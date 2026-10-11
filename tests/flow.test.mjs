@@ -2,7 +2,7 @@
 // Uses Stripe's real webhook signature code, so signature checks are genuine.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler } from "../lib/handlers.mjs";
+import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler } from "../lib/handlers.mjs";
 import { localBlobs, fakeStripe, signedEvent, post, get, WEBHOOK_SECRET, NOW } from "./helpers.mjs";
 
 let blobs; before(async () => { blobs = await localBlobs(); }); after(async () => { await blobs.stop(); });
@@ -15,7 +15,8 @@ const setup = (opts = {}) => {
     cancel: cancelHandler({ store, stripe, now }),
     status: bookingStatusHandler({ store, stripe, now }),
     hook: webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET, now }),
-    admin: adminHandler({ store, adminKey: "secret-admin", now }) };
+    admin: adminHandler({ store, adminKey: "secret-admin", now }),
+    adminCancel: adminCancelHandler({ store, adminKey: "secret-admin", now }) };
 };
 const body = (o = {}) => ({ car: "escalade", from: "2026-11-04", to: "2026-11-08", fromTime: "10:00", toTime: "18:00", location: "dfw", ...o });
 const j = async res => ({ status: res.status, data: await res.json() });
@@ -27,8 +28,9 @@ test("full booking: checkout -> Stripe session -> paid webhook -> confirmed and 
 
   // what was sent to Stripe: server-computed prices, card payments, 30 min expiry, return URLs
   const p = s.stripe.calls.create[0].params;
-  assert.deepEqual(p.line_items.map(l => l.price_data.unit_amount), [144000, 12500, 15650]);  // 4 days -10%, DFW $125, 10% tax
-  assert.equal(r.data.total, 172150);
+  assert.deepEqual(p.line_items.map(l => l.price_data.unit_amount), [108000, 12500, 12050]);  // Wed-Sat: 2x$250 + 2x$350 -10%, DFW $125, 10% tax
+  assert.match(p.line_items[0].price_data.product_data.description, /2 Mon-Thu at \$250, 2 Fri-Sun at \$350/);
+  assert.equal(r.data.total, 132550);
   assert.equal(p.payment_method_types, undefined);   // methods come from the Stripe Dashboard
   assert.equal(p.expires_at, Math.floor(NOW / 1000) + 31 * 60);
   assert.match(p.success_url, /booking=success&session_id=\{CHECKOUT_SESSION_ID\}/);
@@ -43,7 +45,7 @@ test("full booking: checkout -> Stripe session -> paid webhook -> confirmed and 
   const sess = s.stripe.pay("cs_test_1");
   assert.equal((await s.hook(signedEvent("checkout.session.completed", sess))).status, 200);
   const st = await j(await s.status(get("/api/booking?session_id=cs_test_1")));
-  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 172150); assert.equal(st.data.email, "renter@example.com");
+  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 132550); assert.equal(st.data.email, "renter@example.com");
 
   // webhook retries are harmless, and a paid booking can't be cancelled from the return link
   assert.equal((await s.hook(signedEvent("checkout.session.completed", sess))).status, 200);
@@ -135,4 +137,17 @@ test("bank-style payment: pending keeps the dates, cleared confirms, failed rele
   esc = (await all()).data.escalade;
   assert.equal(find("2027-03-01").status, "confirmed");
   assert.equal(find("2027-04-01").status, "released");
+});
+
+test("owner cancels a paid booking from the bookings page: dates free up; wrong key refused", async () => {
+  const s = setup();
+  await s.checkout(post("/api/checkout", body({ car: "bmw", from: "2027-05-07", to: "2027-05-09" })));
+  await s.hook(signedEvent("checkout.session.completed", s.stripe.pay("cs_test_1")));
+  const id = s.stripe.calls.create[0].params.metadata.booking_id;
+  const asOwner = (key) => new Request("https://x/api/admin/cancel", { method: "POST", body: JSON.stringify({ car: "bmw", id }), headers: { "x-admin-key": key } });
+  assert.equal((await s.adminCancel(asOwner("wrong-key-12"))).status, 401);
+  assert.ok((await j(await s.avail(get("/api/availability")))).data.cars.bmw.some(b => b.from === "2027-05-07"));
+  const r = await j(await s.adminCancel(asOwner("secret-admin")));
+  assert.equal(r.data.booking.status, "cancelled");
+  assert.ok(!(await j(await s.avail(get("/api/availability")))).data.cars.bmw.some(b => b.from === "2027-05-07"));
 });

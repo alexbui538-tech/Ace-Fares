@@ -124,6 +124,7 @@ section{scroll-margin-top:80px}
 .index b{display:block;font-family:var(--serif);font-weight:400;font-size:1.15rem}
 .index svg{width:11px;height:11px;margin:3px auto 0;fill:var(--ink)}
 .index small{display:block;font-size:.62rem;color:var(--ink-3);margin-top:2px}
+.index small:first-child{margin:0 0 2px}
 .car-body{padding:20px 20px 22px;display:flex;flex-direction:column;gap:12px;flex:1}
 .car-title{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .car h3{font-size:1.6rem}
@@ -752,25 +753,25 @@ const SITE = {
 };
 
 const CARS = [
-  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", price:400, miles:100,
+  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", weekday:250, weekend:350, miles:100,
     location:"Dallas, TX", rating:4.8, reviews:14, seats:8, color:"Midnight Black",
     desc:"Seats 8 in first-class comfort, with heated and ventilated seats, a panoramic sunroof, AKG Studio Reference sound and a 38-inch curved OLED display. Made for group trips, airport runs and big arrivals.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Third row","8-passenger seating","Sunroof","Premium sound","100 miles/day included"],
     tags:["Seats 8","Third row","Sunroof","Premium sound"],
     photos:[["escalade-1","Front of the black Cadillac Escalade"],["escalade-2","Escalade front grille and headlights"],["escalade-3","Escalade driver's seat and curved display"],["escalade-4","Escalade second-row seats with screens"]], },
-  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", price:59, miles:200,
+  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", weekday:49, weekend:69, miles:200,
     location:"Dallas, TX", rating:5, reviews:0, seats:5, color:"Champagne Silver",
     desc:"A sleek crossover with Cadillac comfort for everyday driving. Heated leather seats, a panoramic sunroof, premium sound and a smooth ride for work trips or weekends away.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Sunroof","Leather interior","AWD","Premium sound","Roof rack","200 miles/day included"],
     tags:["200 mi/day","AWD","Leather","Roof rack"],
     photos:[["srx-1","Champagne Cadillac SRX, front three-quarter view"],["srx-2","Cadillac SRX rear with roof rack"],["srx-3","SRX front seats and dashboard"],["srx-4","SRX rear leather seats"],["srx-5","SRX cargo area"]], },
-  { id:"bmw", name:"BMW 650i xDrive Convertible", year:null, type:"convertible", price:350, miles:100,
+  { id:"bmw", name:"BMW 650i xDrive Convertible", year:null, type:"convertible", weekday:140, weekend:200, miles:100,
     location:"Dallas, TX", rating:5, reviews:0, seats:4, color:"Montego Blue",
     desc:"Drop the top and enjoy the DFW sun. Twin-turbo 4.4L V8, xDrive all-wheel drive, sport-tuned suspension and cognac leather. Made for date nights, weekend drives and arriving in style.",
     features:["AC","Bluetooth","GPS","Backup camera","Convertible top","Heated seats","Cognac leather interior","Premium sound","xDrive AWD","100 miles/day included"],
     tags:["Convertible","V8","Cognac leather","AWD"],
     photos:[["bmw-1","Blue BMW 650i convertible with the top down"],["bmw-2","BMW 650i front view"],["bmw-3","BMW 650i rear three-quarter view"],["bmw-4","BMW 650i rear view, top down"],["bmw-5","BMW cognac leather front seats"],["bmw-6","BMW cognac leather rear seats"]], }
-  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", price:59, miles:200,
+  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:59, weekend:59, miles:200,
     location:"Dallas, TX", rating:5, reviews:0, seats:8, color:"Lunar Silver",
     desc:"The family hauler for DFW. Seats 8 with heated leather seats, tri-zone climate control and Magic Slide second-row seats. A 280 hp V6, Honda Sensing safety features, and Apple CarPlay and Android Auto make every mile easy.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","8-passenger seating","Leather interior","Sliding doors","Magic Slide 2nd row","Honda Sensing safety suite","Apple CarPlay / Android Auto","Tri-zone climate control","9-speed automatic","280 hp V6","200 miles/day included"],
@@ -779,6 +780,7 @@ const CARS = [
 ];
 
 const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
+  ["Why are weekends priced differently?","The Escalade, SRX and BMW have lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Your trip total shows the exact split before you pay."],
   ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100 and DFW Airport handoff is $125. Both are shown in your trip total before you pay."],
   ["What if I drive more than the included miles?","Extra miles are charged per mile after your trip. Ask us for the rate before you book if you're planning a long drive."],
   ["Do I need my own insurance?","Yes, please have proof of your current auto insurance ready. We'll check it when we confirm your booking."],
@@ -807,15 +809,22 @@ const days = (a,b) => Math.round((new Date(b) - new Date(a)) / 864e5);
 const nice = s => new Date(s+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
 
 /* pricing with discounts */
-function priceFor(car, n){
-  const sub = car.price * n;
+// Weekday (Mon-Thu) and weekend (Fri-Sun) rates; each rental day is priced by its own weekday.
+// The return day isn't charged. Must match lib/pricing.mjs.
+const WEEKEND = [5, 6, 0];
+function priceFor(car, n, from){
+  let wd = 0, we = 0;
+  for (let i = 0; i < n && from; i++) { const d = new Date(from + "T12:00"); d.setDate(d.getDate() + i); WEEKEND.includes(d.getDay()) ? we++ : wd++; }
+  const sub = wd * car.weekday + we * car.weekend;
   const d = SITE.discounts.find(x => n >= x.minDays);
   const off = d ? Math.round(sub * d.pct) / 100 : 0;   // rounded to the cent, same as the server
-  return { sub, off, total: Math.round((sub - off) * 100) / 100, d };
+  return { sub, off, total: Math.round((sub - off) * 100) / 100, d, wd, we };
 }
-const totalHTML = (car, n) => {
-  if (!n) return `<b>${fmt(car.price)}</b> / day`;
-  const q = priceFor(car, n);
+const flatRate = car => car.weekday === car.weekend;
+const rateText = car => flatRate(car) ? `${fmt(car.weekday)} per day` : `${fmt(car.weekday)} Mon–Thu, ${fmt(car.weekend)} Fri–Sun`;
+const totalHTML = (car, n, from) => {
+  if (!n) return flatRate(car) ? `<b>${fmt(car.weekday)}</b> / day` : `<b>${fmt(car.weekday)}</b> Mon–Thu, <b>${fmt(car.weekend)}</b> Fri–Sun`;
+  const q = priceFor(car, n, from);
   return `${q.off ? `<s>${money(q.sub)}</s> ` : ""}<b>${money(q.total)}</b> for ${n} day${n>1?"s":""}${q.d ? ` <span class="save">${q.d.pct}% off</span>` : ""}`;
 };
 
@@ -932,7 +941,7 @@ function renderFleet(){
     <article class="car" data-id="${car.id}">
       <div class="gallery" data-i="0">
         <img src="images/${car.photos[0][0]}.webp" alt="${car.photos[0][1]}" loading="lazy" width="1200" height="1600" >
-        <span class="index" aria-hidden="true"><b>${fmt(car.price)}</b><small>per day</small>${SPADE}</span>
+        <span class="index" aria-hidden="true">${flatRate(car) ? "" : "<small>from</small>"}<b>${fmt(car.weekday)}</b><small>per day</small>${SPADE}</span>
         <button class="g-btn g-prev" type="button" aria-label="Previous photo of ${car.name}">${CHEV("M15 6l-6 6 6 6")}</button>
         <button class="g-btn g-next" type="button" aria-label="Next photo of ${car.name}">${CHEV("M9 6l6 6-6 6")}</button>
         <span class="g-count">1 / ${car.photos.length}</span>
@@ -947,7 +956,7 @@ function renderFleet(){
         <p class="desc">${car.desc}</p>
         <ul class="feat">${car.tags.map(t => `<li>${t}</li>`).join("")}</ul>
         <div class="car-foot">
-          <span class="total">${n && carBusy(car.id, state.from, state.to) ? '<span class="unavail">Booked for these dates</span>' : totalHTML(car, n)}</span>
+          <span class="total">${n && carBusy(car.id, state.from, state.to) ? '<span class="unavail">Booked for these dates</span>' : totalHTML(car, n, state.from)}</span>
           <button class="btn btn-ink" type="button" data-book="${car.id}">Book this car</button>
         </div>
         <span class="more" aria-hidden="true">View details</span>
@@ -977,7 +986,7 @@ let current = null;
 function openBooking(id){
   current = CARS.find(c => c.id === id);
   $("#book-title").textContent = current.name;
-  $("#b-sub").textContent = `${fmt(current.price)} per day, ${current.miles} miles/day included`;
+  $("#b-sub").textContent = `${rateText(current)}, ${current.miles} miles/day included`;
   $("#b-img").src = `images/${current.photos[0][0]}-sm.webp`;
   const ls = locsFor(current);
   bLoc.innerHTML = ls.map(l => `<option value="${l.id}">${l.name}${l.fee === 0 ? " (free)" : l.fee ? ` (+${fmt(l.fee)})` : " (fee quoted)"}</option>`).join("");
@@ -998,12 +1007,13 @@ function updateQuote(){
   $("#b-loc-help").textContent = loc ? loc.note : "";
   const n = bFrom.value && bTo.value && bTo.value > bFrom.value ? days(bFrom.value, bTo.value) : 0;
   const fee = loc && loc.fee ? loc.fee : 0;
-  const q = priceFor(current, n || 0);
+  const q = priceFor(current, n || 0, bFrom.value);
   document.querySelectorAll("#b-deals .deal").forEach(el => el.classList.toggle("on", !!q.d && q.d.minDays === +el.dataset.min));
   const taxPct = n <= SITE.tax.shortMaxDays ? SITE.tax.shortPct : SITE.tax.longPct;
   const tax = Math.round(((q.total + (SITE.tax.includesFees ? fee : 0)) * taxPct)) / 100;
   $("#b-quote").innerHTML = n
-    ? `<div><span>${fmt(current.price)} × ${n} day${n>1?"s":""}</span><span>${fmt(q.sub)}</span></div>
+    ? `${q.wd ? `<div><span>${fmt(current.weekday)} × ${q.wd} ${flatRate(current) ? "day" : "Mon–Thu day"}${q.wd>1?"s":""}</span><span>${fmt(q.wd*current.weekday)}</span></div>` : ""}
+       ${q.we ? `<div><span>${fmt(current.weekend)} × ${q.we} ${flatRate(current) ? "day" : "Fri–Sun day"}${q.we>1?"s":""}</span><span>${fmt(q.we*current.weekend)}</span></div>` : ""}
        ${q.off ? `<div class="disc"><span>${q.d.label} (${q.d.pct}%)</span><span>−${money(q.off)}</span></div>` : n < 3 ? `<div class="hint"><span>Book 3 or more days to save 10%</span><span></span></div>` : ""}
        <div><span>${loc ? loc.name : "Pickup"}</span><span>${fee ? fmt(fee) : "Free"}</span></div>
        <div><span>Texas rental tax (${taxPct}%)</span><span>${money(tax)}</span></div>
@@ -1227,7 +1237,7 @@ function openDetail(id, i){
       <span>${STAR}${dCar.reviews ? `${dCar.rating} <span style="color:var(--ink-3)">(${dCar.reviews} trips)</span>` : "New listing"}</span>
       <span>${PIN}${dCar.location}</span><span>${SEAT}${dCar.seats} seats</span>
     </div>
-    <div class="dt-price"><b>${fmt(dCar.price)}</b><span>per day</span></div>
+    <div class="dt-price">${flatRate(dCar) ? `<b>${fmt(dCar.weekday)}</b><span>per day</span>` : `<b>${fmt(dCar.weekday)}</b><span>per day Mon–Thu</span><b style="margin-left:14px">${fmt(dCar.weekend)}</b><span>Fri–Sun</span>`}</div>
     <p>${dCar.desc}</p>
     <div class="dt-facts">
       <div><small>Miles included</small><b>${dCar.miles} per day</b></div>
@@ -1243,7 +1253,7 @@ function openDetail(id, i){
     <ul class="all-feat">${dCar.features.map(f => `<li>${f}</li>`).join("")}</ul>
     <h4>Pickup and delivery</h4>
     <p>${locs}.</p>`;
-  $("#dt-total").innerHTML = totalHTML(dCar, n);
+  $("#dt-total").innerHTML = totalHTML(dCar, n, state.from);
   dShow();
   dt.showModal();
   fitTo($("#dt-frame"), $("#dt-img"), $(".dt-main"));

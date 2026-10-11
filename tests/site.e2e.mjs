@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { join, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler } from "../lib/handlers.mjs";
+import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler } from "../lib/handlers.mjs";
 import { makeRepo } from "../lib/bookings.mjs";
 import { quote } from "../lib/pricing.mjs";
 import { memoryStore, fakeStripe, signedEvent, WEBHOOK_SECRET } from "./helpers.mjs";
@@ -24,6 +24,8 @@ const H = {
   "/api/cancel": cancelHandler({ store, stripe }),
   "/api/booking": bookingStatusHandler({ store, stripe }),
   "/api/stripe-webhook": webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET }),
+  "/api/admin/bookings": adminHandler({ store, adminKey: "owner-key-123" }),
+  "/api/admin/cancel": adminCancelHandler({ store, adminKey: "owner-key-123" }),
 };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, base);
@@ -78,7 +80,7 @@ await page.click("#cal-close");
 // pick free dates, DFW handoff; the page shows the same total the server will charge
 await pickRange(10, 14);
 await page.selectOption("#b-loc", "dfw");
-const expect = quote({ car: "escalade", location: "dfw", days: 4 }).total / 100;
+const expect = quote({ car: "escalade", location: "dfw", days: 4, from: D(10) }).total / 100;
 const shown = (await page.textContent("#b-quote .sum")).replace(/[^\d.]/g, "");
 ok(Number(shown) === expect, `trip total on the page ($${shown}) matches what the server charges ($${expect})`);
 
@@ -123,6 +125,22 @@ const p2 = await browser.newPage();
 await p2.goto("file://" + join(ROOT, "index.html")); await p2.waitForTimeout(500);
 await p2.click("[data-book=bmw]");
 ok((await p2.textContent("#b-go")).includes("Text us"), "no server: falls back to 'Text us to book'");
+
+// owner bookings page
+const a = await browser.newPage(); const aErrs = []; a.on("pageerror", e => aErrs.push(e.message));
+a.on("dialog", d => d.accept());
+await a.goto(base + "/admin.html");
+await a.fill("#key", "wrong"); await a.click("#login button"); await a.waitForTimeout(800);
+ok((await a.textContent("#login-err")).includes("isn't right"), "bookings page: wrong admin key is refused");
+await a.fill("#key", "owner-key-123"); await a.click("#login button"); await a.waitForTimeout(800);
+const txt = await a.textContent("main");
+ok(txt.includes("Test Renter") && txt.includes("Paid") && txt.includes("DFW Airport"), "bookings page: shows the paid booking with renter and pickup");
+await a.screenshot({ path: "e2e-admin.png", fullPage: true });
+const btn = a.locator('button.danger[data-car="escalade"]').first();
+await btn.click(); await a.waitForTimeout(900);
+const esc = await makeRepo(store).all("escalade");
+ok(esc.some(b => b.status === "cancelled"), "bookings page: owner can cancel a booking, freeing the dates");
+ok(aErrs.length === 0, "bookings page: no errors " + aErrs.join(" | "));
 
 ok(errs.length === 0, "no page errors " + errs.join(" | "));
 await browser.close(); server.close();

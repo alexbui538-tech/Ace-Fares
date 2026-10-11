@@ -114,3 +114,18 @@ Refund from the Stripe Dashboard, under Payments → the payment → Refund. Ref
 ## Taxes
 
 The site charges Texas motor vehicle rental tax (10% for 30 days or less, 6.25% for 31–180 days) on the rental after discounts, plus delivery and airport fees. Confirm with your accountant whether those fees should be taxed. The setting is `TAX_INCLUDES_FEES` in `lib/catalog.mjs`, and the matching `includesFees` in `public/index.html`. You're responsible for filing and remitting the tax collected. Stripe doesn't do that for you.
+
+## Your bookings page
+
+Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `ADMIN_KEY`. It shows each car's upcoming paid bookings: dates, times, renter name, phone and email, pickup or delivery, and amount paid. **Cancel** frees the dates. If the renter paid, refund them in the Stripe Dashboard as well. The page isn't linked from the website and tells search engines not to list it, but treat the admin key like a password.
+
+## Prices
+
+| Car | Mon–Thu | Fri–Sun |
+|---|---|---|
+| Cadillac Escalade | $250 | $350 |
+| Cadillac SRX | $49 | $69 |
+| BMW 650i Convertible | $140 | $200 |
+| Honda Odyssey | $59 | $59 |
+
+Each rental day is priced by its day of the week. The return day isn't charged, so a Thursday pickup with a Monday return is one weekday plus three weekend days. Discounts and tax apply to the total. To change prices, edit `lib/catalog.mjs` **and** the matching `weekday`/`weekend` numbers in `public/index.html`. The tests fail if they don't match.

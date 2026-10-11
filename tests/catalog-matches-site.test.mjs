@@ -8,9 +8,10 @@ const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf
 
 test("car prices and miles on the page match the server", () => {
   for (const [id, c] of Object.entries(CARS)) {
-    const m = html.match(new RegExp(`id:"${id}"[^\\n]*?price:(\\d+), miles:(\\d+)`));
+    const m = html.match(new RegExp(`id:"${id}"[^\\n]*?weekday:(\\d+), weekend:(\\d+), miles:(\\d+)`));
     assert.ok(m, `car ${id} found on page`);
-    assert.equal(Number(m[1]), c.price, `${id} price`); assert.equal(Number(m[2]), c.miles, `${id} miles`);
+    assert.equal(Number(m[1]), c.weekday, `${id} weekday price`); assert.equal(Number(m[2]), c.weekend, `${id} weekend price`);
+    assert.equal(Number(m[3]), c.miles, `${id} miles`);
   }
 });
 
