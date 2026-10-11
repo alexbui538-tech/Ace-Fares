@@ -609,6 +609,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     </div>
     <div class="legal">
       <span>&copy; <span id="yr"></span> Ace Fares Rental Company, Dallas, Texas</span>
+      <span><a href="/rental-agreement">Rental agreement</a></span>
       <span>Payments processed securely by Stripe</span>
     </div>
   </div>
@@ -1020,7 +1021,7 @@ function updateQuote(){
        <div><span>Miles included</span><span>${(current.miles*n).toLocaleString()} miles</span></div>
        <div class="sum"><span>Trip total</span><span>${money(q.total + fee + tax)}</span></div>`
     : `<div><span>Choose your dates to see the trip total.</span></div>`;
-  $("#b-fine").textContent = ONLINE.ready ? "You'll pay the trip total now through Stripe's secure checkout. Tolls and any extra miles are billed after the trip." : "Tolls and any extra miles are not included in the trip total.";
+  $("#b-fine").innerHTML = ONLINE.ready ? 'You pay the trip total now through Stripe\'s secure checkout and agree to our <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a>. Tolls and any extra miles are billed after the trip.' : "Tolls and any extra miles are not included in the trip total.";
   const go = $("#b-go"), notice = $("#b-notice");
   go.disabled = false; go.classList.remove("loading");
   notice.hidden = true; notice.classList.remove("err");

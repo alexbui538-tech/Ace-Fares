@@ -2,19 +2,21 @@
 // Uses Stripe's real webhook signature code, so signature checks are genuine.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler } from "../lib/handlers.mjs";
+import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler, agreementPageHandler } from "../lib/handlers.mjs";
 import { localBlobs, fakeStripe, signedEvent, post, get, WEBHOOK_SECRET, NOW } from "./helpers.mjs";
 
 let blobs; before(async () => { blobs = await localBlobs(); }); after(async () => { await blobs.stop(); });
 
+const fakeMailer = (fail = false) => { const sent = []; return { sent, async send(m) { if (fail) throw new Error("SMTP login failed"); sent.push(m); } }; };
 const setup = (opts = {}) => {
   const stripe = fakeStripe(opts), now = () => opts.now ? opts.now() : NOW, store = blobs.store;
-  return { stripe,
+  const mailer = opts.mailer || null, siteUrl = "https://acefares.test";
+  return { stripe, mailer,
     avail: availabilityHandler({ store, now }),
-    checkout: checkoutHandler({ store, stripe, siteUrl: "https://acefares.test", now }),
+    checkout: checkoutHandler({ store, stripe, siteUrl, now, requireTerms: !!opts.requireTerms }),
     cancel: cancelHandler({ store, stripe, now }),
-    status: bookingStatusHandler({ store, stripe, now }),
-    hook: webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET, now }),
+    status: bookingStatusHandler({ store, stripe, now, mailer, siteUrl }),
+    hook: webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET, now, mailer, siteUrl }),
     admin: adminHandler({ store, adminKey: "secret-admin", now }),
     adminCancel: adminCancelHandler({ store, adminKey: "secret-admin", now }) };
 };
@@ -150,4 +152,52 @@ test("owner cancels a paid booking from the bookings page: dates free up; wrong 
   const r = await j(await s.adminCancel(asOwner("secret-admin")));
   assert.equal(r.data.booking.status, "cancelled");
   assert.ok(!(await j(await s.avail(get("/api/availability")))).data.cars.bmw.some(b => b.from === "2027-05-07"));
+});
+
+test("paid booking emails the renter their confirmation and rental agreement, once", async () => {
+  const mailer = fakeMailer(); const s = setup({ mailer });
+  await s.checkout(post("/api/checkout", body({ car: "srx", from: "2027-06-07", to: "2027-06-10" })));
+  const sess = s.stripe.pay("cs_test_1");
+  await s.hook(signedEvent("checkout.session.completed", sess));
+  await s.hook(signedEvent("checkout.session.completed", sess));     // Stripe retry
+  await s.status(get("/api/booking?session_id=cs_test_1"));          // confirmation page check
+  assert.equal(mailer.sent.length, 1);
+  const m = mailer.sent[0];
+  assert.equal(m.to, "renter@example.com");
+  assert.match(m.subject, /Booking confirmed: Cadillac SRX/);
+  assert.match(m.html, /Your rental agreement/); assert.match(m.html, /Renter: Test Renter/); assert.match(m.html, /Cadillac SRX/);
+  assert.match(m.text, /YOUR RENTAL AGREEMENT/);
+  const all = await j(await s.admin(new Request("https://x/api/admin/bookings", { headers: { "x-admin-key": "secret-admin" } })));
+  assert.ok(all.data.srx.find(b => b.from === "2027-06-07").emailedAt);
+});
+
+test("if the email fails, the booking is still confirmed and the failure is recorded", async () => {
+  const s = setup({ mailer: fakeMailer(true) });
+  await s.checkout(post("/api/checkout", body({ car: "srx", from: "2027-07-12", to: "2027-07-14" })));
+  assert.equal((await s.hook(signedEvent("checkout.session.completed", s.stripe.pay("cs_test_1")))).status, 200);
+  const all = await j(await s.admin(new Request("https://x/api/admin/bookings", { headers: { "x-admin-key": "secret-admin" } })));
+  const b = all.data.srx.find(x => x.from === "2027-07-12");
+  assert.equal(b.status, "confirmed"); assert.match(b.emailError, /SMTP/);
+});
+
+test("agreement box at checkout when switched on, and acceptance is recorded", async () => {
+  const off = setup(); await off.checkout(post("/api/checkout", body({ car: "van", from: "2027-08-16", to: "2027-08-18" })));
+  assert.equal(off.stripe.calls.create[0].params.consent_collection, undefined);
+  const s = setup({ requireTerms: true });
+  await s.checkout(post("/api/checkout", body({ car: "van", from: "2027-08-20", to: "2027-08-22" })));
+  const p = s.stripe.calls.create[0].params;
+  assert.deepEqual(p.consent_collection, { terms_of_service: "required" });
+  assert.match(p.custom_text.terms_of_service_acceptance.message, /\(https:\/\/acefares\.test\/rental-agreement\)/);
+  const sess = Object.assign(s.stripe.pay("cs_test_1"), { consent: { terms_of_service: "accepted" } });
+  await s.hook(signedEvent("checkout.session.completed", sess));
+  const all = await j(await s.admin(new Request("https://x/api/admin/bookings", { headers: { "x-admin-key": "secret-admin" } })));
+  assert.equal(all.data.van.find(b => b.from === "2027-08-20").termsAccepted, true);
+});
+
+test("rental agreement page renders and flags unfinished terms", async () => {
+  const res = await agreementPageHandler()(get("/rental-agreement"));
+  const html = await res.text();
+  assert.equal(res.status, 200); assert.match(res.headers.get("content-type"), /text\/html/);
+  assert.match(html, /Rental Agreement/); assert.match(html, /Who may drive/); assert.match(html, /at least 21/);
+  assert.match(html, /\[to be set\]/); assert.match(html, /Draft/);
 });

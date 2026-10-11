@@ -129,3 +129,22 @@ Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `AD
 | Honda Odyssey | $59 | $59 |
 
 Each rental day is priced by its day of the week. The return day isn't charged, so a Thursday pickup with a Monday return is one weekday plus three weekend days. Discounts and tax apply to the total. To change prices, edit `lib/catalog.mjs` **and** the matching `weekday`/`weekend` numbers in `public/index.html`. The tests fail if they don't match.
+
+## Confirmation email and rental agreement
+
+After every paid booking, the renter automatically gets an email from your Gmail with the booking details and the **full rental agreement**, filled in with their name and trip. You get a copy if `OWNER_EMAIL` is set. The agreement is also at **/rental-agreement**. Its wording lives in `lib/agreement.mjs`.
+
+**The agreement is a draft template, not legal advice.** Fill in the `POLICY` values: extra-mile rate, late fee, fuel fee, cleaning and smoking fees, ticket fee, cancellation policy, and whether out-of-state driving is allowed. Until they're filled in, they show as "[to be set]" and the page says "Draft". Have a Texas attorney review it before relying on it.
+
+**Turn on the email:**
+1. Your Google account (acefaresrental@gmail.com) needs **2-Step Verification** on: myaccount.google.com → Security.
+2. Create an **App password** at myaccount.google.com/apppasswords and copy the 16-character password.
+3. In Netlify, add `GMAIL_USER` = `acefaresrental@gmail.com`, `GMAIL_APP_PASSWORD` = the app password, and optionally `OWNER_EMAIL`. Then redeploy.
+
+If an email ever fails, the booking still goes through, and the failure is saved on the booking (`emailError`).
+
+**Turn on the "I agree" box at checkout:**
+1. In Stripe, go to **Settings → Public details** (dashboard.stripe.com/settings/public) and set **Terms of service** to `https://acefaresrental.netlify.app/rental-agreement`.
+2. In Netlify, add `REQUIRE_TERMS` = `true`, then redeploy.
+
+Renters then must tick "I have read and agree to the Ace Fares Rental Agreement" before paying, and each booking records `termsAccepted: true`.

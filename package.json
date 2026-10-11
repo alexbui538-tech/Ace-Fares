@@ -7,7 +7,10 @@
   },
   "dependencies": {
     "@netlify/blobs": "11.1.4",
-    "stripe": "23.0.0"
+    "stripe": "23.0.0",
+    "nodemailer": "6.10.1"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
