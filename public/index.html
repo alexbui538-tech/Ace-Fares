@@ -1,0 +1,1388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ace Fares Rentals</title>
+<meta name="description" content="Rent a Cadillac Escalade, Cadillac SRX, BMW 650i convertible or Honda Odyssey van direct from the owner in Dallas, Texas. Pickup in Dallas or delivery across DFW.">
+<link rel="icon" href="images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ivory:#FBF8F1; --paper:#FFFFFF; --cream:#F3ECDD; --line:#E4DCCB;
+  --ink:#15130F; --ink-2:#514A3D; --ink-3:#6F6757;
+  --gold:#AF8135; --gold-text:#84601F; --gold-bright:#DAA336;
+  --navy:#0F1A34; --navy-2:#18264A; --on-navy:#F4EFE4; --on-navy-2:#C9C2B3;
+  --ok:#2F6B3A;
+  --radius-card:16px; --radius-ctl:10px;
+  --shadow:0 1px 2px rgba(21,19,15,.06),0 8px 24px -12px rgba(21,19,15,.18);
+  --serif:"DM Serif Display",Georgia,serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --wrap:1180px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ivory);color:var(--ink);font:400 1rem/1.6 var(--sans)}
+img{max-width:100%;display:block}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.1;margin:0;letter-spacing:-.01em}
+h2{font-size:clamp(2rem,4vw,2.9rem)}
+.lede{color:var(--ink-2);font-size:1.075rem;max-width:58ch;margin:.75rem 0 0}
+section{scroll-margin-top:80px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:0 1.35rem;border-radius:var(--radius-ctl);border:1.5px solid transparent;font-weight:600;cursor:pointer;text-decoration:none;transition:background-color .18s,border-color .18s,color .18s,transform .12s}
+.btn:active{transform:translateY(1px)}
+.btn-gold{background:var(--gold-bright);color:var(--ink)}
+.btn-gold:hover{background:#E5B24A}
+.btn-ink{background:var(--ink);color:var(--ivory)}
+.btn-ink:hover{background:#2C2820}
+.btn-line{border-color:var(--ink);background:transparent}
+.btn-line:hover{background:var(--ink);color:var(--ivory)}
+.btn-block{width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* header */
+.top{position:sticky;top:0;z-index:40;background:rgba(251,248,241,.94);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:24px;height:72px}
+.brand{display:flex;align-items:center;text-decoration:none}
+.brand img{height:48px;width:auto;border-radius:4px}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:500;color:var(--ink-2)}
+.nav a:hover{color:var(--ink);background:var(--cream)}
+.nav a.host-link{color:var(--gold-text);font-weight:600}
+.nav a[aria-current="page"]{color:var(--ink);background:var(--cream)}
+.menu-btn{display:none;margin-left:auto;width:48px;height:48px;border:1px solid var(--line);border-radius:10px;background:var(--paper);cursor:pointer;align-items:center;justify-content:center}
+@media (max-width:860px){
+  .nav{display:none;position:absolute;top:72px;left:0;right:0;flex-direction:column;background:var(--ivory);border-bottom:1px solid var(--line);padding:8px 16px 16px}
+  .nav.open{display:flex}
+  .nav a{padding:14px 12px}
+  .menu-btn{display:inline-flex}
+  .top .btn{display:none}
+}
+
+/* hero: photo banner with booking bar */
+.hero{padding:20px 0 8px}
+.banner{position:relative;border-radius:22px;overflow:hidden;min-height:520px;display:flex;align-items:center;justify-content:center;background:var(--navy)}
+.banner>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% 45%}
+.banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,26,52,.55) 0%,rgba(15,26,52,.35) 45%,rgba(15,26,52,.7) 100%)}
+.banner-inner{position:relative;z-index:1;width:100%;max-width:960px;padding:56px 24px;text-align:center;color:#fff}
+.hero h1{text-wrap:balance;font-size:clamp(2.3rem,5vw,3.9rem);color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+.hero p.sub{color:#EDE8DC;font-size:1.12rem;max-width:52ch;margin:.9rem auto 2rem;text-shadow:0 1px 12px rgba(0,0,0,.4)}
+.search{background:var(--paper);color:var(--ink);border-radius:16px;padding:8px;display:grid;grid-template-columns:1.1fr 1.45fr 1.45fr auto;align-items:stretch;text-align:left;box-shadow:0 24px 48px -20px rgba(0,0,0,.55)}
+.field{display:flex;flex-direction:column;justify-content:center;padding:6px 14px;border-radius:10px;min-width:0;position:relative}
+.field+.field::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--line)}
+.field:focus-within{background:var(--cream)}
+.field>label,.field>.lbl{font-size:.78rem;font-weight:600;color:var(--ink-3)}
+.field input,.field select{border:0;background:transparent;padding:4px 0;min-height:30px;outline:none;width:100%;min-width:0}
+.pair{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}
+.search .go{width:56px;min-height:56px;padding:0;border-radius:12px;align-self:center;margin-left:4px}
+.search .go span{display:none}
+.search-error{color:#FFD7CF;font-size:.92rem;margin:.75rem 0 0;min-height:1.2em;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+@media (max-width:900px){
+  .banner{min-height:0;border-radius:18px}
+  .banner-inner{padding:40px 14px 28px}
+  .search{grid-template-columns:1fr}
+  .field+.field::before{left:14px;right:14px;top:0;bottom:auto;width:auto;height:1px}
+  .field{padding:10px 14px}
+  .search .go{width:100%;margin:6px 0 0;gap:8px}
+  .search .go span{display:inline}
+}
+.hero .wrap{padding-left:20px;padding-right:20px}
+@media (max-width:520px){.hero .wrap{padding-left:12px;padding-right:12px}}
+
+/* fleet */
+.fleet{padding:64px 0 64px}
+.fleet-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ivory);border-color:var(--ink)}
+.trip-note{margin:0 0 20px;padding:12px 16px;border-radius:10px;background:var(--cream);color:var(--ink-2);display:none}
+.trip-note.show{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(264px,1fr));gap:20px}
+.car{cursor:pointer;transition:box-shadow .2s,transform .2s;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-card);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.gallery{position:relative;aspect-ratio:4/3;background:var(--cream)}
+.gallery img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.g-btn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.g-prev{left:10px}.g-next{right:10px}
+.g-count{position:absolute;right:12px;bottom:12px;background:rgba(21,19,15,.72);color:#fff;font-size:.8rem;padding:3px 10px;border-radius:999px}
+.car:hover{box-shadow:0 2px 4px rgba(21,19,15,.06),0 18px 36px -16px rgba(21,19,15,.3)}
+.car h3 .open{all:unset;cursor:pointer}
+.car h3 .open:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:4px}
+.car p.desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.more{font-weight:600;color:var(--gold-text);font-size:.92rem;text-align:center;margin-top:-2px}
+.car:hover .more{text-decoration:underline}
+/* the playing-card index: price in the corner like a card's rank */
+.index{position:absolute;left:10px;top:10px;background:var(--ivory);border:1px solid var(--line);border-radius:8px;padding:4px 8px 4px;text-align:center;line-height:1;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.index b{display:block;font-family:var(--serif);font-weight:400;font-size:1.15rem}
+.index svg{width:11px;height:11px;margin:3px auto 0;fill:var(--ink)}
+.index small{display:block;font-size:.62rem;color:var(--ink-3);margin-top:2px}
+.car-body{padding:20px 20px 22px;display:flex;flex-direction:column;gap:12px;flex:1}
+.car-title{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.car h3{font-size:1.6rem}
+.meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--ink-2);font-size:.93rem}
+.meta span{display:inline-flex;align-items:center;gap:5px}
+.meta svg{width:16px;height:16px}
+.star{fill:var(--gold)}
+.car p.desc{margin:0;color:var(--ink-2)}
+.feat{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.feat li{font-size:.85rem;padding:4px 10px;border-radius:999px;background:var(--cream);color:var(--ink-2)}
+.car details{border-top:1px solid var(--line);padding-top:10px}
+.car summary{cursor:pointer;font-weight:600;min-height:36px;display:flex;align-items:center;color:var(--gold-text)}
+.all-feat{columns:2;padding:0;margin:8px 0 0;list-style:none;font-size:.92rem;color:var(--ink-2)}
+.all-feat li{break-inside:avoid;padding:3px 0 3px 22px;position:relative}
+.all-feat li::before{content:"";position:absolute;left:2px;top:.6em;width:10px;height:6px;border-left:2px solid var(--ok);border-bottom:2px solid var(--ok);transform:rotate(-45deg)}
+.car-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
+.total{font-size:.92rem;color:var(--ink-2);white-space:nowrap}
+.car-foot .btn{white-space:nowrap;padding:0 1.1rem}
+.total b{color:var(--ink);font-size:1.05rem}
+
+.total s{color:var(--ink-3);font-size:.88rem}
+.save{display:inline-block;font-size:.75rem;font-weight:700;color:var(--ok);background:#E3F0E2;border-radius:999px;padding:1px 8px;margin-left:2px;vertical-align:1px}
+.car-foot{flex-wrap:wrap}
+.quote-box .disc{color:var(--ok);font-weight:600}
+.quote-box .hint{color:var(--gold-text);font-size:.9rem}
+
+/* discount tiles in pop-ups */
+.deals{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.deal{border:1.5px dashed var(--gold);border-radius:12px;padding:10px 12px;background:#FDF8EC}
+.deal b{display:block;font-family:var(--serif);font-weight:400;font-size:1.35rem;color:var(--gold-text);line-height:1.1}
+.deal span{font-size:.88rem;color:var(--ink-2)}
+.deal.on{border-style:solid;border-color:var(--ok);background:#E9F3E7}
+.deal.on b{color:var(--ok)}
+.deals.small .deal{padding:8px 12px}
+.deals.small .deal b{font-size:1.1rem}
+
+/* offers */
+.offers{padding:28px 0 0}
+.offer-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.offer{display:flex;align-items:center;gap:18px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-card);padding:18px 22px}
+.offer .pct{flex:none;width:76px;height:76px;border-radius:14px;background:var(--navy);color:var(--gold-bright);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.offer .pct b{font-family:var(--serif);font-weight:400;font-size:1.9rem}
+.offer .pct small{font-size:.72rem;color:var(--on-navy-2);margin-top:3px}
+.offer h3{font-size:1.35rem}
+.offer p{margin:4px 0 0;color:var(--ink-2)}
+@media (max-width:760px){.offer-row{grid-template-columns:1fr}}
+
+/* host */
+.host{padding:64px 0 88px;background:var(--navy);color:var(--on-navy)}
+.host-page{min-height:60vh}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--gold-bright);text-decoration:none;font-weight:600;margin-bottom:20px;min-height:44px}
+.back:hover{text-decoration:underline}
+.host-how{padding:72px 0}
+.host-how .steps{margin-top:32px}
+.host-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.host h2{color:var(--on-navy)}
+.host .lede{color:var(--on-navy-2)}
+.host-points{list-style:none;padding:0;margin:32px 0 0;display:grid;gap:20px}
+.host-points li{display:grid;grid-template-columns:44px 1fr;gap:14px}
+.host-points .ic{width:44px;height:44px;border-radius:12px;background:var(--navy-2);display:flex;align-items:center;justify-content:center}
+.host-points .ic svg{width:22px;height:22px;stroke:var(--gold-bright);fill:none;stroke-width:1.8}
+.host-points b{display:block;font-size:1.05rem}
+.host-points span{color:var(--on-navy-2)}
+.host-form{background:var(--paper);color:var(--ink);border-radius:20px;padding:28px;display:grid;gap:14px}
+.host-form h3{font-size:1.6rem}
+.host-form .fine{margin-top:-4px}
+.host-form textarea{width:100%;min-height:96px;border:1.5px solid var(--line);border-radius:var(--radius-ctl);padding:10px 12px;resize:vertical}
+.host-form textarea:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(218,163,54,.25)}
+.host-ok{display:none;background:#E3F0E2;color:#1F4A27;border-radius:10px;padding:12px 14px}
+.host-ok.show{display:block}
+@media (max-width:900px){.host-grid{grid-template-columns:1fr;gap:36px}}
+
+/* how it works */
+.how{padding:72px 0;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.steps{list-style:none;padding:0;margin:40px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:32px;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding-top:56px}
+.steps li::before{content:counter(s);position:absolute;top:0;left:0;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gold);color:var(--gold-text);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.25rem}
+.steps h3{font-size:1.4rem;margin-bottom:.4rem}
+.steps p{margin:0;color:var(--ink-2)}
+.needs{margin-top:48px;padding:24px 28px;border-radius:var(--radius-card);background:var(--ivory);border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:12px 32px;align-items:start}
+.needs h3{font-size:1.3rem}
+.needs ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px;color:var(--ink-2)}
+.needs li{padding-left:22px;position:relative}
+.needs li::before{content:"";position:absolute;left:2px;top:.62em;width:10px;height:6px;border-left:2px solid var(--ok);border-bottom:2px solid var(--ok);transform:rotate(-45deg)}
+@media (max-width:760px){.steps{grid-template-columns:1fr;gap:28px}.needs{grid-template-columns:1fr}}
+
+/* delivery */
+.delivery{padding:88px 0}
+.deliv-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:start}
+.places{list-style:none;padding:0;margin:0;border:1px solid var(--line);border-radius:var(--radius-card);background:var(--paper);overflow:hidden}
+.places li{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;padding:18px 20px;border-top:1px solid var(--line)}
+.places li:first-child{border-top:0}
+.places .ic{width:44px;height:44px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center}
+.places .ic svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:1.7}
+.places b{display:block}
+.places span{color:var(--ink-2);font-size:.93rem}
+.fee{font-weight:600;white-space:nowrap}
+.fee.free{color:var(--ok)}
+.areas{margin-top:20px;color:var(--ink-2)}
+@media (max-width:860px){.deliv-grid{grid-template-columns:1fr;gap:28px}}
+
+/* reviews + faq */
+.trust{padding:72px 0 88px;background:var(--cream)}
+.trust-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:56px}
+.score{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-card);padding:28px;margin-top:28px}
+.score .big{font-family:var(--serif);font-size:3.6rem;line-height:1}
+.stars{display:flex;gap:3px;margin:8px 0}
+.stars svg{width:20px;height:20px}
+.score ul{list-style:none;padding:0;margin:20px 0 0;border-top:1px solid var(--line)}
+.score li{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:.95rem}
+.score li span:last-child{color:var(--ink-2)}
+.quotes{display:grid;gap:16px;margin-top:20px}
+.quote{background:var(--paper);border-radius:12px;padding:18px 20px;border:1px solid var(--line)}
+.quote p{margin:0 0 8px}
+.quote cite{font-style:normal;color:var(--ink-3);font-size:.9rem}
+.faq{margin-top:24px}
+.faq details{border-bottom:1px solid #D8CDB6}
+.faq summary{list-style:none;cursor:pointer;padding:20px 40px 20px 0;font-weight:600;font-size:1.06rem;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";position:absolute;right:8px;top:50%;width:10px;height:10px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+.faq details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.faq details p{margin:0 0 20px;color:var(--ink-2);max-width:62ch}
+@media (max-width:860px){.trust-grid{grid-template-columns:1fr;gap:40px}}
+
+.reviews{padding:88px 0;background:var(--paper);border-top:1px solid var(--line)}
+.rev-head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
+.reviews .score{margin:0;display:flex;align-items:center;gap:16px;padding:18px 24px}
+.reviews .score .big{font-size:3rem}
+.reviews .score p{margin:0;color:var(--ink-2);font-size:.95rem}
+.quotes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:36px}
+.quote{background:var(--ivory);border-radius:var(--radius-card);padding:24px;border:1px solid var(--line);display:flex;flex-direction:column;gap:12px;margin:0}
+.quote blockquote{margin:0;font-size:1.05rem}
+.quote footer{margin-top:auto;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.quote cite{font-style:normal;font-weight:600}
+.quote .car-name{color:var(--ink-3);font-size:.9rem}
+.sample{align-self:flex-start;font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;background:#FBE3D9;color:#8A2D14}
+.faq-wrap{max-width:820px}
+.social{display:flex;gap:10px;margin-top:20px}
+.social a{width:44px;height:44px;border-radius:50%;border:1px solid var(--navy-2);background:var(--navy-2);display:flex;align-items:center;justify-content:center}
+.social a:hover{background:var(--gold-bright);border-color:var(--gold-bright);color:var(--ink)}
+.social svg{width:20px;height:20px;fill:currentColor}
+.gallery img{cursor:zoom-in}
+.zoom-hint{position:absolute;left:12px;bottom:12px;background:rgba(21,19,15,.72);color:#fff;font-size:.8rem;padding:3px 10px;border-radius:999px;display:flex;gap:6px;align-items:center;pointer-events:none}
+/* date buttons + calendar */
+.date-btn{border:0;background:transparent;padding:4px 0;min-height:30px;text-align:left;cursor:pointer;color:var(--ink);white-space:nowrap}
+.date-btn.empty{color:var(--ink-3)}
+.lab{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+.date-ctl{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:var(--radius-ctl);padding:0 12px;background:var(--paper);display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left}
+.date-ctl:hover{border-color:var(--gold)}
+.date-ctl.empty span{color:var(--ink-3)}
+.ctl.bad .date-ctl{border-color:#A3321F}
+#cal{width:min(720px,calc(100vw - 24px));border-radius:20px;padding:0}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+.cal-head h3{font-size:1.5rem}
+.cal-step{margin:4px 20px 0;color:var(--ink-2)}
+.cal-nav{position:relative;height:0}
+.cal-nav .g-btn{top:14px;transform:none;border:1px solid var(--line);box-shadow:none;z-index:1}
+#cal-prev{left:16px}#cal-next{right:16px}
+.cal-months{display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:14px 20px 8px}
+.cal-month h4{text-align:center;margin:10px 0 14px;font-size:1.02rem}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px}
+.cal-grid .wd{text-align:center;font-size:.78rem;color:var(--ink-3);padding-bottom:6px}
+.cal-grid button{height:42px;border:0;background:transparent;border-radius:999px;cursor:pointer;font-weight:500;position:relative}
+.cal-grid button:hover:not(:disabled):not(.start):not(.end):not(.in){background:var(--cream)}
+.cal-grid button.in:hover{background:#E9DFC9}
+.cal-grid button:disabled{color:#C8C0B0;cursor:default;text-decoration:line-through}
+.cal-grid button.today{box-shadow:inset 0 0 0 1.5px var(--line)}
+.cal-grid button.in{background:var(--cream);border-radius:0}
+.cal-grid button.start,.cal-grid button.end{background:var(--ink);color:var(--ivory)}
+.cal-grid button.start.has-end{border-radius:999px 0 0 999px}
+.cal-grid button.end{border-radius:0 999px 999px 0}
+.cal-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px 18px;border-top:1px solid var(--line)}
+.cal-foot b{display:block}
+.cal-foot span{font-size:.9rem;color:var(--ok);font-weight:600}
+.cal-foot span.nudge{color:var(--gold-text);font-weight:500}
+.cal-actions{display:flex;gap:8px}
+@media (max-width:700px){
+  #cal{width:100vw;max-width:100vw;margin:auto 0 0;border-radius:20px 20px 0 0;max-height:92vh}
+  .cal-months{grid-template-columns:1fr}
+}
+
+/* vehicle details */
+#detail{width:min(1080px,calc(100vw - 24px));max-height:calc(100vh - 24px);border-radius:20px;overflow:hidden}
+.dt{display:grid;grid-template-columns:1.25fr 1fr;height:min(760px,calc(100vh - 24px))}
+.dt-media{background:#fff;display:flex;flex-direction:column;min-height:0;overflow:hidden;border-right:1px solid var(--line)}
+.dt-main .g-btn{z-index:2}
+.dt-main{position:relative;flex:1;min-height:0;background:#fff;display:flex;align-items:center;justify-content:center;padding:16px 16px 8px}
+.frame{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 6px 20px -10px rgba(21,19,15,.35)}
+.frame img{display:block;width:100%;height:100%;cursor:zoom-in}
+.dt-main .g-count{right:12px;bottom:12px}
+.dt-main .zoom-hint{left:12px;bottom:12px}
+.thumbs{display:flex;gap:8px;padding:8px 16px 16px;overflow-x:auto;background:#fff}
+.thumbs button{flex:none;width:78px;height:58px;border-radius:8px;overflow:hidden;border:2px solid transparent;padding:0;cursor:pointer;background:none;opacity:.6;border-radius:10px}
+.thumbs button[aria-current="true"]{border-color:var(--gold);opacity:1}
+.thumbs button:hover{opacity:1}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+.dt-info{display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+.dt-top{position:sticky;top:0;background:var(--paper);display:flex;justify-content:flex-end;padding:12px 12px 0;z-index:1}
+.dt-body{padding:0 28px 20px;display:grid;gap:14px}
+.dt-body h3{font-size:2rem}
+.dt-price{display:flex;align-items:baseline;gap:6px}
+.dt-price b{font-family:var(--serif);font-weight:400;font-size:2.2rem}
+.dt-price span{color:var(--ink-2)}
+.dt-body p{margin:0;color:var(--ink-2)}
+.dt-body h4{margin:6px 0 0;font-size:1rem}
+.dt-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dt-facts div{background:var(--ivory);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.dt-facts small{display:block;color:var(--ink-3);font-size:.8rem}
+.dt-facts b{font-weight:600}
+.dt-foot{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
+@media (max-width:820px){
+  #detail{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}
+  .dt{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:100vh;max-height:100vh}
+  .dt-main{min-height:0;aspect-ratio:4/3;flex:none}
+  .dt-info{overflow-y:auto}
+  .dt-body{padding:0 18px 18px}
+  .dt-foot{padding:12px 18px}
+  .dt-top{position:absolute;top:10px;right:10px;padding:0;background:none}
+}
+
+/* lightbox */
+#lb{width:100vw;height:100vh;max-width:none;max-height:none;border-radius:0;background:#fff;color:var(--ink);margin:0}
+#lb::backdrop{background:#fff}
+.lb-stage{position:absolute;inset:72px 16px 56px;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center}
+.lb-stage img{display:block;border-radius:18px;transform-origin:0 0;cursor:zoom-in;user-select:none;-webkit-user-drag:none}
+.lb-stage.zoomed img{cursor:grab}
+.lb-stage.dragging img{cursor:grabbing}
+.lb-bar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fff;z-index:2}
+.lb-bar .t{margin-right:auto;font-weight:600}
+.lb-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.1);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lb-btn:hover{background:var(--cream)}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2}
+.lb-prev{left:12px}.lb-next{right:12px}
+.lb-count{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:var(--cream);color:var(--ink);padding:4px 12px;border-radius:999px;font-size:.88rem;z-index:2}
+
+/* footer */
+.foot{background:var(--navy);color:var(--on-navy);padding:64px 0 40px}
+.foot-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:40px}
+.foot .plate{display:inline-block;background:var(--ivory);border-radius:8px;padding:6px}
+.foot .plate img{height:56px}
+.foot h3{font-family:var(--sans);font-weight:600;font-size:1rem;color:var(--gold-bright);margin-bottom:12px}
+.foot p,.foot li{color:var(--on-navy-2);margin:0}
+.foot ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.foot a{color:var(--on-navy);text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.foot .cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.foot .btn-line{border-color:var(--on-navy);color:var(--on-navy)}
+.foot .btn-line:hover{background:var(--on-navy);color:var(--navy)}
+.legal{margin-top:48px;padding-top:24px;border-top:1px solid var(--navy-2);font-size:.88rem;color:var(--on-navy-2);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:760px){.foot-grid{grid-template-columns:1fr}}
+
+/* booking dialog */
+dialog{border:0;padding:0;border-radius:18px;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px);background:var(--paper);color:var(--ink);box-shadow:0 40px 80px -20px rgba(0,0,0,.45)}
+dialog::backdrop{background:rgba(15,26,52,.6)}
+.dlg-head{display:flex;gap:14px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+.dlg-head img{width:84px;height:64px;object-fit:cover;border-radius:10px}
+.dlg-head h3{font-size:1.45rem}
+.dlg-head p{margin:2px 0 0;color:var(--ink-2);font-size:.92rem}
+.x{margin-left:auto;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.dlg-body{padding:20px;display:grid;gap:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ctl label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+.ctl input,.ctl select{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:var(--radius-ctl);padding:0 12px;background:var(--paper)}
+.ctl input:focus,.ctl select:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(218,163,54,.25)}
+.ctl .help{font-size:.84rem;color:var(--ink-3);margin:6px 0 0}
+.ctl .err{font-size:.86rem;color:#A3321F;margin:6px 0 0;display:none}
+.ctl.bad input{border-color:#A3321F}
+.ctl.bad .err{display:block}
+.quote-box{background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.quote-box div{display:flex;justify-content:space-between;gap:12px;padding:4px 0;color:var(--ink-2)}
+.quote-box .sum{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;color:var(--ink);font-weight:700;font-size:1.08rem}
+.fine{font-size:.85rem;color:var(--ink-3);margin:0}
+.dlg-foot{padding:0 20px 20px}
+.cal-grid button.booked{color:#B9AF9C;text-decoration:line-through;background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(185,175,156,.18) 5px 7px)}
+.unavail{display:inline-block;font-size:.78rem;font-weight:700;color:#8A2D14;background:#FBE3D9;border-radius:999px;padding:2px 10px}
+.notice.err{background:#FBE3D9;color:#8A2D14}
+.btn.loading{position:relative;color:transparent!important}
+.btn.loading::after{content:"";position:absolute;width:20px;height:20px;border:2.5px solid var(--ink);border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.btn.loading::after{animation-duration:2s}}
+.btn.loading .lbl-loading{position:absolute;inset:auto}
+#done{width:min(520px,calc(100vw - 24px));border-radius:20px;padding:0}
+.done-body{padding:28px;display:grid;gap:14px;text-align:center}
+.done-body h3{font-size:1.9rem}
+.done-body p{margin:0;color:var(--ink-2)}
+.done-mark{width:64px;height:64px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;background:#E3F0E2;color:var(--ok)}
+.done-mark.wait{background:var(--cream);color:var(--gold-text)}
+.done-mark.bad{background:#FBE3D9;color:#8A2D14}
+.done-sum{text-align:left;background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.done-sum div{display:flex;justify-content:space-between;gap:12px;padding:4px 0;color:var(--ink-2)}
+.done-sum div b{color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--ivory);padding:12px 18px;border-radius:12px;z-index:60;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.notice{background:var(--cream);border-radius:10px;padding:12px 14px;font-size:.92rem;color:var(--ink-2)}
+@media (max-width:520px){.row2{grid-template-columns:1fr}}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Ace Fares, home">
+      <img src="images/logo@2x.png" alt="Ace Fares, DFW rental car company" width="130" height="56">
+    </a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="nav" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="#fleet">Our fleet</a>
+      <a href="#how">How it works</a>
+      <a href="#delivery">Delivery &amp; airport</a>
+      <a href="#faq">FAQ</a>
+      <a href="#host" class="host-link">Become a host</a>
+    </nav>
+    <a class="btn btn-ink" href="#fleet">Book a car</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="banner">
+        <img src="images/hero.webp" srcset="images/hero-sm.webp 1000w, images/hero.webp 2000w" sizes="100vw" alt="Black Cadillac Escalade parked in a Dallas driveway" width="2000" height="1296" fetchpriority="high">
+        <div class="banner-inner">
+          <h1 id="hero-title">Drive something worth arriving in.</h1>
+          <p class="sub">Cadillacs, a BMW convertible and a Honda Odyssey van, rented straight from a Dallas owner. Pick up in Dallas, or have the car brought to you.</p>
+          <form class="search" id="search" novalidate>
+            <div class="field">
+              <label for="s-loc">Where</label>
+              <select id="s-loc"></select>
+            </div>
+            <div class="field">
+              <span class="lbl" id="l-from">From</span>
+              <div class="pair">
+                <input type="hidden" id="s-from"><button type="button" class="date-btn" id="s-from-btn" data-cal="search" aria-labelledby="l-from s-from-btn">Add date</button>
+                <select id="s-from-t" aria-label="Pickup time"></select>
+              </div>
+            </div>
+            <div class="field">
+              <span class="lbl" id="l-to">Until</span>
+              <div class="pair">
+                <input type="hidden" id="s-to"><button type="button" class="date-btn" id="s-to-btn" data-cal="search" aria-labelledby="l-to s-to-btn">Add date</button>
+                <select id="s-to-t" aria-label="Return time"></select>
+              </div>
+            </div>
+            <button class="btn btn-gold go" type="submit" aria-label="Search cars">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Search cars</span>
+            </button>
+          </form>
+          <p class="search-error" id="search-error" role="alert"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fleet" id="fleet" aria-labelledby="fleet-title">
+    <div class="wrap">
+      <div class="fleet-head">
+        <div>
+          <h2 id="fleet-title">Our fleet</h2>
+          <p class="lede">Every car is cleaned and checked before each trip. Prices are per day, with miles included.</p>
+        </div>
+        <div class="chips" role="group" aria-label="Filter cars">
+          <button class="chip" data-filter="all" aria-pressed="true">All cars</button>
+          <button class="chip" data-filter="suv" aria-pressed="false">SUVs</button>
+          <button class="chip" data-filter="van" aria-pressed="false">Van</button>
+          <button class="chip" data-filter="convertible" aria-pressed="false">Convertible</button>
+        </div>
+      </div>
+      <p class="trip-note" id="trip-note" aria-live="polite"></p>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="how" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <h2 id="how-title">How it works</h2>
+      <p class="lede">No rental counter and no line. You deal with the owner from booking to return.</p>
+      <ol class="steps">
+        <li><h3>Choose your car and dates</h3><p>Pick a car from the fleet, set your trip dates and choose pickup or delivery. You see the full price before you pay.</p></li>
+        <li><h3>Book and pay online</h3><p>Checkout is handled securely by Stripe. You get a confirmation by email, and we text you to set a handoff time.</p></li>
+        <li><h3>Pick up and drive</h3><p>Meet us at the car or get it delivered. At the end of your trip, return it to the same spot with the same fuel level.</p></li>
+      </ol>
+      <div class="needs">
+        <h3>What you'll need</h3>
+        <ul id="needs"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="delivery" id="delivery" aria-labelledby="deliv-title">
+    <div class="wrap deliv-grid">
+      <div>
+        <h2 id="deliv-title">Delivery &amp; airport</h2>
+        <p class="lede">Flying into Dallas? We can meet you at DFW International with the car ready, so you skip the shuttle and the rental lot.</p>
+        <p class="areas" id="areas"></p>
+        <a class="btn btn-line" href="#fleet" style="margin-top:12px">Choose a car</a>
+      </div>
+      <ul class="places" id="places"></ul>
+    </div>
+  </section>
+
+  <section class="trust" id="faq" aria-labelledby="faq-title">
+    <div class="wrap faq-wrap">
+      <h2 id="faq-title">Questions, answered</h2>
+      <div class="faq" id="faq-list"></div>
+    </div>
+  </section>
+</main>
+
+<main id="host" class="host-page" hidden>
+  <section class="host" aria-labelledby="host-title">
+    <div class="wrap host-grid">
+      <div>
+        <a class="back" href="#top"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Back to rentals</a>
+        <h2 id="host-title">Become a host and start earning</h2>
+        <p class="lede">Have a car that sits more than it drives? List it with Ace Fares and let it earn money while you're not using it.</p>
+        <ul class="host-points">
+          <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span><div><b>We find the renters</b><span>Your car is listed on our website and promoted on our Instagram and TikTok.</span></div></li>
+          <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div><b>You choose when it's available</b><span>Tell us which days your car is free, and keep it for yourself the rest of the time.</span></div></li>
+          <li><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2.2 2.8 5 3.3 5 1.4 5 3.4-2.2 3.3-5 3.3-5-1.3-5-3.3"/></svg></span><div><b>You get paid for every trip</b><span>We handle bookings and renter questions, and you earn from each rental.</span></div></li>
+        </ul>
+      </div>
+      <form class="host-form" id="host-form" novalidate>
+        <h3>Tell us about your car</h3>
+        <p class="fine">We'll review it and reach out within a few days.</p>
+        <div class="row2">
+          <div class="ctl" id="h-c-name"><label for="h-name">Your name</label><input id="h-name" autocomplete="name" required><p class="err">Enter your name.</p></div>
+          <div class="ctl" id="h-c-phone"><label for="h-phone">Phone</label><input id="h-phone" type="tel" autocomplete="tel" required><p class="err">Enter a phone number.</p></div>
+        </div>
+        <div class="ctl"><label for="h-email">Email</label><input id="h-email" type="email" autocomplete="email"></div>
+        <div class="row2">
+          <div class="ctl" id="h-c-car"><label for="h-car">Year, make and model</label><input id="h-car" placeholder="e.g. 2020 Toyota Camry" required><p class="err">Tell us which car.</p></div>
+          <div class="ctl"><label for="h-miles">Mileage</label><input id="h-miles" inputmode="numeric" placeholder="e.g. 45,000"></div>
+        </div>
+        <div class="ctl"><label for="h-note">Anything else? (optional)</label><textarea id="h-note" placeholder="Availability, features, questions"></textarea></div>
+        <button class="btn btn-gold btn-block" type="submit">Send my car details</button>
+        <p class="host-ok" id="host-ok" role="status">Thanks! Your email app should open with your details filled in. Press send and we'll be in touch.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="host-how">
+    <div class="wrap">
+      <h2>How hosting works</h2>
+      <ol class="steps">
+        <li><h3>Send your car details</h3><p>Fill out the form with your car and the best way to reach you.</p></li>
+        <li><h3>We review and set it up</h3><p>We look over the car, take photos and agree on availability with you.</p></li>
+        <li><h3>Start earning</h3><p>Your car goes live on Ace Fares, and you earn from every trip it takes.</p></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="plate"><img src="images/logo@2x.png" alt="Ace Fares" width="130" height="56"></span>
+        <p style="margin-top:16px;max-width:36ch">Car rentals direct from the owner, serving Dallas and the DFW area.</p>
+        <div class="cta-row" id="contact-ctas"></div>
+        <div class="social" id="social"></div>
+      </div>
+      <div>
+        <h3>Contact</h3>
+        <ul id="contact-list"></ul>
+      </div>
+      <div>
+        <h3>Explore</h3>
+        <ul>
+          <li><a href="#fleet">Our fleet</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#delivery">Delivery &amp; airport</a></li>
+          <li><a href="#host">Become a host</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="legal">
+      <span>&copy; <span id="yr"></span> Ace Fares Rental Company, Dallas, Texas</span>
+      <span>Payments processed securely by Stripe</span>
+    </div>
+  </div>
+</footer>
+
+<dialog id="detail" aria-labelledby="dt-title">
+  <div class="dt">
+    <div class="dt-media">
+      <div class="dt-main">
+        <button class="g-btn g-prev" type="button" id="dt-prev" aria-label="Previous photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button class="g-btn g-next" type="button" id="dt-next" aria-label="Next photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="frame" id="dt-frame"><img id="dt-img" src="" alt="">
+        <span class="zoom-hint" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></svg>Tap to zoom</span>
+        <span class="g-count" id="dt-count"></span></div>
+      </div>
+      <div class="thumbs" id="dt-thumbs"></div>
+    </div>
+    <div class="dt-info">
+      <div class="dt-top"><button class="x" type="button" id="dt-close" aria-label="Close details"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="dt-body" id="dt-body"></div>
+      <div class="dt-foot">
+        <span class="total" id="dt-total"></span>
+        <button class="btn btn-gold" type="button" id="dt-book">Book this car</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="done" aria-labelledby="done-title">
+  <div class="done-body">
+    <span class="done-mark" id="done-mark" aria-hidden="true"></span>
+    <h3 id="done-title"></h3>
+    <p id="done-text" role="status"></p>
+    <div class="done-sum" id="done-sum" hidden></div>
+    <button class="btn btn-ink btn-block" type="button" id="done-close">Done</button>
+  </div>
+</dialog>
+
+<dialog id="cal" aria-labelledby="cal-title">
+  <div class="cal-head">
+    <h3 id="cal-title">Choose your dates</h3>
+    <button class="x" type="button" id="cal-close" aria-label="Close calendar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <p class="cal-step" id="cal-step">Tap your pickup date</p>
+  <div class="cal-nav">
+    <button class="g-btn" type="button" id="cal-prev" aria-label="Previous month"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button class="g-btn" type="button" id="cal-next" aria-label="Next month"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+  <div class="cal-months" id="cal-months"></div>
+  <div class="cal-foot">
+    <div><b id="cal-sum">No dates chosen</b><span id="cal-save"></span></div>
+    <div class="cal-actions"><button class="btn btn-line" type="button" id="cal-clear">Clear</button><button class="btn btn-ink" type="button" id="cal-done">Done</button></div>
+  </div>
+</dialog>
+
+<dialog id="lb" aria-label="Photo viewer">
+  <div class="lb-stage" id="lb-stage"><img id="lb-img" src="" alt="" draggable="false"></div>
+  <div class="lb-bar">
+    <span class="t" id="lb-title"></span>
+    <button class="lb-btn" type="button" id="lb-out" aria-label="Zoom out"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M8 11h6"/></svg></button>
+    <button class="lb-btn" type="button" id="lb-in" aria-label="Zoom in"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></svg></button>
+    <button class="lb-btn" type="button" id="lb-close" aria-label="Close photo viewer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <button class="lb-btn lb-nav lb-prev" type="button" id="lb-prev" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <button class="lb-btn lb-nav lb-next" type="button" id="lb-next" aria-label="Next photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+  <span class="lb-count" id="lb-count"></span>
+</dialog>
+
+<dialog id="book" aria-labelledby="book-title">
+  <form method="dialog" id="book-form" novalidate>
+    <div class="dlg-head">
+      <img id="b-img" src="" alt="">
+      <div>
+        <h3 id="book-title"></h3>
+        <p id="b-sub"></p>
+      </div>
+      <button class="x" type="button" id="b-close" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="dlg-body">
+      <div class="row2 own-only">
+        <div class="ctl" id="c-from"><span class="lab" id="lb-from">Start date</span><input type="hidden" id="b-from"><button type="button" class="date-ctl" id="b-from-btn" data-cal="book" aria-labelledby="lb-from b-from-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Choose date</span></button><p class="err">Choose your trip dates.</p></div>
+        <div class="ctl" id="c-to"><span class="lab" id="lb-to">End date</span><input type="hidden" id="b-to"><button type="button" class="date-ctl" id="b-to-btn" data-cal="book" aria-labelledby="lb-to b-to-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Choose date</span></button><p class="err">Choose a return date.</p></div>
+      </div>
+      <div class="row2 own-only">
+        <div class="ctl"><label for="b-from-t">Pickup time</label><select id="b-from-t"></select></div>
+        <div class="ctl"><label for="b-to-t">Return time</label><select id="b-to-t"></select></div>
+      </div>
+      <div class="ctl own-only">
+        <label for="b-loc">Pickup or delivery</label>
+        <select id="b-loc"></select>
+        <p class="help" id="b-loc-help"></p>
+      </div>
+      <div class="deals small" id="b-deals">
+        <div class="deal" data-min="3"><b>10% off</b><span>3+ days</span></div>
+        <div class="deal" data-min="30"><b>25% off</b><span>Monthly, 30+ days</span></div>
+      </div>
+      <div class="quote-box own-only" id="b-quote" aria-live="polite"></div>
+      <div class="notice" id="b-notice" hidden></div>
+      <p class="fine" id="b-fine"></p>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-gold btn-block" type="submit" id="b-go">Continue to secure checkout</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* =====================================================================
+   SITE SETTINGS: edit this block to update the site.
+   Anything marked TODO needs your real information before going live.
+   ===================================================================== */
+const SITE = {
+  phone: "(972) 994-6413",
+  email: "acefaresrental@gmail.com",
+  minAge: 21,
+  instagram: "https://www.instagram.com/acefaresrental/",
+  tiktok: "https://www.tiktok.com/@acefares_rental",
+
+  // Online booking server (Netlify functions). If it can't be reached, booking falls back to "Text us to book".
+  api: "/api",
+  // Texas motor vehicle rental tax: 10% for 1-30 days, 6.25% for 31-180 days, after discounts (must match lib/catalog.mjs)
+  tax: { shortPct: 10, longPct: 6.25, shortMaxDays: 30, includesFees: true },
+
+  // Where renters can get the car. fee: number = flat fee, 0 = free, null = "quoted when we confirm"
+  locations: [
+    { id:"dallas-pickup",   name:"Dallas pickup",             note:"Meet at the car in Dallas",             fee:0,    cars:["srx","escalade","bmw","van"] },
+    { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:100,  cars:["srx","escalade","bmw","van"] },
+    { id:"dfw",             name:"DFW International Airport", note:"Meet at arrivals, any terminal",        fee:125,  cars:["srx","escalade","bmw","van"] },
+  ],
+  // Discounts on the rental price (not delivery fees). The biggest one that applies is used.
+  discounts: [ { minDays:30, pct:25, label:"Monthly discount" }, { minDays:3, pct:10, label:"3+ day discount" } ],
+  serviceAreas: "Dallas, Plano, Frisco, Richardson, Irving and the rest of DFW.", // TODO confirm
+
+  // Paste real reviews here (copy them from Turo or Google). Delete the sample lines, or set sample:false on real ones.
+  reviews: [
+    { sample:true, stars:5, text:"Write a real renter's review here, such as what they said about the car and the handoff.", name:"Renter's first name", car:"Cadillac Escalade" },
+    { sample:true, stars:5, text:"Write a real renter's review here, such as what they said about the car and the handoff.", name:"Renter's first name", car:"BMW 650i Convertible" },
+    { sample:true, stars:5, text:"Write a real renter's review here, such as what they said about the car and the handoff.", name:"Renter's first name", car:"Cadillac SRX" }
+  ]
+};
+
+const CARS = [
+  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", price:400, miles:100,
+    location:"Dallas, TX", rating:4.8, reviews:14, seats:8, color:"Midnight Black",
+    desc:"Seats 8 in first-class comfort, with heated and ventilated seats, a panoramic sunroof, AKG Studio Reference sound and a 38-inch curved OLED display. Made for group trips, airport runs and big arrivals.",
+    features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Third row","8-passenger seating","Sunroof","Premium sound","100 miles/day included"],
+    tags:["Seats 8","Third row","Sunroof","Premium sound"],
+    photos:[["escalade-1","Front of the black Cadillac Escalade"],["escalade-2","Escalade front grille and headlights"],["escalade-3","Escalade driver's seat and curved display"],["escalade-4","Escalade second-row seats with screens"]], },
+  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", price:59, miles:200,
+    location:"Dallas, TX", rating:5, reviews:0, seats:5, color:"Champagne Silver",
+    desc:"A sleek crossover with Cadillac comfort for everyday driving. Heated leather seats, a panoramic sunroof, premium sound and a smooth ride for work trips or weekends away.",
+    features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Sunroof","Leather interior","AWD","Premium sound","Roof rack","200 miles/day included"],
+    tags:["200 mi/day","AWD","Leather","Roof rack"],
+    photos:[["srx-1","Champagne Cadillac SRX, front three-quarter view"],["srx-2","Cadillac SRX rear with roof rack"],["srx-3","SRX front seats and dashboard"],["srx-4","SRX rear leather seats"],["srx-5","SRX cargo area"]], },
+  { id:"bmw", name:"BMW 650i xDrive Convertible", year:null, type:"convertible", price:350, miles:100,
+    location:"Dallas, TX", rating:5, reviews:0, seats:4, color:"Montego Blue",
+    desc:"Drop the top and enjoy the DFW sun. Twin-turbo 4.4L V8, xDrive all-wheel drive, sport-tuned suspension and cognac leather. Made for date nights, weekend drives and arriving in style.",
+    features:["AC","Bluetooth","GPS","Backup camera","Convertible top","Heated seats","Cognac leather interior","Premium sound","xDrive AWD","100 miles/day included"],
+    tags:["Convertible","V8","Cognac leather","AWD"],
+    photos:[["bmw-1","Blue BMW 650i convertible with the top down"],["bmw-2","BMW 650i front view"],["bmw-3","BMW 650i rear three-quarter view"],["bmw-4","BMW 650i rear view, top down"],["bmw-5","BMW cognac leather front seats"],["bmw-6","BMW cognac leather rear seats"]], }
+  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", price:59, miles:200,
+    location:"Dallas, TX", rating:5, reviews:0, seats:8, color:"Lunar Silver",
+    desc:"The family hauler for DFW. Seats 8 with heated leather seats, tri-zone climate control and Magic Slide second-row seats. A 280 hp V6, Honda Sensing safety features, and Apple CarPlay and Android Auto make every mile easy.",
+    features:["AC","Bluetooth","GPS","Backup camera","Heated seats","8-passenger seating","Leather interior","Sliding doors","Magic Slide 2nd row","Honda Sensing safety suite","Apple CarPlay / Android Auto","Tri-zone climate control","9-speed automatic","280 hp V6","200 miles/day included"],
+    tags:["Van","Seats 8","200 mi/day","CarPlay"],
+    photos:[["van-1","Silver Honda Odyssey, front three-quarter view"],["van-2","Honda Odyssey front and driver's side"],["van-3","Honda Odyssey rear three-quarter view"],["van-4","Honda Odyssey rear and tail lights"],["van-5","Odyssey front seats and dashboard"],["van-6","Odyssey second-row seats"]], }
+];
+
+const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
+  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100 and DFW Airport handoff is $125. Both are shown in your trip total before you pay."],
+  ["What if I drive more than the included miles?","Extra miles are charged per mile after your trip. Ask us for the rate before you book if you're planning a long drive."],
+  ["Do I need my own insurance?","Yes, please have proof of your current auto insurance ready. We'll check it when we confirm your booking."],
+  ["How old do I need to be?",`Drivers must be at least ${SITE.minAge} years old with a valid driver's license.`],
+  ["Can you meet me at the airport?","Yes. We can hand the car over at DFW International Airport. Share your flight details when we confirm and we'll be there when you land."],
+  ["How do tolls work?","Many Dallas highways are toll roads. Any tolls charged during your trip are added to your final bill after the car is returned."],
+  ["Do you offer discounts for longer rentals?","Yes. Rentals of 3 days or more get 10% off the rental price, and rentals of 30 days or more get 25% off. The discount is applied automatically when you choose your dates."],
+  ["Can I rent out my own car through Ace Fares?","Yes. Fill out the form in the Become a host section and we'll get back to you about listing your car."],
+  ["What if I need to cancel?","Contact us as soon as possible. We'll confirm the cancellation terms with you when your booking is confirmed."]
+];
+
+/* ===================== site code below, no need to edit ===================== */
+const $ = (s, r=document) => r.querySelector(s);
+const fmt = n => "$" + n.toLocaleString("en-US");
+const money = d => "$" + d.toLocaleString("en-US", { minimumFractionDigits: Math.round(d * 100) % 100 ? 2 : 0, maximumFractionDigits: 2 });
+const SPADE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C9 6 3 9.5 3 14a4.5 4.5 0 0 0 7.6 3.2C10.2 19 9.4 20.6 8 22h8c-1.4-1.4-2.2-3-2.6-4.8A4.5 4.5 0 0 0 21 14c0-4.5-6-8-9-12z"/></svg>';
+const STAR = '<svg viewBox="0 0 24 24" class="star" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
+const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+const SEAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/></svg>';
+const CHEV = d => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+
+const state = { from:"", to:"", loc:"", filter:"all", fromT:"10:00", toT:"10:00" };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const today = () => { const d=new Date(); d.setHours(0,0,0,0); return d; };
+const days = (a,b) => Math.round((new Date(b) - new Date(a)) / 864e5);
+const nice = s => new Date(s+"T12:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+
+/* pricing with discounts */
+function priceFor(car, n){
+  const sub = car.price * n;
+  const d = SITE.discounts.find(x => n >= x.minDays);
+  const off = d ? Math.round(sub * d.pct) / 100 : 0;   // rounded to the cent, same as the server
+  return { sub, off, total: Math.round((sub - off) * 100) / 100, d };
+}
+const totalHTML = (car, n) => {
+  if (!n) return `<b>${fmt(car.price)}</b> / day`;
+  const q = priceFor(car, n);
+  return `${q.off ? `<s>${money(q.sub)}</s> ` : ""}<b>${money(q.total)}</b> for ${n} day${n>1?"s":""}${q.d ? ` <span class="save">${q.d.pct}% off</span>` : ""}`;
+};
+
+/* header menu */
+const menuBtn = $(".menu-btn"), nav = $("#nav");
+menuBtn.addEventListener("click", () => { const o = nav.classList.toggle("open"); menuBtn.setAttribute("aria-expanded", o); menuBtn.setAttribute("aria-label", o ? "Close menu" : "Open menu"); });
+nav.addEventListener("click", e => { if (e.target.tagName === "A") { nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", false); } });
+
+/* hero search */
+const sLoc = $("#s-loc"), sFrom = $("#s-from"), sTo = $("#s-to"), sFromT = $("#s-from-t"), sToT = $("#s-to-t");
+const TIMES = []; for (let m = 6*60; m <= 22*60; m += 30) { const h = Math.floor(m/60), mm = m%60; TIMES.push([`${String(h).padStart(2,"0")}:${mm?"30":"00"}`, `${(h%12)||12}:${mm?"30":"00"} ${h<12?"AM":"PM"}`]); }
+const timeOpts = TIMES.map(([v,l]) => `<option value="${v}">${l}</option>`).join("");
+const tLabel = v => (TIMES.find(t => t[0] === v) || ["",""])[1];
+[sFromT, sToT].forEach(el => { el.innerHTML = timeOpts; el.value = "10:00"; });
+sLoc.innerHTML = '<option value="">Any location</option>' + SITE.locations.map(l => `<option value="${l.id}">${l.name}</option>`).join("");
+const minDate = iso(today());
+function paintDateBtns(){
+  [["s-from-btn",sFrom],["s-to-btn",sTo]].forEach(([id,inp]) => { const b = $("#"+id); b.textContent = inp.value ? nice(inp.value) : "Add date"; b.classList.toggle("empty", !inp.value); });
+  [["b-from-btn","b-from"],["b-to-btn","b-to"]].forEach(([id,i]) => { const b = $("#"+id), v = $("#"+i).value; b.querySelector("span").textContent = v ? new Date(v+"T12:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}) : "Choose date"; b.classList.toggle("empty", !v); });
+}
+
+/* range calendar */
+const cal = $("#cal"); let calT = null, calA = "", calB = "", calView = null;
+const CAL_T = {
+  search: { get:() => [sFrom.value, sTo.value], set:(a,b) => { sFrom.value = a; sTo.value = b; $("#search-error").textContent = ""; } },
+  book:   { get:() => [$("#b-from").value, $("#b-to").value], set:(a,b) => { $("#b-from").value = a; $("#b-to").value = b; ["c-from","c-to"].forEach(i => $("#"+i).classList.remove("bad")); updateQuote(); } }
+};
+let calKind = "search";
+function openCal(kind){
+  calKind = kind; calT = CAL_T[kind]; [calA, calB] = calT.get();
+  const base = calA ? new Date(calA+"T12:00") : today();
+  calView = new Date(base.getFullYear(), base.getMonth(), 1);
+  renderCal(); cal.showModal();
+}
+function renderCal(){
+  const months = innerWidth > 700 ? 2 : 1, tdy = iso(today());
+  let html = "";
+  for (let m = 0; m < months; m++) {
+    const first = new Date(calView.getFullYear(), calView.getMonth() + m, 1);
+    const dim = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    html += `<div class="cal-month"><h4>${first.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</h4><div class="cal-grid">`;
+    html += ["S","M","T","W","T","F","S"].map(d => `<span class="wd" aria-hidden="true">${d}</span>`).join("");
+    html += "<span></span>".repeat(first.getDay());
+    const blocked = calKind === "book" && current ? bookedSet(current.id) : null;
+    const limit = blocked && calA && !calB ? nextBlockedAfter(blocked, calA) : null;
+    for (let d = 1; d <= dim; d++) {
+      const v = iso(new Date(first.getFullYear(), first.getMonth(), d));
+      const isBooked = blocked && blocked.has(v), beyond = limit && v >= limit;
+      const cls = [v === tdy ? "today" : "", v === calA ? "start" + (calB ? " has-end" : "") : "", v === calB ? "end" : "", calA && calB && v > calA && v < calB ? "in" : ""].join(" ");
+      const label = new Date(v+"T12:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+      html += `<button type="button" class="${cls}${isBooked ? " booked" : ""}" data-d="${v}" ${v < tdy || isBooked || beyond ? "disabled" : ""} aria-label="${label}${isBooked ? ", booked" : ""}" aria-pressed="${v === calA || v === calB}">${d}</button>`;
+    }
+    html += "</div></div>";
+  }
+  $("#cal-months").innerHTML = html;
+  const thisMonth = new Date(today().getFullYear(), today().getMonth(), 1);
+  $("#cal-prev").disabled = calView <= thisMonth;
+  const n = calA && calB ? days(calA, calB) : 0;
+  $("#cal-step").textContent = calKind === "book" && ONLINE.state === "loading" ? "Checking which dates are free..." : !calA ? "Tap your pickup date" : !calB ? "Now tap your return date" : "Tap Done to use these dates, or tap a new pickup date";
+  $("#cal-sum").textContent = n ? `${nice(calA)} to ${nice(calB)}, ${n} day${n>1?"s":""}` : calA ? `Pickup ${nice(calA)}` : "No dates chosen";
+  const save = $("#cal-save"), d = SITE.discounts.find(x => n >= x.minDays);
+  save.className = "";
+  if (d) save.textContent = `${d.label}: ${d.pct}% off`;
+  else if (n) { save.textContent = `Add ${3 - n} more day${3-n>1?"s":""} to save 10%`; save.className = "nudge"; }
+  else save.textContent = "";
+}
+$("#cal-months").addEventListener("click", e => {
+  const b = e.target.closest("button[data-d]"); if (!b || b.disabled) return;
+  const v = b.dataset.d;
+  if (!calA || calB || v <= calA) { calA = v; calB = ""; } else calB = v;
+  renderCal();
+  const nb = $(`#cal-months button[data-d="${v}"]`); if (nb) nb.focus();
+});
+$("#cal-prev").addEventListener("click", () => { calView = new Date(calView.getFullYear(), calView.getMonth() - 1, 1); renderCal(); });
+$("#cal-next").addEventListener("click", () => { calView = new Date(calView.getFullYear(), calView.getMonth() + 1, 1); renderCal(); });
+$("#cal-clear").addEventListener("click", () => { calA = calB = ""; renderCal(); });
+$("#cal-close").addEventListener("click", () => cal.close());
+cal.addEventListener("click", e => { if (e.target === cal) cal.close(); });
+$("#cal-done").addEventListener("click", () => {
+  if (calA && !calB) { $("#cal-step").textContent = "Choose a return date to finish"; return; }
+  calT.set(calA, calB); paintDateBtns(); cal.close();
+});
+document.addEventListener("click", e => { const b = e.target.closest("[data-cal]"); if (b) openCal(b.dataset.cal); });
+$("#search").addEventListener("submit", e => {
+  e.preventDefault();
+  const err = $("#search-error");
+  if (!sFrom.value || !sTo.value) { err.textContent = "Choose both dates to see trip prices."; return; }
+  if (sTo.value <= sFrom.value) { err.textContent = "The end date needs to be after the start date."; return; }
+  err.textContent = "";
+  Object.assign(state, { from:sFrom.value, to:sTo.value, loc:sLoc.value, fromT:sFromT.value, toT:sToT.value });
+  renderFleet();
+  $("#fleet").scrollIntoView();
+});
+
+/* fleet */
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
+  document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c));
+  state.filter = c.dataset.filter; renderFleet();
+}));
+
+function locsFor(car){ return SITE.locations.filter(l => l.cars.includes(car.id)); }
+
+function renderFleet(){
+  const loc = SITE.locations.find(l => l.id === state.loc);
+  let list = CARS.filter(c => state.filter === "all" || c.type === state.filter);
+  if (loc) list = list.filter(c => loc.cars.includes(c.id));
+  const n = state.from && state.to ? days(state.from, state.to) : 0;
+  const note = $("#trip-note");
+  if (n) { note.textContent = `Showing prices for ${nice(state.from)} to ${nice(state.to)} (${n} day${n>1?"s":""})${loc ? ", " + loc.name : ""}.`; note.classList.add("show"); }
+  else note.classList.remove("show");
+  const grid = $("#grid");
+  if (!list.length) { grid.innerHTML = `<p>No cars match that filter. <button class="btn btn-line" onclick="document.querySelector('[data-filter=all]').click()">Show all cars</button></p>`; return; }
+  grid.innerHTML = list.map(car => `
+    <article class="car" data-id="${car.id}">
+      <div class="gallery" data-i="0">
+        <img src="images/${car.photos[0][0]}.webp" alt="${car.photos[0][1]}" loading="lazy" width="1200" height="1600" >
+        <span class="index" aria-hidden="true"><b>${fmt(car.price)}</b><small>per day</small>${SPADE}</span>
+        <button class="g-btn g-prev" type="button" aria-label="Previous photo of ${car.name}">${CHEV("M15 6l-6 6 6 6")}</button>
+        <button class="g-btn g-next" type="button" aria-label="Next photo of ${car.name}">${CHEV("M9 6l6 6-6 6")}</button>
+        <span class="g-count">1 / ${car.photos.length}</span>
+      </div>
+      <div class="car-body">
+        <div class="car-title"><h3><button class="open" type="button" data-open="${car.id}">${car.year ? car.year + " " : ""}${car.name}</button></h3></div>
+        <div class="meta">
+          <span>${STAR}${car.reviews ? `${car.rating} <span style="color:var(--ink-3)">(${car.reviews} trips)</span>` : "New listing"}</span>
+          <span>${PIN}${car.location}</span>
+          <span>${SEAT}${car.seats} seats</span>
+        </div>
+        <p class="desc">${car.desc}</p>
+        <ul class="feat">${car.tags.map(t => `<li>${t}</li>`).join("")}</ul>
+        <div class="car-foot">
+          <span class="total">${n && carBusy(car.id, state.from, state.to) ? '<span class="unavail">Booked for these dates</span>' : totalHTML(car, n)}</span>
+          <button class="btn btn-ink" type="button" data-book="${car.id}">Book this car</button>
+        </div>
+        <span class="more" aria-hidden="true">View details</span>
+      </div>
+    </article>`).join("");
+}
+
+$("#grid").addEventListener("click", e => {
+  const g = e.target.closest(".g-btn");
+  if (g) {
+    const card = g.closest(".car"), car = CARS.find(c => c.id === card.dataset.id), gal = card.querySelector(".gallery");
+    let i = (+gal.dataset.i + (g.classList.contains("g-next") ? 1 : -1) + car.photos.length) % car.photos.length;
+    gal.dataset.i = i;
+    const img = gal.querySelector("img"); img.src = `images/${car.photos[i][0]}.webp`; img.alt = car.photos[i][1];
+    gal.querySelector(".g-count").textContent = `${i+1} / ${car.photos.length}`;
+    return;
+  }
+  const b = e.target.closest("[data-book]");
+  if (b) { openBooking(b.dataset.book); return; }
+  const card = e.target.closest(".car");
+  if (card) { const gal = card.querySelector(".gallery"); openDetail(card.dataset.id, +gal.dataset.i); }
+});
+
+/* booking */
+const dlg = $("#book"), bFrom = $("#b-from"), bTo = $("#b-to"), bLoc = $("#b-loc");
+let current = null;
+function openBooking(id){
+  current = CARS.find(c => c.id === id);
+  $("#book-title").textContent = current.name;
+  $("#b-sub").textContent = `${fmt(current.price)} per day, ${current.miles} miles/day included`;
+  $("#b-img").src = `images/${current.photos[0][0]}-sm.webp`;
+  const ls = locsFor(current);
+  bLoc.innerHTML = ls.map(l => `<option value="${l.id}">${l.name}${l.fee === 0 ? " (free)" : l.fee ? ` (+${fmt(l.fee)})` : " (fee quoted)"}</option>`).join("");
+  if (ls.some(l => l.id === state.loc)) bLoc.value = state.loc;
+  $("#b-from-t").innerHTML = timeOpts; $("#b-to-t").innerHTML = timeOpts;
+  $("#b-from-t").value = state.fromT; $("#b-to-t").value = state.toT;
+  bFrom.value = state.from; bTo.value = state.to; paintDateBtns();
+  ["c-from","c-to"].forEach(i => $("#"+i).classList.remove("bad"));
+  updateQuote();
+  dlg.showModal();
+}
+$("#b-close").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+bLoc.addEventListener("change", updateQuote);
+
+function updateQuote(){
+  const loc = SITE.locations.find(l => l.id === bLoc.value);
+  $("#b-loc-help").textContent = loc ? loc.note : "";
+  const n = bFrom.value && bTo.value && bTo.value > bFrom.value ? days(bFrom.value, bTo.value) : 0;
+  const fee = loc && loc.fee ? loc.fee : 0;
+  const q = priceFor(current, n || 0);
+  document.querySelectorAll("#b-deals .deal").forEach(el => el.classList.toggle("on", !!q.d && q.d.minDays === +el.dataset.min));
+  const taxPct = n <= SITE.tax.shortMaxDays ? SITE.tax.shortPct : SITE.tax.longPct;
+  const tax = Math.round(((q.total + (SITE.tax.includesFees ? fee : 0)) * taxPct)) / 100;
+  $("#b-quote").innerHTML = n
+    ? `<div><span>${fmt(current.price)} × ${n} day${n>1?"s":""}</span><span>${fmt(q.sub)}</span></div>
+       ${q.off ? `<div class="disc"><span>${q.d.label} (${q.d.pct}%)</span><span>−${money(q.off)}</span></div>` : n < 3 ? `<div class="hint"><span>Book 3 or more days to save 10%</span><span></span></div>` : ""}
+       <div><span>${loc ? loc.name : "Pickup"}</span><span>${fee ? fmt(fee) : "Free"}</span></div>
+       <div><span>Texas rental tax (${taxPct}%)</span><span>${money(tax)}</span></div>
+       <div><span>Miles included</span><span>${(current.miles*n).toLocaleString()} miles</span></div>
+       <div class="sum"><span>Trip total</span><span>${money(q.total + fee + tax)}</span></div>`
+    : `<div><span>Choose your dates to see the trip total.</span></div>`;
+  $("#b-fine").textContent = ONLINE.ready ? "You'll pay the trip total now through Stripe's secure checkout. Tolls and any extra miles are billed after the trip." : "Tolls and any extra miles are not included in the trip total.";
+  const go = $("#b-go"), notice = $("#b-notice");
+  go.disabled = false; go.classList.remove("loading");
+  notice.hidden = true; notice.classList.remove("err");
+  if (ONLINE.ready) {
+    go.textContent = "Book and pay securely";
+    if (n && carBusy(current.id, bFrom.value, bTo.value)) { notice.hidden = false; notice.classList.add("err"); notice.textContent = "This car is already booked for some of those dates. Choose different dates."; go.disabled = true; }
+  } else {
+    const contact = SITE.phone ? "text" : SITE.email ? "email" : "";
+    go.textContent = contact === "text" ? "Text us to book" : contact === "email" ? "Email us to book" : "Online booking opens soon";
+    if (!contact) { go.disabled = true; notice.hidden = false; notice.textContent = "Online checkout for this car is being set up. Please check back shortly."; }
+  }
+}
+
+
+$("#book-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const okFrom = !!bFrom.value, okTo = okFrom && bTo.value && bTo.value > bFrom.value;
+  $("#c-from").classList.toggle("bad", !okFrom); $("#c-to").classList.toggle("bad", !okTo);
+  if (!okFrom || !okTo) { openCal("book"); return; }
+  const loc = SITE.locations.find(l => l.id === bLoc.value);
+  const summary = `${current.name}, ${nice(bFrom.value)} at ${tLabel($("#b-from-t").value)} to ${nice(bTo.value)} at ${tLabel($("#b-to-t").value)}, ${loc.name}`;
+  if (ONLINE.ready) { startCheckout(loc); return; }
+  if (SITE.phone) {
+    location.href = `sms:${SITE.phone.replace(/[^\d+]/g, "")}?&body=${encodeURIComponent("Hi Ace Fares, I'd like to book: " + summary)}`;
+  } else if (SITE.email) {
+    location.href = `mailto:${SITE.email}?subject=${encodeURIComponent("Booking request: " + current.name)}&body=${encodeURIComponent("Hi Ace Fares, I'd like to book: " + summary)}`;
+  }
+});
+
+/* ===== Online booking (server + Stripe) =====
+   The server keeps the bookings and charges through Stripe. This page only
+   asks it which dates are taken and starts checkout. If the server can't be
+   reached (for example when the page is opened as a file), booking falls back
+   to "Text us to book". */
+const ONLINE = { state: "loading", ready: false, booked: {} };
+// a booked trip from..to blocks those days; with the 1-day turnaround a new trip
+// can start the day after a return and must end the day before a pickup
+function bookedSet(car){
+  const set = new Set();
+  for (const b of ONLINE.booked[car] || []) for (let d = new Date(b.from+"T12:00"); iso(d) <= b.to; d.setDate(d.getDate()+1)) set.add(iso(d));
+  return set;
+}
+function nextBlockedAfter(set, a){ let best = null; for (const d of set) if (d > a && (!best || d < best)) best = d; return best; }
+function carBusy(car, from, to){
+  if (!ONLINE.ready || !from || !to) return false;
+  return (ONLINE.booked[car] || []).some(b => !(days(b.to, from) >= 1 || days(to, b.from) >= 1));
+}
+async function api(path, opts = {}, ms = 10000){
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const res = await fetch(SITE.api + path, { ...opts, signal: ctl.signal, headers: { "content-type": "application/json", ...(opts.headers || {}) } });
+    let data = null; try { data = await res.json(); } catch {}
+    return { ok: res.ok, status: res.status, data: data || {} };
+  } finally { clearTimeout(t); }
+}
+async function loadAvailability(){
+  try {
+    if (location.protocol === "file:") throw new Error("opened as a file");
+    const r = await api("/availability", {}, 8000);
+    if (!r.ok || !r.data.cars) throw new Error("availability " + r.status);
+    ONLINE.booked = r.data.cars; ONLINE.ready = true; ONLINE.state = "ready";
+  } catch (e) {
+    ONLINE.state = "off"; ONLINE.ready = false;
+    console.info("[Ace Fares] online booking unavailable, using text booking:", e.message);
+  }
+  renderFleet();
+  if (dlg.open && current) updateQuote();
+  if (cal.open) renderCal();
+}
+async function startCheckout(loc){
+  const go = $("#b-go"), notice = $("#b-notice");
+  go.disabled = true; go.classList.add("loading"); notice.hidden = true; notice.classList.remove("err");
+  try {
+    const r = await api("/checkout", { method: "POST", body: JSON.stringify({ car: current.id, from: bFrom.value, to: bTo.value, fromTime: $("#b-from-t").value, toTime: $("#b-to-t").value, location: loc.id }) }, 20000);
+    if (r.ok && r.data.url) { location.href = r.data.url; return; }
+    if (r.status === 409) loadAvailability();
+    showBookErr(r.data.message || "Online checkout isn't available right now. Please try again, or text us to book.");
+  } catch (e) {
+    showBookErr("We couldn't reach our booking system. Check your connection and try again, or text us to book.");
+  }
+  go.disabled = false; go.classList.remove("loading");
+}
+function showBookErr(msg){
+  const n = $("#b-notice"); n.hidden = false; n.classList.add("err");
+  n.innerHTML = `${msg}${SITE.phone ? ` <a href="sms:${SITE.phone.replace(/[^\d+]/g, "")}">Text ${SITE.phone}</a>` : ""}`;
+}
+function toast(msg){
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 6000);
+}
+
+/* coming back from Stripe */
+const DONE_ICON = {
+  ok: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  wait: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  bad: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>'
+};
+function showDone(kind, title, text, d){
+  $("#done-mark").className = "done-mark" + (kind === "ok" ? "" : " " + kind);
+  $("#done-mark").innerHTML = DONE_ICON[kind];
+  $("#done-title").textContent = title; $("#done-text").textContent = text;
+  $("#done-sum").hidden = !d;
+  if (d) $("#done-sum").innerHTML = `<div><span>Car</span><b>${d.car}</b></div>
+    <div><span>Pickup</span><b>${nice(d.from)}, ${tLabel(d.fromTime)}</b></div>
+    <div><span>Return</span><b>${nice(d.to)}, ${tLabel(d.toTime)}</b></div>
+    <div><span>Where</span><b>${d.location}</b></div>
+    ${d.total ? `<div><span>Paid</span><b>${money(d.total/100)}</b></div>` : ""}`;
+  if (!$("#done").open) $("#done").showModal();
+}
+async function handleReturn(){
+  const q = new URLSearchParams(location.search), kind = q.get("booking");
+  if (!kind) return;
+  history.replaceState(null, "", location.pathname + location.hash);
+  if (kind === "cancelled") {
+    api("/cancel", { method: "POST", body: JSON.stringify({ car: q.get("car"), ref: q.get("ref") }) }).finally(loadAvailability);
+    toast("Checkout cancelled. You weren't charged, and the dates are open again.");
+    return;
+  }
+  if (kind !== "success") return;
+  const sid = q.get("session_id") || "";
+  showDone("wait", "Confirming your booking...", "Your payment went through. This takes a few seconds.", null);
+  for (let i = 0; i < 10; i++) {
+    try {
+      const r = await api("/booking?session_id=" + encodeURIComponent(sid));
+      if (r.ok && r.data.status === "confirmed") {
+        showDone("ok", "You're booked!", `A receipt is on its way${r.data.email ? " to " + r.data.email : ""}. We'll text you to set up the handoff.`, r.data); loadAvailability(); return;
+      }
+      if (r.ok && r.data.status === "conflict") {
+        showDone("bad", "Those dates were just taken", "Someone else booked this car a moment before your payment finished. You'll get a full refund, and we'll text you to find other dates.", r.data); return;
+      }
+      if (!r.ok && r.status !== 404) break;
+    } catch {}
+    await new Promise(res => setTimeout(res, 2000));
+  }
+  showDone("bad", "We couldn't load your booking", `If you were charged, you'll get a receipt from Stripe by email and your booking is safe. Questions? Text us at ${SITE.phone}.`, null);
+}
+
+/* how it works: requirements */
+$("#needs").innerHTML = [
+  "A valid driver's license",
+  `Minimum age of ${SITE.minAge}`,
+  "Proof of current auto insurance",
+  "A credit or debit card for payment"
+].map(t => `<li>${t}</li>`).join("");
+
+/* delivery */
+const ICONS = {
+  pickup:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  delivery:'<svg viewBox="0 0 24 24"><path d="M3 16V7a1 1 0 0 1 1-1h10v10M14 9h4l3 4v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
+  air:'<svg viewBox="0 0 24 24"><path d="M10.5 4.5L12 3l1.5 1.5v5L21 14v2l-7.5-2.5V18l2 1.5V21L12 20l-3.5 1v-1.5l2-1.5v-4.5L3 16v-2l7.5-4.5z"/></svg>'
+};
+$("#places").innerHTML = SITE.locations.map(l => {
+  const ic = l.id.includes("pickup") ? ICONS.pickup : l.id.includes("delivery") ? ICONS.delivery : ICONS.air;
+  const carsTxt = l.cars.length === CARS.length ? "All cars" : l.cars.map(id => CARS.find(c => c.id === id).name.replace(" xDrive Convertible","")).join(", ");
+  const fee = l.fee === 0 ? '<span class="fee free">Free</span>' : l.fee ? `<span class="fee">${fmt(l.fee)}</span>` : '<span class="fee">Quoted</span>';
+  return `<li><span class="ic" aria-hidden="true">${ic}</span><div><b>${l.name}</b><span>${l.note}. ${carsTxt}.</span></div>${fee}</li>`;
+}).join("");
+$("#areas").textContent = "We deliver across " + SITE.serviceAreas;
+
+/* reviews */
+const rated = CARS.filter(c => c.reviews);
+const trips = rated.reduce((a,c) => a + c.reviews, 0);
+const avg = trips ? (rated.reduce((a,c) => a + c.rating*c.reviews, 0) / trips) : 0;
+/* faq */
+$("#faq-list").innerHTML = FAQ.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join("");
+
+/* contact */
+const cl = [], cta = [];
+if (SITE.phone) { const t = SITE.phone.replace(/[^\d+]/g,""); cl.push(`<li><a href="tel:${t}">${SITE.phone}</a></li>`); cta.push(`<a class="btn btn-gold" href="tel:${t}">Call</a>`, `<a class="btn btn-line" href="sms:${t}">Text</a>`); }
+if (SITE.email) { cl.push(`<li><a href="mailto:${SITE.email}">${SITE.email}</a></li>`); }
+cl.push("<li>Dallas, Texas</li>");
+$("#contact-ctas").innerHTML = cta.join("") || '<a class="btn btn-gold" href="#fleet">Book a car</a>';
+const IG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.2.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.2 4.4 2.6 6.8 7 7 1.2.1 1.6.1 4.9.1s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.2-4.4-2.6-6.8-7-7C15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.4 1.4 0 1 0 0 2.9 1.4 1.4 0 0 0 0-2.9z"/></svg>';
+const TT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.6 6.7a4.8 4.8 0 0 1-3.8-4.2V2h-3.4v13.7a2.9 2.9 0 1 1-2-2.8V9.4a6.3 6.3 0 1 0 5.4 6.3V8.7a8.2 8.2 0 0 0 4.8 1.5V6.8l-1-.1z"/></svg>';
+$("#social").innerHTML = (SITE.instagram ? `<a href="${SITE.instagram}" target="_blank" rel="noopener" aria-label="Ace Fares on Instagram">${IG}</a>` : "") + (SITE.tiktok ? `<a href="${SITE.tiktok}" target="_blank" rel="noopener" aria-label="Ace Fares on TikTok">${TT}</a>` : "");
+if (SITE.instagram) cl.push(`<li><a href="${SITE.instagram}" target="_blank" rel="noopener">Instagram @acefaresrental</a></li>`);
+if (SITE.tiktok) cl.push(`<li><a href="${SITE.tiktok}" target="_blank" rel="noopener">TikTok @acefares_rental</a></li>`);
+$("#contact-list").innerHTML = cl.join("");
+$("#yr").textContent = new Date().getFullYear();
+
+/* fit a photo inside a box, keeping its shape, so rounded corners hug the photo */
+function fitTo(el, img, box){
+  const go = () => {
+    const pad = getComputedStyle(box), bw = box.clientWidth - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight), bh = box.clientHeight - parseFloat(pad.paddingTop) - parseFloat(pad.paddingBottom);
+    if (!img.naturalWidth || bw <= 0 || bh <= 0) return;
+    const k = Math.min(bw / img.naturalWidth, bh / img.naturalHeight);
+    el.style.width = Math.floor(img.naturalWidth * k) + "px"; el.style.height = Math.floor(img.naturalHeight * k) + "px";
+  };
+  if (img.complete) go(); img.onload = go;
+}
+window.addEventListener("resize", () => {
+  if ($("#detail").open) fitTo($("#dt-frame"), $("#dt-img"), $(".dt-main"));
+  if ($("#lb").open) { lbReset(); fitTo(lbImg, lbImg, lbStage); }
+});
+
+/* vehicle details pop-up */
+const dt = $("#detail"); let dCar = null, dI = 0;
+function dShow(){
+  const p = dCar.photos[dI];
+  $("#dt-img").src = `images/${p[0]}.webp`; $("#dt-img").alt = p[1];
+  if (dt.open) fitTo($("#dt-frame"), $("#dt-img"), $(".dt-main"));
+  $("#dt-count").textContent = `${dI+1} / ${dCar.photos.length}`;
+  document.querySelectorAll("#dt-thumbs button").forEach((b,k) => b.setAttribute("aria-current", k === dI));
+  const t = document.querySelectorAll("#dt-thumbs button")[dI]; if (t) t.scrollIntoView({block:"nearest", inline:"nearest"});
+}
+function openDetail(id, i){
+  dCar = CARS.find(c => c.id === id); dI = i || 0;
+  const n = state.from && state.to ? days(state.from, state.to) : 0;
+  const locs = locsFor(dCar).map(l => l.name).join(", ");
+  $("#dt-thumbs").innerHTML = dCar.photos.map((p,k) => `<button type="button" aria-label="Show photo ${k+1}"><img src="images/${p[0]}-sm.webp" alt=""></button>`).join("");
+  $("#dt-body").innerHTML = `
+    <h3 id="dt-title">${dCar.year ? dCar.year + " " : ""}${dCar.name}</h3>
+    <div class="meta">
+      <span>${STAR}${dCar.reviews ? `${dCar.rating} <span style="color:var(--ink-3)">(${dCar.reviews} trips)</span>` : "New listing"}</span>
+      <span>${PIN}${dCar.location}</span><span>${SEAT}${dCar.seats} seats</span>
+    </div>
+    <div class="dt-price"><b>${fmt(dCar.price)}</b><span>per day</span></div>
+    <p>${dCar.desc}</p>
+    <div class="dt-facts">
+      <div><small>Miles included</small><b>${dCar.miles} per day</b></div>
+      <div><small>Seats</small><b>${dCar.seats} passengers</b></div>
+      <div><small>Color</small><b>${dCar.color}</b></div>
+      <div><small>Type</small><b>${{suv:"SUV",van:"Van",convertible:"Convertible"}[dCar.type]}</b></div>
+    </div>
+    <div class="deals">
+      <div class="deal${n >= 3 && n < 30 ? " on" : ""}"><b>10% off</b><span>Rent 3 days or more</span></div>
+      <div class="deal${n >= 30 ? " on" : ""}"><b>25% off</b><span>Rent by the month (30+ days)</span></div>
+    </div>
+    <h4>Features</h4>
+    <ul class="all-feat">${dCar.features.map(f => `<li>${f}</li>`).join("")}</ul>
+    <h4>Pickup and delivery</h4>
+    <p>${locs}.</p>`;
+  $("#dt-total").innerHTML = totalHTML(dCar, n);
+  dShow();
+  dt.showModal();
+  fitTo($("#dt-frame"), $("#dt-img"), $(".dt-main"));
+  $("#dt-body").parentElement.scrollTop = 0;
+}
+$("#dt-thumbs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; dI = [...b.parentElement.children].indexOf(b); dShow(); });
+$("#dt-prev").addEventListener("click", () => { dI = (dI - 1 + dCar.photos.length) % dCar.photos.length; dShow(); });
+$("#dt-next").addEventListener("click", () => { dI = (dI + 1) % dCar.photos.length; dShow(); });
+$("#dt-img").addEventListener("click", () => openLightbox(dCar.id, dI));
+$("#dt-close").addEventListener("click", () => dt.close());
+dt.addEventListener("click", e => { if (e.target === dt) dt.close(); });
+$("#dt-book").addEventListener("click", () => { dt.close(); openBooking(dCar.id); });
+
+/* photo viewer with zoom */
+const lb = $("#lb"), lbStage = $("#lb-stage"), lbImg = $("#lb-img");
+const Z = { car:null, i:0, s:1, x:0, y:0 };
+function lbApply(){
+  lbImg.style.transform = `translate(${Z.x}px,${Z.y}px) scale(${Z.s})`;
+  lbStage.classList.toggle("zoomed", Z.s > 1);
+}
+function lbReset(){ Z.s = 1; Z.x = 0; Z.y = 0; lbImg.style.transform = ""; lbStage.classList.remove("zoomed"); }
+function lbClamp(){
+  const w = lbImg.offsetWidth, h = lbImg.offsetHeight;
+  const minX = w - w*Z.s, minY = h - h*Z.s;
+  Z.x = Math.min(0, Math.max(minX, Z.x)); Z.y = Math.min(0, Math.max(minY, Z.y));
+}
+function lbZoomAt(ns, cx, cy){ // cx,cy = point relative to the image's unscaled box
+  ns = Math.min(4, Math.max(1, ns));
+  Z.x = cx - (cx - Z.x) * ns / Z.s; Z.y = cy - (cy - Z.y) * ns / Z.s; Z.s = ns;
+  if (ns === 1) { Z.x = 0; Z.y = 0; }
+  lbClamp(); lbApply();
+}
+function lbShow(){
+  const p = Z.car.photos[Z.i];
+  lbReset();
+  lbImg.src = `images/${p[0]}-lg.webp`; lbImg.alt = p[1];
+  fitTo(lbImg, lbImg, lbStage);
+  $("#lb-title").textContent = Z.car.name;
+  $("#lb-count").textContent = `${Z.i+1} / ${Z.car.photos.length}`;
+}
+function openLightbox(id, i){ Z.car = CARS.find(c => c.id === id); Z.i = i || 0; lb.showModal(); lbShow(); }
+const lbStep = d => { Z.i = (Z.i + d + Z.car.photos.length) % Z.car.photos.length; lbShow(); };
+$("#lb-prev").addEventListener("click", () => lbStep(-1));
+$("#lb-next").addEventListener("click", () => lbStep(1));
+$("#lb-close").addEventListener("click", () => lb.close());
+const centerPt = () => [lbImg.offsetWidth/2, lbImg.offsetHeight/2];
+$("#lb-in").addEventListener("click", () => { const [cx,cy] = centerPt(); lbZoomAt(Z.s * 1.6, cx, cy); });
+$("#lb-out").addEventListener("click", () => { const [cx,cy] = centerPt(); lbZoomAt(Z.s / 1.6, cx, cy); });
+lb.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") lbStep(1);
+  else if (e.key === "ArrowLeft") lbStep(-1);
+  else if (e.key === "+" || e.key === "=") $("#lb-in").click();
+  else if (e.key === "-") $("#lb-out").click();
+});
+// point on the unscaled image box from a screen point
+function imgPt(clientX, clientY){
+  const left = lbImg.offsetLeft + lbStage.getBoundingClientRect().left, top = lbImg.offsetTop + lbStage.getBoundingClientRect().top;
+  return [clientX - left, clientY - top];
+}
+lbStage.addEventListener("wheel", e => {
+  e.preventDefault();
+  const [px,py] = imgPt(e.clientX, e.clientY);
+  lbZoomAt(Z.s * (e.deltaY < 0 ? 1.2 : 1/1.2), px, py);
+}, { passive:false });
+const ptrs = new Map(); let drag = null, pinch = null, moved = false;
+let downOn = null;
+lbStage.addEventListener("pointerdown", e => {
+  downOn = e.target;
+  if (e.target !== lbImg) return;
+  lbStage.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, [e.clientX, e.clientY]); moved = false;
+  if (ptrs.size === 1) drag = { sx:e.clientX, sy:e.clientY, x:Z.x, y:Z.y };
+  if (ptrs.size === 2) {
+    const [a,b] = [...ptrs.values()];
+    pinch = { d:Math.hypot(a[0]-b[0], a[1]-b[1]), s:Z.s, c:imgPt((a[0]+b[0])/2, (a[1]+b[1])/2) };
+    drag = null;
+  }
+});
+lbStage.addEventListener("pointermove", e => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pinch && ptrs.size === 2) {
+    const [a,b] = [...ptrs.values()]; moved = true;
+    const ns = pinch.s * Math.hypot(a[0]-b[0], a[1]-b[1]) / pinch.d;
+    lbZoomAt(ns, pinch.c[0], pinch.c[1]);
+  } else if (drag) {
+    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 6) moved = true;
+    if (Z.s > 1) { lbStage.classList.add("dragging"); Z.x = drag.x + dx; Z.y = drag.y + dy; lbClamp(); lbApply(); }
+  }
+});
+function endPtr(e){
+  if (!ptrs.has(e.pointerId)) return;
+  const wasDrag = drag && !pinch;
+  ptrs.delete(e.pointerId); lbStage.classList.remove("dragging");
+  if (ptrs.size < 2) pinch = null;
+  if (wasDrag && !moved && e.type === "pointerup") { // tap or click toggles zoom at that spot
+    const [px,py] = imgPt(e.clientX, e.clientY);
+    lbZoomAt(Z.s > 1 ? 1 : 2.5, px, py);
+  } else if (wasDrag && moved && Z.s === 1) { // swipe to change photo when not zoomed
+    const dx = e.clientX - drag.sx; if (Math.abs(dx) > 50) lbStep(dx < 0 ? 1 : -1);
+  }
+  if (ptrs.size === 0) drag = null;
+}
+lbStage.addEventListener("pointerup", endPtr);
+lbStage.addEventListener("pointercancel", endPtr);
+lbStage.addEventListener("click", () => { if (downOn === lbStage) lb.close(); downOn = null; });
+
+/* simple page switch: #host shows the host page, everything else shows rentals */
+function route(){
+  const host = location.hash === "#host";
+  $("#host").hidden = !host; $("#top").hidden = host;
+  document.querySelectorAll('a[href="#host"]').forEach(a => host ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+  if (host) scrollTo(0, 0);
+  else if (location.hash && location.hash !== "#top") { const t = document.querySelector(location.hash); if (t) t.scrollIntoView(); }
+  else scrollTo(0, 0);
+}
+addEventListener("hashchange", route);
+route();
+
+/* host sign-up: opens an email to the business with the details filled in */
+$("#host-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = id => $("#"+id).value.trim();
+  let first = null;
+  [["h-name","h-c-name"],["h-phone","h-c-phone"],["h-car","h-c-car"]].forEach(([i,c]) => { const bad = !v(i); $("#"+c).classList.toggle("bad", bad); if (bad && !first) first = i; });
+  if (first) { $("#"+first).focus(); return; }
+  const body = `Name: ${v("h-name")}\nPhone: ${v("h-phone")}\nEmail: ${v("h-email")}\nCar: ${v("h-car")}\nMileage: ${v("h-miles")}\n\n${v("h-note")}`;
+  location.href = `mailto:${SITE.email}?subject=${encodeURIComponent("Host sign-up: " + v("h-car"))}&body=${encodeURIComponent(body)}`;
+  $("#host-ok").classList.add("show");
+});
+
+
+
+paintDateBtns();
+renderFleet();
+$("#done-close").addEventListener("click", () => $("#done").close());
+loadAvailability();
+handleReturn();
+</script>
+</body>
+</html>
