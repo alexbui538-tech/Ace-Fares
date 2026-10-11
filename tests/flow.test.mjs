@@ -30,7 +30,7 @@ test("full booking: checkout -> Stripe session -> paid webhook -> confirmed and 
   assert.deepEqual(p.line_items.map(l => l.price_data.unit_amount), [144000, 12500, 15650]);  // 4 days -10%, DFW $125, 10% tax
   assert.equal(r.data.total, 172150);
   assert.deepEqual(p.payment_method_types, ["card"]);
-  assert.equal(p.expires_at, Math.floor(NOW / 1000) + 1800);
+  assert.equal(p.expires_at, Math.floor(NOW / 1000) + 31 * 60);
   assert.match(p.success_url, /booking=success&session_id=\{CHECKOUT_SESSION_ID\}/);
   assert.equal(p.metadata.car, "escalade"); assert.equal(s.stripe.calls.create[0].opts.idempotencyKey.startsWith("checkout-"), true);
 
