@@ -10,7 +10,7 @@ The website keeps its own calendar and booking window. A small server, Netlify F
    - works out the price itself: rental, then the discount (10% for 3+ days, 25% for 30+ days), then the fee (delivery $100, DFW $125), then Texas rental tax (10% for 30 days or less, 6.25% for 31–180 days)
    - **holds the dates for 35 minutes**
    - creates a Stripe Checkout page and sends the renter there
-3. **Payment:** the renter pays on Stripe by card, Apple Pay or Google Pay.
+3. **Payment:** the renter pays on Stripe with whatever methods you turn on in Stripe (Settings → Payment methods), such as card, Apple Pay or Google Pay. Methods that take days to clear, like bank payments, keep the dates held until the money arrives, then confirm or release them.
 4. **Confirmation:** Stripe calls `/api/stripe-webhook`, the booking becomes **confirmed**, and the dates stay blocked for good. The renter returns to the site and sees "You're booked!"
 5. **Abandoned or declined checkout:** if the renter backs out, the card is declined, or they walk away, the hold is released and the dates open again. Stripe checkout pages expire after 30 minutes.
 6. **Turnaround:** there's a 1-day gap between rentals. A car returned on the 10th can go out again on the 11th.
@@ -60,7 +60,7 @@ Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database 
 4. **Note the site address:** for example `https://acefares.netlify.app`.
 5. **Set up the Stripe webhook:** in Stripe, in **Test mode**, go to Developers → Webhooks → **Add endpoint**.
    - **URL:** `https://YOUR-SITE/api/stripe-webhook`
-   - **Events:** `checkout.session.completed` and `checkout.session.expired`
+   - **Events:** `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`
    - Copy the signing secret into Netlify as `STRIPE_WEBHOOK_SECRET`, then redeploy.
 6. **Run the live tests below.**
 7. **Go live:** switch to your **live** Stripe keys. Make a live webhook endpoint (same URL and events) and update both variables in Netlify.

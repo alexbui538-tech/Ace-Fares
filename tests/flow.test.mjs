@@ -29,7 +29,7 @@ test("full booking: checkout -> Stripe session -> paid webhook -> confirmed and 
   const p = s.stripe.calls.create[0].params;
   assert.deepEqual(p.line_items.map(l => l.price_data.unit_amount), [144000, 12500, 15650]);  // 4 days -10%, DFW $125, 10% tax
   assert.equal(r.data.total, 172150);
-  assert.deepEqual(p.payment_method_types, ["card"]);
+  assert.equal(p.payment_method_types, undefined);   // methods come from the Stripe Dashboard
   assert.equal(p.expires_at, Math.floor(NOW / 1000) + 31 * 60);
   assert.match(p.success_url, /booking=success&session_id=\{CHECKOUT_SESSION_ID\}/);
   assert.equal(p.metadata.car, "escalade"); assert.equal(s.stripe.calls.create[0].opts.idempotencyKey.startsWith("checkout-"), true);
@@ -116,3 +116,23 @@ test("admin list needs the admin key; unknown session ids are rejected", async (
 // enforces version checks the way Netlify Blobs does. The local Blobs emulator does
 // not enforce them atomically, so the same check against real Netlify storage is
 // done after deploy with scripts/live-checks.mjs.
+
+test("bank-style payment: pending keeps the dates, cleared confirms, failed releases", async () => {
+  const s = setup();
+  await s.checkout(post("/api/checkout", body({ car: "escalade", from: "2027-03-01", to: "2027-03-03" })));
+  await s.checkout(post("/api/checkout", body({ car: "escalade", from: "2027-04-01", to: "2027-04-03" })));
+  const a = s.stripe.sessions.get("cs_test_1"), b = s.stripe.sessions.get("cs_test_2");
+  a.status = b.status = "complete";   // checkout finished, money not yet received
+  await s.hook(signedEvent("checkout.session.completed", a));
+  await s.hook(signedEvent("checkout.session.completed", b));
+  const all = async () => j(await s.admin(new Request("https://x/api/admin/bookings", { headers: { "x-admin-key": "secret-admin" } })));
+  let esc = (await all()).data.escalade;
+  const find = from => esc.find(x => x.from === from);
+  assert.equal(find("2027-03-01").status, "hold"); assert.ok(find("2027-03-01").pendingPayment);
+  assert.ok(Date.parse(find("2027-03-01").expiresAt) > NOW + 6 * 864e5, "held for days while the payment clears");
+  await s.hook(signedEvent("checkout.session.async_payment_succeeded", { ...a, payment_status: "paid" }));
+  await s.hook(signedEvent("checkout.session.async_payment_failed", b));
+  esc = (await all()).data.escalade;
+  assert.equal(find("2027-03-01").status, "confirmed");
+  assert.equal(find("2027-04-01").status, "released");
+});
