@@ -119,7 +119,9 @@ ok(await p.evaluate(() => window.__pk) === PK, "Stripe started with the publisha
 if (SHOTS) await p.screenshot({ path: `${SHOTS}/checkout-desktop.png`, fullPage: true });
 
 ok(await p.isDisabled("#pay-btn"), "Book trip is disabled until the agreement box is checked");
-ok(/By checking this box, I am electronically signing/.test(await p.textContent("#agree-text")) && /\$750/.test(await p.textContent("#agree-text")), "clickwrap words with the deposit amount are next to the box");
+ok(/^I agree to pay the total shown \(\$[\d,.]+\) and to the Ace Fares Rental Agreement/.test(await p.textContent("#agree-text")), "short agreement line next to the box");
+const agreeLinks = await p.$$eval("#agree-text a", as => as.map(a => [a.textContent, a.getAttribute("href")]));
+ok(agreeLinks.length === 6 && agreeLinks.some(([t, h]) => t === "privacy policy" && h === "/privacy.html") && agreeLinks.some(([t, h]) => t === "cancellation policy" && h === "/rental-agreement#section-15"), "each document it names is a link");
 ok((await p.textContent("#t-deposit")) === "$750" && (await p.textContent("#t-smoke")) === "$150" && !(await p.isHidden("#sum-dep")), "key terms and deposit shown");
 await p.check("#agree");
 ok(!(await p.isDisabled("#pay-btn")), "checking the box enables Book trip");

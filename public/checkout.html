@@ -98,7 +98,9 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .keys b{color:var(--ink)}
 .terms .read{display:inline-block;margin-top:10px;font-weight:600;font-size:.93rem;color:var(--gold-text)}
 .terms .read span{font-weight:400;color:var(--ink-3)}
-#agree-text{font-size:.93rem}
+#agree-text{font-size:.93rem;line-height:1.5}
+#agree-text a{color:var(--gold-text);font-weight:600;text-decoration:none}
+#agree-text a:hover{text-decoration:underline}
 .sign-hint{text-align:center;color:var(--ink-3);font-size:.86rem;margin:8px 0 0}
 .btn:disabled:not(.loading){opacity:.45;cursor:not-allowed}
 .dep{margin-top:10px;display:flex;justify-content:space-between;gap:12px;color:var(--ink-2);font-size:.92rem}
@@ -290,7 +292,10 @@ $("#agree").addEventListener("change", e => {
 
 function renderTerms(t) {
   TERMS = t;
-  $("#agree-text").textContent = t.clickwrap;
+  // same words that are signed, with each document it names as a link
+  let html = t.clickwrap.replace(/[&<>]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
+  for (const [phrase, href] of t.clickwrapLinks || []) html = html.replace(phrase, `<a href="${href}" target="_blank" rel="noopener">${phrase}</a>`);
+  $("#agree-text").innerHTML = html;
   $("#t-deposit").textContent = whole(t.deposit);
   $("#t-timing").textContent = t.depositTiming;
   $("#t-release").textContent = t.releaseHours;

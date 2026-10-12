@@ -58,7 +58,7 @@ test("agreement has the direct-lessor, deposit, insurance, smoking and Dallas Co
   assert.match(agreementText(null), /2021 Cadillac Escalade: \$750/);
   assert.ok(agreementSections(null).length >= 18);
   const words = clickwrapText({ total: "$500.00", deposit: 500 });
-  assert.match(words, /By checking this box, I am electronically signing/); assert.match(words, /\$500 security deposit hold/); assert.match(words, /\$150 smoking and vaping fee/);
+  assert.equal(words, "I agree to pay the total shown ($500.00) and to the Ace Fares Rental Agreement, including the security deposit hold, no-smoking policy and cancellation policy. I agree to sign and receive records electronically, and I acknowledge the privacy policy.");
 });
 
 test("checkout shows the terms, saves the card for the deposit, and records the clickwrap signature in Stripe", async () => {
@@ -68,7 +68,7 @@ test("checkout shows the terms, saves the card for the deposit, and records the 
   assert.equal(pc.setup_future_usage, "off_session"); assert.equal(pc.metadata.deposit_hold_amount, "500.00");
   const g = await j(await s.details(get(`/api/checkout-details?car=bmw&ref=${r.data.ref}`)));
   assert.equal(g.data.terms.version, AGREEMENT_VERSION); assert.equal(g.data.terms.deposit, DEPOSITS.bmw); assert.equal(g.data.terms.smokingFee, 150);
-  assert.match(g.data.terms.clickwrap, /electronically signing/); assert.match(g.data.terms.depositTiming, /24 hours before pickup/);
+  assert.match(g.data.terms.clickwrap, /^I agree to pay the total shown/); assert.equal(g.data.terms.clickwrapLinks.length, 6); assert.match(g.data.terms.depositTiming, /24 hours before pickup/);
 
   // an outdated version of the terms can't be signed
   const old = await j(await sign(s, "bmw", r.data.ref, { termsVersion: "2020-01-01" }));

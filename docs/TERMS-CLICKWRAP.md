@@ -21,9 +21,13 @@ Settings live in `lib/catalog.mjs`:
 
 ## 1. Clickwrap consent text (next to the checkbox)
 
-The checkout page fills in the trip total and the deposit for the car:
+A short line, like Turo's. The checkout page fills in the trip total, and each document it names is a link:
 
-> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft5) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
+> I agree to pay the total shown ([$TRIP TOTAL]) and to the [Ace Fares Rental Agreement](/rental-agreement), including the [security deposit hold](/rental-agreement#section-5), [no-smoking policy](/rental-agreement#section-12) and [cancellation policy](/rental-agreement#section-15). I agree to [sign and receive records electronically](/rental-agreement#section-2), and I acknowledge the [privacy policy](/privacy.html).
+
+The deposit amount and the $150 smoking fee are no longer repeated in this line. They're shown in full in the "Key rental terms" box right above it, and in the agreement itself. Ask your attorney whether that's enough, or whether the line should repeat the amounts.
+
+The privacy policy (`public/privacy.html`) is a plain-language draft based on what the site actually collects. It's for attorney review.
 
 A **"Key rental terms"** box appears directly above the checkbox:
 
