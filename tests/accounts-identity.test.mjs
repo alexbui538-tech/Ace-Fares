@@ -192,7 +192,7 @@ test("ID check: needs sign-in, a paid trip and Texas biometric consent; then ope
     headers: { "content-type": "application/json", cookie: me.cookie, "x-nf-client-connection-ip": "203.0.113.5" } })));
   assert.equal(st.status, 200); assert.match(st.data.clientSecret, /^vs_test_1_secret/); assert.equal(st.data.publishableKey, "pk_test_1");
   const p = s.stripe.calls.vsCreate[0].params;
-  assert.deepEqual(p.options, { document: { allowed_types: ["driving_license"], require_matching_selfie: true } });
+  assert.deepEqual(p.options, { document: { allowed_types: ["driving_license"], require_matching_selfie: true, require_live_capture: false } });
   assert.equal(p.metadata.kind, "identity"); assert.equal(p.metadata.booking_id, ref); assert.equal(p.provided_details.email, "jordan@example.com");
   const v = (await s.repo.get("srx", ref)).verification;
   assert.equal(v.status, "started"); assert.equal(v.consent.ip, "203.0.113.5"); assert.equal(v.consent.version, "2026-10-12-idv1");
@@ -286,4 +286,28 @@ test("ID name check also accepts the name on the renter's account", () => {
   const b = { from: "2027-03-02", to: "2027-03-05", customer: { name: "R B" }, accountName: "Riley Brooks" };
   assert.equal(checkResult(b, out, lic).checks.name, true);
   assert.equal(checkResult({ ...b, accountName: "Sam Smith" }, out, lic).checks.name, false);
+});
+
+test("1-hour rule: an ID check not done within an hour of booking emails the owner and the renter once", async () => {
+  const s = setup();
+  const sent = [];
+  const idv = makeIdentity({ store: s.store, stripe: s.stripe, now: s.now, notify: async (subject, text) => s.notices.push({ subject, text }),
+    mailer: { send: async m => { sent.push(m); } }, siteUrl: "https://acefares.test", log: quiet });
+  const me = await s.a("signup", { method: "POST", body: jordan });
+  const ref = await paidTrip(s, me.cookie);
+  const g = await j(await s.verify(req(`/api/verify?car=srx&ref=${ref}`, { cookie: me.cookie })));
+  assert.equal(g.data.dueAt, new Date(NOW + 3600e3).toISOString()); assert.equal(g.data.overdue, false);
+  s.setTime(NOW + 59 * 60e3); assert.deepEqual(await idv.sweep(), []);
+  s.setTime(NOW + 61 * 60e3);
+  assert.deepEqual(await idv.sweep(), [["overdue", "srx", ref]]);
+  assert.equal(s.notices.length, 1); assert.match(s.notices[0].subject, /ID check overdue/);
+  assert.equal(sent.length, 1); assert.equal(sent[0].to, "jordan@example.com"); assert.match(sent[0].text, /verify\.html\?car=srx&ref=/);
+  assert.deepEqual(await idv.sweep(), []);                                   // only once
+  assert.equal((await j(await s.verify(req(`/api/verify?car=srx&ref=${ref}`, { cookie: me.cookie })))).data.overdue, true);
+  // a finished check is never overdue
+  const s2 = setup(); const me2 = await s2.a("signup", { method: "POST", body: jordan }); const ref2 = await paidTrip(s2, me2.cookie);
+  await s2.verify(req("/api/verify", { method: "POST", body: { car: "srx", ref: ref2, consent: true }, cookie: me2.cookie }));
+  await s2.hook(signedEvent("identity.verification_session.verified", s2.stripe.finishIdentity((await s2.repo.get("srx", ref2)).verification.sessionId)));
+  s2.setTime(NOW + 2 * 3600e3);
+  assert.deepEqual(await makeIdentity({ store: s2.store, stripe: s2.stripe, now: s2.now, log: quiet }).sweep(), []);
 });

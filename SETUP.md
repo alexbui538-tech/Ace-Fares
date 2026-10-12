@@ -255,12 +255,12 @@ Every paid booking emails your business inbox once, with the subject **New booki
 
 - **Where renters find it:** every logged-in renter has an invite link (**Refer a friend** in the account menu, or the gold band under the fleet).
 - **The friend's $50:** a friend who opens the link sees "Name invited you: $50 off your first trip" and gets **$50 off their first trip** when they sign up.
-- **Your renter's $100:** when that friend's first trip of **4 or more days** (longer than three) has ended without being cancelled, the person who invited them gets **$100 in Ace Fares credit**.
+- **Your renter's $100:** when that friend's first trip of **3 or more days** has ended without being cancelled, the person who invited them gets **$100 in Ace Fares credit**.
   - It's paid once per friend, by the hourly job, and they're emailed.
   - Credit comes off their next booking automatically, before tax, never taking the rental below $1. It's taken off their balance once that trip is paid.
 - **Stripe records:** the referral discount and credit appear as their own lines at checkout and on the payment in Stripe (`credit_applied`, `credit_codes`).
 - **Your bookings page** shows the credits each booking used.
-- **To change the amounts,** edit `REFERRAL` in `lib/catalog.mjs`, which holds the $100 reward, the $50 friend discount and the 4-day minimum.
+- **To change the amounts,** edit `REFERRAL` in `lib/catalog.mjs`, which holds the $100 reward, the $50 friend discount and the 3-day minimum.
 - The program terms (no cash value, not transferable, no self-referrals) are shown in the Refer a friend window. Have your attorney look at them with the rest of the legal package.
 
 ## Insurance choice at checkout
@@ -285,3 +285,13 @@ At pickup and at return, **you and the renter each take photos** on the website:
 - **The rental agreement** (section 14, version draft4) now describes this process.
 
 To change the photo list, edit `SHOTS` in `lib/inspections.mjs`.
+
+
+## ID check deadline: 1 hour after booking
+
+- **The deadline:** renters must finish the license and selfie check within **1 hour of paying**. The confirmation screen, the confirmation email, My trips and the verification page all show the deadline.
+- **If it's missed:** a job running every 15 minutes marks the trip **Overdue** on your bookings page. It emails you once, and it emails the renter a reminder with the link. Nothing is cancelled automatically; you decide whether to cancel.
+- **Rental agreement:** section 3 (version draft5) includes the 1-hour rule.
+- **To change the hour,** edit `IDENTITY_DUE_MINUTES` in `lib/catalog.mjs`.
+- **Photos:** on the verification page, renters can photograph their license with the camera, pick it from their photo library, or upload a file. The selfie is always taken live with the camera; that's what stops someone using a photo of another person.
+- **Consent:** the checkbox reads "I agree that Ace Fares Rental may use its identity verification provider", with a **Terms and conditions** link that opens the full Texas biometric notice.

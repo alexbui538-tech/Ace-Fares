@@ -51,6 +51,17 @@ h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);lin
 
 .consent{background:var(--cream);border-radius:14px;padding:16px 18px;margin:0 0 16px}
 .consent h2{font-size:1.02rem;margin:0 0 8px}
+.box{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.box:hover{border-color:var(--gold);box-shadow:0 6px 18px -10px rgba(21,19,15,.35)}
+.box .go{margin-top:2px;font-weight:700;color:var(--gold-text);font-size:.92rem}
+.linkish{background:none;border:0;padding:0;color:var(--gold-text);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.due{display:flex;gap:10px;align-items:center;border-radius:12px;padding:12px 14px;margin:0 0 18px;font-size:.95rem;background:#FFF1D6;color:#6B4A00}
+.due.late{background:#FBE3D9;color:#7A2A13}
+#terms-dlg{border:0;border-radius:16px;padding:0;width:min(560px,calc(100vw - 24px));box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+#terms-dlg::backdrop{background:rgba(15,26,52,.55)}
+#terms-dlg .in{padding:22px 24px;display:grid;gap:12px}
+#terms-dlg h2{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0}
+#terms-dlg p{margin:0;color:var(--ink-2)}
 .agree{display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start;font-size:.92rem;color:var(--ink-2);cursor:pointer}
 .agree input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--ink);cursor:pointer}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:12px;border:0;font-weight:700;font-size:1.06rem;cursor:pointer;background:var(--gold-bright);color:var(--ink);text-decoration:none;transition:background-color .15s}
@@ -120,8 +131,9 @@ h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);lin
 
         <!-- start: the two steps -->
         <div id="start">
+          <div class="due" id="due" role="status" hidden></div>
           <div class="boxes">
-            <div class="box" id="box-license">
+            <div class="box" id="box-license" role="button" tabindex="0" aria-label="Start: photos of your driver's license">
               <span class="num" aria-hidden="true">1</span>
               <div class="art" aria-hidden="true">
                 <svg width="74" height="50" viewBox="0 0 74 50" fill="none"><rect x="1.5" y="1.5" width="71" height="47" rx="6" fill="#fff" stroke="#15130F" stroke-width="2.5"/><rect x="8" y="10" width="20" height="25" rx="3" fill="#F3ECDD" stroke="#15130F" stroke-width="2"/><circle cx="18" cy="19" r="4" stroke="#15130F" stroke-width="2"/><path d="M11 32c1.5-4 4-5.5 7-5.5s5.5 1.5 7 5.5" stroke="#15130F" stroke-width="2"/><path d="M35 13h30M35 21h24M35 29h28M8 41h56" stroke="#AF8135" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -129,22 +141,24 @@ h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);lin
               </div>
               <h2>Your driver's license</h2>
               <p>Take a photo of the front and the back.</p>
-              <ul><li>Camera</li><li>Photo library</li><li>File</li></ul>
+              <ul><li>Camera</li><li>Photo library</li><li>Upload a file</li></ul>
+              <span class="go">Tap to start →</span>
             </div>
-            <div class="box" id="box-selfie">
+            <div class="box" id="box-selfie" role="button" tabindex="0" aria-label="Start: selfie">
               <span class="num" aria-hidden="true">2</span>
               <div class="art" aria-hidden="true">
                 <svg width="88" height="72" viewBox="0 0 88 72" fill="none"><rect x="20" y="2" width="48" height="68" rx="9" fill="#fff" stroke="#15130F" stroke-width="2.5"/><circle cx="44" cy="28" r="10" stroke="#15130F" stroke-width="2.5"/><path d="M29 54c3-9 8.5-12 15-12s12 3 15 12" stroke="#15130F" stroke-width="2.5" stroke-linecap="round"/><path d="M4 18V8a6 6 0 0 1 6-6h6M84 18V8a6 6 0 0 0-6-6h-6M4 54v10a6 6 0 0 0 6 6h6M84 54v10a6 6 0 0 1-6 6h-6" stroke="#AF8135" stroke-width="2.5" stroke-linecap="round"/></svg>
               </div>
               <h2>A selfie</h2>
-              <p>Look at the camera so we can match your face to your license photo.</p>
+              <p>Look at the camera so we can match your face to your license photo. The selfie is taken live, so it can't be uploaded.</p>
               <ul><li>Front camera</li><li>Good lighting</li></ul>
+              <span class="go">Tap to start →</span>
             </div>
           </div>
 
           <div class="consent">
             <h2>Your consent</h2>
-            <label class="agree"><input type="checkbox" id="consent"><span id="consent-text"></span></label>
+            <label class="agree"><input type="checkbox" id="consent"><span>I agree that Ace Fares Rental may use its identity verification provider. <button type="button" class="linkish" id="terms-open">Terms and conditions</button></span></label>
           </div>
           <button class="btn" type="button" id="go" disabled>Start verification</button>
           <p class="hint" id="go-hint">Check the box above to continue.</p>
@@ -171,6 +185,12 @@ h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);lin
     </div>
   </div>
 </main>
+
+<dialog id="terms-dlg" aria-labelledby="terms-title"><div class="in">
+  <h2 id="terms-title">ID verification terms</h2>
+  <p id="consent-text"></p>
+  <button class="btn" type="button" id="terms-close">Close</button>
+</div></dialog>
 
 <script>
 const $ = s => document.querySelector(s);
@@ -200,6 +220,12 @@ function render(d) {
   $("#dates").textContent = `${when(t.from, t.fromTime)} to ${when(t.to, t.toTime)}`;
   $("#where").textContent = t.location || "";
   $("#consent-text").textContent = d.consent.text;
+  const due = $("#due");
+  if (d.dueAt) {
+    const by = new Date(d.dueAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    due.hidden = false; due.classList.toggle("late", !!d.overdue);
+    due.textContent = d.overdue ? `Your ID check was due by ${by}. Please finish it now. We can't hand over the car until it's done.` : `Please finish within 1 hour of booking, by ${by}.`;
+  }
   const st = v.status;
   const done = (kind, title, text) => {
     $("#start").hidden = true; $("#state").hidden = false;
@@ -237,7 +263,18 @@ async function poll() {
   polling = false;
 }
 
-$("#consent").addEventListener("change", e => { $("#go").disabled = !e.target.checked; $("#go-hint").hidden = e.target.checked; });
+$("#consent").addEventListener("change", e => { $("#go").disabled = !e.target.checked; $("#go-hint").hidden = e.target.checked; showErr(""); });
+$("#terms-open").addEventListener("click", e => { e.preventDefault(); $("#terms-dlg").showModal(); });
+$("#terms-close").addEventListener("click", () => $("#terms-dlg").close());
+// the two boxes start the check too
+for (const id of ["#box-license", "#box-selfie"]) {
+  const start = () => {
+    if (!$("#consent").checked) { showErr("Check the box to agree first, then tap again."); $("#consent").focus(); return; }
+    $("#go").click();
+  };
+  $(id).addEventListener("click", start);
+  $(id).addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); start(); } });
+}
 $("#go").addEventListener("click", async () => {
   const btn = $("#go");
   if (btn.disabled || !$("#consent").checked) return;

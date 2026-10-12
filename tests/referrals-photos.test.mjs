@@ -88,12 +88,12 @@ test("refer a friend: friend gets $50 off their first trip, referrer gets $100 a
   assert.equal((await s.a("me", { cookie: alex.cookie })).data.user.credit, 0);
 });
 
-test("referral: trips of 3 days or less, cancelled trips and self-invites don't earn credit", async () => {
+test("referral: trips under 3 days, cancelled trips and late invites don't earn credit", async () => {
   const s = setup();
   const alex = await s.a("signup", { method: "POST", body: person("alex@example.com", "Alex") });
   const code = (await s.a("referral", { cookie: alex.cookie })).data.code;
   const sam = await s.a("signup", { method: "POST", body: { ...person("sam@example.com", "Sam"), invite: code } });
-  const short = await bookAndPay(s, sam.cookie, { car: "van", from: "2027-03-01", to: "2027-03-04", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" });
+  const short = await bookAndPay(s, sam.cookie, { car: "van", from: "2027-03-01", to: "2027-03-03", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" });
   const long = await bookAndPay(s, sam.cookie, { car: "bmw", from: "2027-03-10", to: "2027-03-15", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" });
   await s.repo.cancel("bmw", long.id);
   s.setTime(Date.parse("2027-04-01T12:00:00Z"));

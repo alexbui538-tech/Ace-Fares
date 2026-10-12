@@ -93,8 +93,10 @@ function photoCell(car, b){
 }
 function idCell(b){
   if (b.status !== "confirmed") return "";
-  const v = b.verification || {}, st = v.status || "not_started";
-  const L = { verified: ["confirmed", "Verified"], review: ["hold", "Needs your review"], processing: ["hold", "Processing"], started: ["", "Started, not finished"], retry: ["conflict", "Failed, renter can retry"], canceled: ["conflict", "Cancelled"], not_started: ["", "Not done yet"] }[st] || ["", st];
+  const v = b.verification || {};
+  const due = b.confirmedAt ? Date.parse(b.confirmedAt) + 3600e3 : 0;
+  const st = !["verified", "review", "processing"].includes(v.status) && due && Date.now() > due ? "overdue" : (v.status || "not_started");
+  const L = { verified: ["confirmed", "Verified"], review: ["hold", "Needs your review"], processing: ["hold", "Processing"], started: ["", "Started, not finished"], retry: ["conflict", "Failed, renter can retry"], canceled: ["conflict", "Cancelled"], not_started: ["", "Due within 1 hour of booking"], overdue: ["conflict", "Overdue (over 1 hour)"] }[st] || ["", st];
   let more = "";
   if (v.verifiedName) more += `<small>Name on license: ${esc(v.verifiedName)}</small>`;
   if (v.reasons && v.reasons.length) more += v.reasons.map(r => `<small class="warn">${esc(r)}</small>`).join("");

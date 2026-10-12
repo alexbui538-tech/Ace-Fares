@@ -423,11 +423,13 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 
 
 /* refer a friend */
-.refer-band{padding:8px 0 56px}
+.refer-band{padding:0 0 64px}
 .refer-card{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;background:var(--navy);color:var(--on-navy);border-radius:var(--radius-card);padding:22px 26px}
-.refer-card .amt{width:92px;height:92px;border-radius:16px;background:var(--gold-bright);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.refer-card .amt{width:92px;height:92px;border-radius:16px;background:var(--cream);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 .refer-card .amt b{font-family:var(--serif);font-weight:400;font-size:2.1rem}
 .refer-card .amt small{font-size:.74rem;font-weight:600;margin-top:4px}
+.btn-cream{background:var(--cream);color:var(--ink)}
+.btn-cream:hover{background:var(--ivory)}
 .refer-card h2{font-size:1.7rem;color:var(--on-navy);margin:0}
 .refer-card p{margin:6px 0 0;color:var(--on-navy-2);max-width:60ch}
 @media (max-width:760px){.refer-card{grid-template-columns:1fr;text-align:left}.refer-card .btn{width:100%}}
@@ -592,19 +594,6 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     </div>
   </section>
 
-  <section class="refer-band" id="refer-band" aria-labelledby="refer-title">
-    <div class="wrap">
-      <div class="refer-card">
-        <div class="amt" aria-hidden="true"><b>$100</b><small>for you</small></div>
-        <div>
-          <h2 id="refer-title">Refer a friend: give $50, get $100</h2>
-          <p>Share your link. Your friend gets $50 off their first trip, and when they finish a trip longer than three days, you get $100 in Ace Fares credit.</p>
-        </div>
-        <button class="btn btn-gold" type="button" id="refer-cta">Get your invite link</button>
-      </div>
-    </div>
-  </section>
-
   <section class="how" id="how" aria-labelledby="how-title">
     <div class="wrap">
       <h2 id="how-title">How it works</h2>
@@ -617,6 +606,19 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <div class="needs">
         <h3>What you'll need</h3>
         <ul id="needs"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="refer-band" id="refer-band" aria-labelledby="refer-title">
+    <div class="wrap">
+      <div class="refer-card">
+        <div class="amt" aria-hidden="true"><b>$100</b><small>for you</small></div>
+        <div>
+          <h2 id="refer-title">Refer a friend: give $50, get $100</h2>
+          <p>Share your link. Your friend gets $50 off their first trip, and when they finish a trip of 3 days or more, you get $100 in Ace Fares credit.</p>
+        </div>
+        <button class="btn btn-cream" type="button" id="refer-cta">Get your invite link</button>
       </div>
     </div>
   </section>
@@ -800,7 +802,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     <ol class="ref-steps">
       <li>Share your link with a friend.</li>
       <li>They get <b>$50 off</b> their first trip.</li>
-      <li>When they finish a trip longer than three days, you get <b>$100</b> in Ace Fares credit, used automatically on your next booking.</li>
+      <li>When they finish a trip of 3 days or more, you get <b>$100</b> in Ace Fares credit, used automatically on your next booking.</li>
     </ol>
     <div class="ctl"><label for="ref-url">Your invite link</label>
       <div class="ref-link"><input id="ref-url" readonly><button class="btn btn-ink" type="button" id="ref-copy">Copy</button></div>
@@ -968,7 +970,7 @@ const FAQ = [ // TODO review every answer and change anything that doesn't match
   ["What if I drive more than the included miles?","Extra miles are charged per mile after your trip. Ask us for the rate before you book if you're planning a long drive."],
   ["Do I need my own insurance?","Yes. At checkout you tell us your auto insurance company, and you bring proof at pickup. Your policy needs to cover you in a rental car."],
   ["What photos do I take at pickup and return?","When you pick up the car, you and we each take photos on our phones through this site: the front, back and both sides, the odometer (mileage), the fuel gauge and the interior, plus close-ups of any existing damage. You do the same when you return it. The photos are time-stamped and saved, so we both have a clear record of the car's condition. Open My trips to take them."],
-  ["How does Refer a friend work?","Log in and choose Refer a friend in your account menu to get your link. A friend who signs up with it gets $50 off their first trip. When they finish a trip longer than three days, you get $100 in Ace Fares credit, applied automatically to your next booking."],
+  ["How does Refer a friend work?","Log in and choose Refer a friend in your account menu to get your link. A friend who signs up with it gets $50 off their first trip. When they finish a trip of 3 days or more, you get $100 in Ace Fares credit, applied automatically to your next booking."],
   ["How old do I need to be?",`Drivers must be at least ${SITE.minAge} years old with a valid driver's license.`],
   ["Can you meet me at the airport?","Yes. We can hand the car over at DFW International Airport. Share your flight details when we confirm and we'll be there when you land."],
   ["How do tolls work?","Many Dallas highways are toll roads. Any tolls charged during your trip are added to your final bill after the car is returned."],
@@ -1346,7 +1348,7 @@ async function handleReturn(){
       if (r.ok && r.data.status === "confirmed") {
         const needId = r.data.carId && r.data.ref && !["verified", "review", "processing"].includes(r.data.verification);
         showDone("ok", "You're booked!", `A receipt is on its way${r.data.email ? " to " + r.data.email : ""}.` + (needId
-          ? " Next, verify your driver's license with a quick photo and selfie. It takes about 2 minutes and is required before pickup."
+          ? " Next, verify your driver's license within the next hour. It takes about 2 minutes: photos of your license and a quick selfie."
           : " We'll text you to set up the handoff."), r.data, needId ? `/verify.html?car=${encodeURIComponent(r.data.carId)}&ref=${encodeURIComponent(r.data.ref)}` : "");
         loadAvailability(); return;
       }
@@ -1760,7 +1762,7 @@ async function openTrips(){
       : !ph.return ? `<a class="btn btn-line btn-sm" href="/inspect.html?${q}&stage=return">Return photos</a>` : `<span class="pill ok">Photos done</span>`;
     return `<div class="trip"><img src="images/${esc(t.photo)}-sm.webp" alt="" width="104" height="78"><div>
       <h4>${esc(t.carName)}</h4><p>${nice(t.from)}, ${tLabel(t.fromTime)} to ${nice(t.to)}, ${tLabel(t.toTime)}</p><p>${esc(t.location)}${t.total ? " · " + money(t.total / 100) : ""}</p>
-      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>${t.status === "confirmed" ? `<span class="pill ${id[0]}">${id[1]}</span>` : ""}${act}${photoBtn}</div></div></div>`;
+      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>${t.status === "confirmed" ? (t.idOverdue ? `<span class="pill bad">ID overdue</span>` : !["verified", "review", "processing"].includes(t.verification) && t.idDueAt ? `<span class="pill warn">Verify ID by ${new Date(t.idDueAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>` : `<span class="pill ${id[0]}">${id[1]}</span>`) : ""}${act}${photoBtn}</div></div></div>`;
   }).join("");
 }
 $("#m-trips").addEventListener("click", openTrips);
