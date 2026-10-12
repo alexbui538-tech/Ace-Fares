@@ -48,6 +48,9 @@ Set these in Netlify under **Site configuration → Environment variables**. Nev
 | `STRIPE_SECRET_KEY` | Stripe Dashboard → Developers → API keys → **Secret key**. Use the **test** key (`sk_test_…`) first. |
 | `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Developers → Webhooks → your endpoint → **Signing secret** (`whsec_…`). See step 5. |
 | `ADMIN_KEY` | Any long password you make up. It's used to view all bookings. |
+| `GOOGLE_CLIENT_ID` | Turns on **Continue with Google**. See "Set up Continue with Google" below. It isn't secret. |
+| `SESSION_SECRET` (optional) | Signs login cookies. If it's empty, the site makes a random key and keeps it in its private storage. |
+| `REQUIRE_ACCOUNT` (optional) | Set to `false` to let people book without an account. Accounts are required by default. |
 | `SITE_URL` (optional) | Your custom domain, once you have one. Netlify's own address is used until then. |
 
 Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database to set up.
@@ -60,7 +63,7 @@ Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database 
 4. **Note the site address:** for example `https://acefares.netlify.app`.
 5. **Set up the Stripe webhook:** in Stripe, in **Test mode**, go to Developers → Webhooks → **Add endpoint**.
    - **URL:** `https://YOUR-SITE/api/stripe-webhook`
-   - **Events:** `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`
+   - **Events:** `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, the `payment_intent.*` events listed in "On-site checkout page", and the four `identity.verification_session.*` events listed in "Driver's license and selfie check"
    - Copy the signing secret into Netlify as `STRIPE_WEBHOOK_SECRET`, then redeploy.
 6. **Run the live tests below.**
 7. **Go live:** switch to your **live** Stripe keys. Make a live webhook endpoint (same URL and events) and update both variables in Netlify.
@@ -181,3 +184,62 @@ The full text, code and the questions for your attorney are in **`docs/TERMS-CLI
 - **The hourly job** (`deposit-holds`) appears in Netlify → Functions as a scheduled function. Scheduled functions only run on the live (published) site.
 
 Tests: `node tests/checkout.e2e.mjs` runs browser checks: opening the page, the totals match, required fields, paying, the confirmation and email, a declined card, Change trip, a blocked payment form, and a dead link.
+
+## Renter accounts: log in / sign up (email or Google)
+
+Like Turo, renters sign in before they book. Clicking **Book and pay securely** while logged out opens a **Log in to book** window, and booking continues on its own once they're in. The header shows **Log in / Sign up**, or the renter's initials with a menu: **My trips**, **Book a car**, **Log out**.
+
+- **Email first:** the renter types their email. If an account exists they enter their password; if not, they get the sign-up form (first and last name as on their license, optional mobile number, password of 8+ characters).
+- **Continue with Google:** one tap, once `GOOGLE_CLIENT_ID` is set (steps below). If someone had already signed up with that email using a password nobody verified, Google sign-in takes over the account and removes that password.
+- **Forgot password:** emails a one-time link that works for 60 minutes. This needs Gmail set up (`GMAIL_USER` and `GMAIL_APP_PASSWORD`). Without it, renters are told to text you.
+- **Checkout is filled in** with the renter's name, email and phone, and a trip can only be paid for from the account that booked it.
+- **My trips** lists each booking with its status and the license check. It has a **Verify your license** button until the check is done.
+- **Security:**
+  - Passwords are stored only as scrypt hashes.
+  - Logins are a signed, HttpOnly cookie that lasts 30 days.
+  - After 8 wrong passwords, that email is locked for 15 minutes.
+  - Requests from other websites are refused.
+  - Accounts live in a private Netlify Blobs store called `users`.
+
+### Set up "Continue with Google" (free, about 10 minutes)
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) and sign in with the business Google account. Create a project, for example "Ace Fares Website".
+2. Open **Google Auth Platform**, which may be labeled **APIs & Services → OAuth consent screen**.
+   - Choose **External** and fill in the app name "Ace Fares Rental", the support email and your logo.
+   - Under **Audience**, press **Publish app** so anyone can sign in, not just test users. This site only asks Google for name, email and photo, which don't need Google's review.
+3. Go to **Clients** (or **Credentials → Create credentials → OAuth client ID**) and choose **Web application**.
+   - Under **Authorized JavaScript origins**, add `https://acefaresrental.netlify.app`, plus your own domain later.
+   - Don't add a client secret anywhere. This sign-in method doesn't use one.
+4. Copy the **Client ID**, which ends in `.apps.googleusercontent.com`. Add it in Netlify as `GOOGLE_CLIENT_ID`, then redeploy. The Google button appears in the sign-in window.
+
+## Driver's license and selfie check (Stripe Identity)
+
+After paying, the confirmation shows **Verify your license now**. It also appears in My trips and in the email link. It opens `/verify.html`, which works like this:
+
+1. **Two boxes** explain the steps: **1. Your driver's license** (front and back, from the camera, photo library or a file) and **2. A selfie**.
+2. **Texas biometric consent:** the renter must check a box before starting. This is required by Tex. Bus. & Com. Code §503.001. The consent records the time, IP address and version.
+3. **Start verification** opens Stripe's secure screens:
+   - Stripe checks that the license is genuine.
+   - It compares the selfie with the license photo.
+   - Photos go straight to Stripe, never through your site.
+4. **The result** comes back automatically through the webhook. The site then checks it against the booking:
+   - The renter is **21 or older on the pickup date**.
+   - The **name matches** the booking or the account.
+   - The **license is valid through the return date**.
+   - If everything passes, the booking shows **Verified**. If anything fails, it shows **Needs your review** and you're emailed.
+   - The site never stores the license photos, the date of birth or the license number. It keeps only the result and the name on the license.
+5. **Deletion:** the hourly job tells Stripe to permanently delete (redact) the license images and face data **90 days after the return**, or 30 days after a cancellation. That's well inside Texas's one-year limit.
+6. **Your bookings page** has a **License check** column with each renter's status, the reasons for any review, and a link to the check in Stripe.
+
+**Cost:** $1.50 per completed check (Stripe Identity, US pricing). The first 50 are free.
+
+**Setup:**
+1. **Turn it on:** in the Stripe Dashboard, open **Identity** (search "Identity") and complete the short activation form. Test mode works right away; live mode needs Stripe's approval.
+2. **Webhook events:** in **Developers → Webhooks →** your endpoint, add these four events:
+   - `identity.verification_session.verified`
+   - `identity.verification_session.requires_input`
+   - `identity.verification_session.processing`
+   - `identity.verification_session.canceled`
+3. **Branding (optional):** under **Settings → Branding**, add your logo and colors. Stripe's ID screens use them.
+
+**About the Texas DMV:** Texas driver's licenses are kept by **Texas DPS**, not the DMV, and there's no public database a business can search. The closest thing is AAMVA's DLDV service. It only confirms that the name, date of birth, license number and expiration match state records, and it doesn't compare photos. It's sold only through approved identity companies such as Persona, Incode or Onfido, usually under a sales contract. If you want that later, it can be added next to the Stripe check.

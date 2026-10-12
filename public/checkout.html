@@ -354,6 +354,7 @@ $("#form").addEventListener("submit", async e => {
     const d = await api("/checkout-details", { method: "POST", body: JSON.stringify({ car: CAR, ref: REF, name, email, phone,
       agree: true, agreedAt: agreedAt || new Date().toISOString(), termsVersion: TERMS && TERMS.version }) });
     if (!d.ok) {
+      if (d.status === 401) { location.href = `/?login=1&next=${encodeURIComponent(location.pathname + location.search)}`; return; }
       if (d.data.error === "terms_changed") { $("#top-err").hidden = false; $("#top-err").innerHTML = `${d.data.message} <a href="${location.href}">Refresh</a>`; $("#top-err").scrollIntoView({ block: "center" }); return done(); }
       if (d.status === 409 || d.status === 410) return ended(d.status === 409 && d.data.error === "unavailable" ? "Those dates were just booked" : "This checkout has ended", d.data.message);
       showErr($("#top-err"), d.data.message || "Something went wrong. Please try again.");
@@ -386,11 +387,13 @@ $("#back").addEventListener("click", async () => {
   let r;
   try { r = await api(`/checkout-details?car=${encodeURIComponent(CAR)}&ref=${encodeURIComponent(REF)}`); }
   catch { return ended("We couldn't load your trip", "Check your connection and refresh this page."); }
-  if (!r.ok) return ended("This checkout link isn't valid", "Choose your dates again to book.");
+  if (r.status === 401) { location.replace(`/?login=1&next=${encodeURIComponent(location.pathname + location.search)}`); return; }   // sign in, then come back
+  if (!r.ok) return ended("This checkout link isn't valid", r.data.message || "Choose your dates again to book.");
   const st = r.data.status;
   if (r.data.paymentIntent || st === "confirmed") { location.replace(`/?booking=success&payment_intent=${encodeURIComponent(r.data.paymentIntent || "")}`); return; }
   if (!r.data.clientSecret) return ended();
   renderSummary(r.data.summary);
+  if (r.data.prefill) for (const k of ["name", "email", "phone"]) if (r.data.prefill[k] && !$("#" + k).value) $("#" + k).value = r.data.prefill[k];
   if (r.data.terms) renderTerms(r.data.terms);
   syncButton();
   expiresAt = Date.parse(r.data.expiresAt); tick(); setInterval(tick, 1000);

@@ -30,7 +30,7 @@ button:disabled{opacity:.5;cursor:default}
 .bar .grow{flex:1}
 h2.car{font-size:1.15rem;margin:26px 0 10px}
 .wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:12px}
-table{border-collapse:collapse;width:100%;min-width:760px}
+table{border-collapse:collapse;width:100%;min-width:900px}
 th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
 th{border-top:0;font-size:.8rem;color:var(--ink-3);font-weight:600;background:var(--ivory)}
 td small{display:block;color:var(--ink-3)}
@@ -41,7 +41,7 @@ td small{display:block;color:var(--ink-3)}
 .dep{font-size:.86rem}
 .dep .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .dep button{min-height:32px;padding:0 10px;font-size:.82rem;background:transparent;color:var(--ink);border:1.5px solid var(--line)}
-.dep .warn{color:var(--bad)}
+.dep .warn,td small.warn{color:var(--bad)}
 .empty{color:var(--ink-3);padding:14px 12px;margin:0}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--ivory);padding:10px 16px;border-radius:10px}
 </style>
@@ -81,6 +81,17 @@ function renderLogin(err){
   location.reload();
 }
 const dollars = c => "$" + (c / 100).toFixed(2);
+function idCell(b){
+  if (b.status !== "confirmed") return "";
+  const v = b.verification || {}, st = v.status || "not_started";
+  const L = { verified: ["confirmed", "Verified"], review: ["hold", "Needs your review"], processing: ["hold", "Processing"], started: ["", "Started, not finished"], retry: ["conflict", "Failed, renter can retry"], canceled: ["conflict", "Cancelled"], not_started: ["", "Not done yet"] }[st] || ["", st];
+  let more = "";
+  if (v.verifiedName) more += `<small>Name on license: ${esc(v.verifiedName)}</small>`;
+  if (v.reasons && v.reasons.length) more += v.reasons.map(r => `<small class="warn">${esc(r)}</small>`).join("");
+  if (v.error && st === "retry") more += `<small>${esc(v.error.message || "")}</small>`;
+  if (v.sessionId) more += `<small><a href="https://dashboard.stripe.com/${/^vs_test_/.test(v.sessionId) ? "test/" : ""}identity/verification-sessions/${esc(v.sessionId)}" target="_blank" rel="noopener">Open in Stripe</a>${v.redactedAt ? " · photos deleted" : ""}</small>`;
+  return `<span class="pill ${L[0]}">${L[1]}</span>${more}`;
+}
 function depositCell(car, b){
   const d = b.deposit; if (!d || !d.status || b.status !== "confirmed" && d.status !== "held") return "";
   const btn = (action, label) => `<button data-dep="${action}" data-car="${car}" data-id="${esc(b.id)}" data-max="${d.amount || 0}">${label}</button>`;
@@ -119,7 +130,7 @@ function render(data){
       .sort((a, b) => a.from < b.from ? -1 : 1);
     html += `<h2 class="car">${name}</h2><div class="wrap">`;
     if (!list.length) { html += `<p class="empty">No bookings to show.</p></div>`; continue; }
-    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>Deposit hold</th><th></th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>License check</th><th>Deposit hold</th><th></th></tr></thead><tbody>`;
     for (const b of list) {
       const c = b.customer || {};
       const canCancel = b.status === "confirmed" || b.status === "hold" || b.status === "conflict";
@@ -128,6 +139,7 @@ function render(data){
         <td>${PLACES[b.location] || esc(b.location)}</td>
         <td>${money(b.amountPaid || (b.status === "confirmed" ? b.total : 0))}</td>
         <td><span class="pill ${esc(b.status)}">${LABEL[b.status] || esc(b.status)}</span>${b.signature ? `<small title="Fingerprint ${esc(b.signature.sha256)}">Signed ${esc(new Date(b.signature.signedAt).toLocaleString())}<br>IP ${esc(b.signature.ip)} · v${esc(b.signature.agreementVersion)}</small>` : ""}</td>
+        <td>${idCell(b)}</td>
         <td class="dep">${depositCell(car, b)}</td>
         <td>${canCancel ? `<button class="danger" data-car="${car}" data-id="${esc(b.id)}">Cancel</button>` : ""}</td></tr>`;
     }

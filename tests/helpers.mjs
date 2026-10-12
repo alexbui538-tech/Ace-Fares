@@ -14,6 +14,7 @@ export function memoryStore({ delay = 0 } = {}) {
       if (o.onlyIfMatch && (!cur || cur.etag !== o.onlyIfMatch)) return { modified: false };
       const etag = `"${++n}"`; m.set(k, { data: JSON.stringify(data), etag }); return { modified: true, etag };
     },
+    async delete(k) { m.delete(k); },
   };
 }
 
@@ -33,7 +34,7 @@ const real = new Stripe("sk_test_dummy");
 
 export function fakeStripe({ failCreate = false, declineHolds = false, clock = () => Date.now() } = {}) {
   const sessions = new Map(), intents = new Map(), customers = new Map(); let n = 0, k = 0, cu = 0;
-  const calls = { create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [], piCapture: [], cusCreate: [], cusUpdate: [] };
+  const calls = { create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [], piCapture: [], cusCreate: [], cusUpdate: [], vsCreate: [], vsRetrieve: [], vsCancel: [], vsRedact: [] };
   const fake = { declineHolds };
   const noSuch = () => { const e = new Error("No such payment_intent"); e.type = "StripeInvalidRequestError"; return e; };
   return {
@@ -63,6 +64,29 @@ export function fakeStripe({ failCreate = false, declineHolds = false, clock = (
       async capture(id, params = {}) { calls.piCapture.push({ id, params }); const pi = intents.get(id); if (!pi) throw noSuch();
         if (pi.status !== "requires_capture") { const e = new Error("This PaymentIntent could not be captured"); e.type = "StripeInvalidRequestError"; throw e; }
         pi.status = "succeeded"; pi.amount_received = params.amount_to_capture ?? pi.amount; return pi; },
+    },
+    identity: { verificationSessions: (() => {
+      const vs = new Map(); let v = 0;
+      const noVs = () => { const e = new Error("No such verification session"); e.type = "StripeInvalidRequestError"; return e; };
+      const api = {
+        all: vs,
+        async create(params, opts) { calls.vsCreate.push({ params, opts });
+          if (fake.identityOff) { const e = new Error("Your account is not activated for Identity"); e.type = "StripeInvalidRequestError"; throw e; }
+          const id = `vs_test_${++v}`; const s = { id, object: "identity.verification_session", status: "requires_input", client_secret: `${id}_secret_xyz`,
+            url: `https://verify.stripe.com/start/${id}`, metadata: { ...params.metadata }, last_error: null, verified_outputs: null, last_verification_report: null };
+          vs.set(id, s); return s; },
+        async retrieve(id, opts) { calls.vsRetrieve.push({ id, opts }); const s = vs.get(id); if (!s) throw noVs(); return { ...s }; },
+        async cancel(id) { calls.vsCancel.push(id); const s = vs.get(id); if (!s) throw noVs(); s.status = "canceled"; return s; },
+        async redact(id) { calls.vsRedact.push(id); const s = vs.get(id); if (!s) throw noVs(); s.redacted = true; s.verified_outputs = null; return s; },
+      };
+      return api; })() },
+    // simulate the renter finishing Stripe's license + selfie screens
+    finishIdentity(id, { result = "verified", first = "Jordan", last = "Lee", dob = { day: 4, month: 6, year: 1990 }, expires = { day: 1, month: 1, year: 2030 }, error = "document_expired" } = {}) {
+      const s = this.identity.verificationSessions.all.get(id);
+      if (result === "verified") Object.assign(s, { status: "verified", last_error: null,
+        verified_outputs: { first_name: first, last_name: last, dob }, last_verification_report: { id: "vr_1", document: { expiration_date: expires, type: "driving_license" } } });
+      else Object.assign(s, { status: "requires_input", last_error: { code: error, reason: "The document is expired." } });
+      return { ...s };
     },
     customers: {
       async create(params) { calls.cusCreate.push(params); const id = `cus_test_${++cu}`; const c = { id, ...params }; customers.set(id, c); return c; },

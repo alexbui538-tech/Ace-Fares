@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { availabilityHandler, checkoutHandler, checkoutDetailsHandler, cancelHandler, bookingStatusHandler, webhookHandler } from "../lib/handlers.mjs";
 import { makeRepo } from "../lib/bookings.mjs";
+import { makeAuth } from "../lib/auth.mjs";
 import { quote, daysBetween } from "../lib/pricing.mjs";
 import { memoryStore, fakeStripe, signedEvent, WEBHOOK_SECRET } from "./helpers.mjs";
 
@@ -21,10 +22,11 @@ const D = day => iso(new Date(nm.getFullYear(), nm.getMonth(), day));
 const store = memoryStore(), stripe = fakeStripe(), PK = "pk_test_fake";
 const mailer = { sent: [], async send(m) { this.sent.push(m); } };
 let base = "";
+const auth = makeAuth({ store: memoryStore(), bookingsStore: store, secret: "e2e", log: { error() {}, warn() {}, log() {} } });
 const hook = webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET, mailer, siteUrl: "" });
 const H = {
   "/api/availability": availabilityHandler({ store }),
-  "/api/checkout-details": checkoutDetailsHandler({ store, stripe, publishableKey: PK }),
+  "/api/checkout-details": checkoutDetailsHandler({ store, stripe, publishableKey: PK, userOf: auth.userOf }),
   "/api/cancel": cancelHandler({ store, stripe }),
   "/api/booking": bookingStatusHandler({ store, stripe, mailer, siteUrl: "" }),
   "/api/stripe-webhook": hook,
@@ -36,7 +38,8 @@ const server = http.createServer(async (req, res) => {
     await hook(signedEvent("payment_intent.succeeded", pi));
     res.writeHead(200); return res.end("ok");
   }
-  const h = url.pathname === "/api/checkout" ? checkoutHandler({ store, stripe, siteUrl: base, publishableKey: PK }) : H[url.pathname];
+  const h = url.pathname === "/api/checkout" ? checkoutHandler({ store, stripe, siteUrl: base, publishableKey: PK, userOf: auth.userOf, requireAccount: true, linkBooking: auth.linkBooking })
+    : url.pathname.startsWith("/api/auth/") ? auth.handler : H[url.pathname];
   if (h) {
     const chunks = []; for await (const c of req) chunks.push(c);
     const r = await h(new Request(url, { method: req.method, headers: req.headers, body: chunks.length ? Buffer.concat(chunks) : undefined }));
@@ -68,9 +71,13 @@ window.Stripe = function (pk) { window.__pk = pk; return {
   } }; };`;
 
 const browser = await chromium.launch();
+let renters = 0;
 async function newPage(w = 1280, h = 900, stripeJs = FAKE_STRIPE_JS) {
   const p = await browser.newPage({ viewport: { width: w, height: h } });
   p.errs = []; p.on("pageerror", e => p.errs.push(e.message));
+  // every renter books from a signed-in account (each page gets its own)
+  const su = await p.request.post(base + "/api/auth/signup", { data: { email: `renter${++renters}@example.com`, password: "renter-pass-1", firstName: "Jordan", lastName: "Lee", phone: "(214) 555-0100" } });
+  if (su.status() !== 201) throw new Error("test sign-up failed " + su.status());
   await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
   await p.route(/js\.stripe\.com/, r => stripeJs ? r.fulfill({ contentType: "application/javascript", body: stripeJs }) : r.abort());
   return p;
@@ -96,6 +103,7 @@ const fill = async (p, name = "Jordan Lee") => {
 const p = await newPage();
 await startCheckout(p, "escalade", 10, 13, "dallas-delivery");
 ok(/\/checkout\.html\?car=escalade&ref=/.test(p.url()), "Book and pay securely opens the site's own checkout page");
+ok(await p.inputValue("#name") === "Jordan Lee" && /^renter\d+@example\.com$/.test(await p.inputValue("#email")) && await p.inputValue("#phone") === "(214) 555-0100", "checkout is prefilled from the renter's account");
 ok(await p.locator(".fake-pe").count() === 1, "Stripe payment form is shown on the page");
 const shownTotal = (await p.textContent("#sum-total")).trim();
 const q = quote({ car: "escalade", location: "dallas-delivery", from: D(10), days: daysBetween(D(10), D(13)) });
@@ -112,6 +120,7 @@ await p.check("#agree");
 ok(!(await p.isDisabled("#pay-btn")), "checking the box enables Book trip");
 await p.uncheck("#agree"); ok(await p.isDisabled("#pay-btn"), "unchecking disables it again");
 await p.check("#agree");
+await p.fill("#name", "");
 await p.click("#pay-btn");
 ok(await p.locator("#c-name.bad").count() === 1 && p.url().includes("checkout.html"), "empty details: asks for the name, nothing charged");
 await fill(p);

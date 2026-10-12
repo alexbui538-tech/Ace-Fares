@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler } from "../lib/handlers.mjs";
 import { makeRepo } from "../lib/bookings.mjs";
+import { makeAuth } from "../lib/auth.mjs";
+import { verifyHandler } from "../lib/identity.mjs";
 import { quote } from "../lib/pricing.mjs";
 import { memoryStore, fakeStripe, signedEvent, WEBHOOK_SECRET } from "./helpers.mjs";
 
@@ -16,11 +18,14 @@ const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")
 const nm = new Date(); nm.setDate(1); nm.setMonth(nm.getMonth() + 1);           // first of next month
 const D = day => iso(new Date(nm.getFullYear(), nm.getMonth(), day));
 
-const store = memoryStore(), stripe = fakeStripe();
+const store = memoryStore(), stripe = fakeStripe(), users = memoryStore(), mails = [];
 let base = "", apiDown = false;
+const auth = makeAuth({ store: users, bookingsStore: store, secret: "e2e-secret", mailer: { send: async m => { mails.push(m); } }, log: { error() {}, warn() {}, log() {} } });
+const checkoutFor = siteUrl => checkoutHandler({ store, stripe, siteUrl, userOf: auth.userOf, requireAccount: true, linkBooking: auth.linkBooking });
 const H = {
   "/api/availability": availabilityHandler({ store }),
-  "/api/checkout": checkoutHandler({ store, stripe, siteUrl: () => base }),
+  "/api/checkout": checkoutFor(""),
+  "/api/verify": verifyHandler({ store, stripe, userOf: auth.userOf, siteUrl: "" }),
   "/api/cancel": cancelHandler({ store, stripe }),
   "/api/booking": bookingStatusHandler({ store, stripe }),
   "/api/stripe-webhook": webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET }),
@@ -29,12 +34,12 @@ const H = {
 };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, base);
-  const h = H[url.pathname];
+  const h = url.pathname.startsWith("/api/auth/") ? auth.handler : H[url.pathname];
   if (h) {
     if (apiDown && url.pathname === "/api/checkout") { res.writeHead(500, { "content-type": "application/json" }); return res.end("{}"); }
     const chunks = []; for await (const c of req) chunks.push(c);
     // siteUrl is read when checkout runs
-    const r = await (url.pathname === "/api/checkout" ? checkoutHandler({ store, stripe, siteUrl: base }) : h)(new Request(url, { method: req.method, headers: req.headers, body: chunks.length ? Buffer.concat(chunks) : undefined }));
+    const r = await (url.pathname === "/api/checkout" ? checkoutFor(base) : h)(new Request(url, { method: req.method, headers: req.headers, body: chunks.length ? Buffer.concat(chunks) : undefined }));
     res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(await r.text());
   }
   try {
@@ -84,8 +89,28 @@ const expect = quote({ car: "escalade", location: "dfw", days: 4, from: D(10) })
 const shown = (await page.textContent("#b-quote .sum")).replace(/[^\d.]/g, "");
 ok(Number(shown) === expect, `trip total on the page ($${shown}) matches what the server charges ($${expect})`);
 
-// book -> Stripe -> pay -> back to the site
-await Promise.all([page.waitForURL(/checkout\.stripe\.com/), page.click("#b-go")]);
+// book while logged out -> "Log in to book" -> sign up -> straight on to Stripe
+ok(await page.isVisible("#acct-out") && !(await page.isVisible("#acct-in")), "header shows Log in / Sign up when logged out");
+await page.click("#b-go");
+await page.waitForSelector("#auth[open]");
+ok((await page.textContent("#auth-title")).includes("Log in to book"), "Book and pay while logged out opens 'Log in to book'");
+await page.screenshot({ path: "e2e-auth.png" });
+await page.fill("#a-email", "nope"); await page.click("#auth [data-step=start] button[type=submit]");
+ok((await page.textContent("#auth-err")).includes("valid email"), "sign-in: a bad email gets a clear message");
+await page.fill("#a-email", "Riley.Brooks@example.com"); await page.click("#auth [data-step=start] button[type=submit]");
+await page.waitForSelector("#auth [data-step=signup]:not([hidden])");
+ok((await page.textContent("#auth [data-step=signup] .a-email-show")) === "Riley.Brooks@example.com", "new email: goes to the sign-up form with the email filled in");
+await page.fill("#a-first", "Riley"); await page.fill("#a-last", "Brooks"); await page.fill("#a-phone", "214-555-0188"); await page.fill("#a-newpass", "short");
+await page.click("#auth [data-step=signup] button[type=submit]");
+ok((await page.textContent("#auth-err")).includes("8 characters"), "sign-up: short password is refused");
+await page.fill("#a-newpass", "riley-pass-2027");
+await page.screenshot({ path: "e2e-signup.png" });
+await Promise.all([page.waitForURL(/checkout\.stripe\.com/), page.click("#auth [data-step=signup] button[type=submit]")]);
+ok(true, "after signing up, booking continues straight to payment");
+const riley = (await users.getWithMetadata(`email-${(await import("../lib/auth.mjs")).sha("riley.brooks@example.com")}`)).data.id;
+ok((await makeRepo(store).all("escalade")).some(b => b.userId === riley), "the booking is saved to Riley's account");
+
+// pay -> back to the site
 const p = stripe.calls.create.at(-1).params;
 ok(p.metadata.from === D(10) && p.metadata.to === D(14) && p.metadata.location === "dfw", "Stripe checkout started with the chosen dates and DFW");
 const sid = [...stripe.sessions.keys()].at(-1);
@@ -95,8 +120,46 @@ await page.waitForSelector("#done[open]"); await page.waitForTimeout(400);
 ok((await page.textContent("#done-title")).includes("You're booked"), "after paying, the site shows 'You're booked!'");
 ok((await page.textContent("#done-sum")).includes("DFW"), "confirmation shows the trip details");
 ok(!page.url().includes("session_id"), "the address bar is cleaned up");
+ok(await page.isVisible("#done-verify") && (await page.getAttribute("#done-verify", "href")).startsWith("/verify.html?car=escalade&ref="), "after paying: 'Verify your license now' button");
+ok(await page.isVisible("#acct-in") && (await page.textContent("#acct-first")) === "Riley", "header shows Riley's account");
 await page.screenshot({ path: "e2e-confirmed.png" });
 await page.click("#done-close");
+
+// My trips: the paid trip, with the license check to do
+await page.click("#acct-btn"); await page.click("#m-trips"); await page.waitForSelector("#trips .trip");
+const tripTxt = await page.textContent("#trips-list");
+ok(tripTxt.includes("Escalade") && tripTxt.includes("Booked") && tripTxt.includes("ID not verified yet"), "My trips lists the booking and its ID status");
+const verifyHref = await page.getAttribute("#trips-list a.btn", "href");
+await page.screenshot({ path: "e2e-trips.png" });
+await page.click("#trips-close");
+
+// license + selfie page (Stripe Identity)
+await page.route(/verify\.stripe\.com/, r => r.fulfill({ contentType: "text/html", body: "<h1>Stripe ID check</h1>" }));
+await page.goto(base + verifyHref); await page.waitForSelector("#page:not([hidden])");
+ok((await page.textContent("#box-license")).includes("front and the back") && (await page.textContent("#box-selfie")).includes("selfie"), "ID page: license box and selfie box");
+ok(await page.isDisabled("#go"), "ID page: Start is disabled until the consent box is checked");
+ok((await page.textContent("#consent-text")).includes("biometric"), "ID page: Texas biometric consent text is shown");
+await page.screenshot({ path: "e2e-verify.png", fullPage: true });
+await page.check("#consent");
+await Promise.all([page.waitForURL(/verify\.stripe\.com/), page.click("#go")]);
+const vs = [...stripe.identity.verificationSessions.all.keys()].at(-1);
+ok(stripe.calls.vsCreate.at(-1).params.options.document.require_matching_selfie === true, "ID page: opens Stripe's license + matching-selfie check");
+await H["/api/stripe-webhook"](signedEvent("identity.verification_session.verified", stripe.finishIdentity(vs, { first: "Riley", last: "Brooks" })));
+await page.goto(base + verifyHref + "&returned=1"); await page.waitForSelector("#state:not([hidden])");
+ok((await page.textContent("#state-title")).includes("You're verified"), "ID page: shows 'You're verified' after the check");
+await page.goto(base + "/"); await page.waitForTimeout(500);
+
+// log out, then log back in with the password
+await page.click("#acct-btn"); await page.click("#m-logout"); await page.waitForTimeout(300);
+ok(await page.isVisible("#acct-out"), "log out: back to Log in / Sign up");
+await page.click(".login-link"); await page.fill("#a-email", "riley.brooks@example.com"); await page.click("#auth [data-step=start] button[type=submit]");
+await page.waitForSelector("#auth [data-step=login]:not([hidden])");
+await page.fill("#a-pass", "wrong-password"); await page.click("#auth [data-step=login] button[type=submit]");
+await page.waitForSelector("#auth-err:not([hidden])");
+ok((await page.textContent("#auth-err")).includes("don't match"), "log in: wrong password is refused");
+await page.fill("#a-pass", "riley-pass-2027"); await page.click("#auth [data-step=login] button[type=submit]");
+await page.waitForSelector("#acct-in:not([hidden])");
+ok(!(await page.isVisible("#auth")), "log in with email + password works");
 
 // the new booking now blocks those dates for the next renter
 await page.click("[data-book=escalade]");
@@ -141,6 +204,23 @@ await btn.click(); await a.waitForTimeout(900);
 const esc = await makeRepo(store).all("escalade");
 ok(esc.some(b => b.status === "cancelled"), "bookings page: owner can cancel a booking, freeing the dates");
 ok(aErrs.length === 0, "bookings page: no errors " + aErrs.join(" | "));
+
+// phone: header, sign-in window and My trips fit the screen
+const m = await browser.newPage({ viewport: { width: 390, height: 844 } }); m.on("pageerror", e => errs.push(e.message));
+await m.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+await m.goto(base + "/"); await m.waitForTimeout(400);
+ok(await m.isVisible(".login-link"), "phone: Log in is in the header");
+await m.click(".login-link"); await m.waitForSelector("#auth[open]");
+ok(await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "phone: sign-in window has no sideways scrolling");
+await m.screenshot({ path: "e2e-phone-auth.png" });
+await m.fill("#a-email", "riley.brooks@example.com"); await m.click("#auth [data-step=start] button[type=submit]");
+await m.waitForSelector("#auth [data-step=login]:not([hidden])");
+await m.fill("#a-pass", "riley-pass-2027"); await m.click("#auth [data-step=login] button[type=submit]");
+await m.waitForSelector("#acct-in:not([hidden])");
+await m.click("#acct-btn"); await m.screenshot({ path: "e2e-phone-menu.png" });
+await m.click("#m-trips"); await m.waitForSelector("#trips .trip");
+ok(await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "phone: My trips has no sideways scrolling");
+await m.screenshot({ path: "e2e-phone-trips.png" });
 
 ok(errs.length === 0, "no page errors " + errs.join(" | "));
 await browser.close(); server.close();

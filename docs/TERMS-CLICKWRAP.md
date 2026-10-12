@@ -1,6 +1,6 @@
 # Ace Fares: clickwrap signature, deposit hold and smoking policy
 
-**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft2`.
+**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft3`.
 
 Everything below is already live in the code. The agreement text comes from `lib/agreement.mjs`, and the checkout page, the `/rental-agreement` page and the confirmation email all read from it. Change the wording only there, and bump `AGREEMENT_VERSION` when you do.
 
@@ -23,7 +23,7 @@ Settings live in `lib/catalog.mjs`:
 
 The checkout page fills in the trip total and the deposit for the car:
 
-> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft2) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
+> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft3) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
 
 A **"Key rental terms"** box appears directly above the checkbox:
 
@@ -85,6 +85,9 @@ Ace Fares is not responsible for personal property left in the vehicle, or for i
 If we find any evidence of smoking or vaping when the vehicle is returned, including smoke or vapor odor, ash, cigarette or cigar butts, rolling papers, vape devices or cartridges, or burn marks, a smoking remediation fee of $150 applies. This fee is not negotiable. It is a pre-agreed amount reflecting the reasonable cost of odor treatment, deep cleaning and the time the vehicle is out of service, which are hard to measure exactly for each rental; it is not a penalty.
 
 We will notify you within 48 hours after return, with dated photos and a description of what we found. You authorize us to collect the fee from your security deposit hold or your card on file. Burn holes, stains or other damage are charged separately under section 7.
+
+### 3. Who may drive (added paragraph)
+Identity check. Before handoff you must complete our online identity check: photos of the front and back of your driver's license and a selfie, checked by our verification provider, Stripe, as explained on the verification page, where you consent to it separately. The license must be valid for the whole trip, and its name and photo must match you and this booking. If you do not complete the check, or it does not pass and you cannot prove your identity to us in person at handoff, we may refuse handoff and the cancellation policy in section 15 applies.
 
 ### 13. Rules of use (gig work allowed)
 No pets unless we agree in advance. No racing, off-road driving or towing. Do not drive under the influence of alcohol or drugs, and do not use the vehicle for anything illegal. Travel outside Texas: [to be set].
@@ -220,6 +223,7 @@ To prove a signature later, rebuild the text for that version and booking from g
 - **E-SIGN consumer consent.** Confirm whether the consent and disclosure wording in section 2 is enough, or whether the renter must show they can access electronic records before consenting.
 - **Insurance.** Confirm the insurance clause matches your actual commercial or fleet policy. Who holds each car's title also affects the "owner and lessor" wording.
 - **Gig work (section 13).** Confirm with your own insurer that your commercial or fleet policy allows renters to use the cars for rideshare and delivery. Many rental policies exclude it. Also confirm the platforms' current rules: Uber, for example, has had its own rules about which rental cars it accepts.
+- **Biometric consent (ID check).** The verification page has its own consent under Tex. Bus. & Com. Code §503.001: Stripe does the check, nothing is sold, and the data is deleted 90 days after the return and always within a year. Confirm the wording, and whether a privacy policy page should be added to the site.
 - **Blanks still to fill.** Extra-mile rate, late fee, fuel fee, cleaning fee, ticket fee, cancellation policy and out-of-state travel.
 
 Sources:

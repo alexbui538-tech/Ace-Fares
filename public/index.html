@@ -421,6 +421,55 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 .notice{background:var(--cream);border-radius:10px;padding:12px 14px;font-size:.92rem;color:var(--ink-2)}
 @media (max-width:520px){.row2{grid-template-columns:1fr}}
 
+
+/* account: log in / sign up (Turo-style), account menu, my trips */
+.acct{display:flex;align-items:center;gap:6px}
+.acct-out{display:flex;align-items:center;gap:6px}
+.login-link{background:none;border:0;font-weight:600;color:var(--ink);cursor:pointer;padding:0 14px;border-radius:8px;min-height:44px}
+.login-link:hover{background:var(--cream)}
+.acct-wrap{position:relative}
+.avatar-btn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 14px 4px 4px;cursor:pointer;min-height:44px;font-weight:600}
+.avatar-btn:hover{box-shadow:var(--shadow)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--navy);color:var(--on-navy);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden;flex:none;text-transform:uppercase}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.acct-menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 40px -16px rgba(21,19,15,.35);min-width:240px;padding:8px;display:grid;z-index:50}
+.acct-menu .who{padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.acct-menu .who b{display:block}
+.acct-menu .who span{font-size:.85rem;color:var(--ink-3);word-break:break-all}
+.acct-menu button,.acct-menu a{text-align:left;background:none;border:0;padding:11px 12px;border-radius:8px;cursor:pointer;font-weight:500;text-decoration:none;color:var(--ink);font-size:.97rem}
+.acct-menu button:hover,.acct-menu a:hover{background:var(--cream)}
+@media (max-width:860px){.acct{margin-left:4px}.acct .acct-first{display:none}.avatar-btn{padding:4px}}
+#auth{width:min(440px,calc(100vw - 24px))}
+.auth-head{display:flex;align-items:center;gap:10px;padding:16px 16px 0 24px}
+.auth-head h3{font-size:1.65rem;margin:0}
+.auth-body{padding:6px 24px 24px;display:grid;gap:14px}
+.auth-step{display:grid;gap:14px}
+.auth-sub{margin:0;color:var(--ink-2)}
+.g-wrap{min-height:44px;display:flex;justify-content:center}
+.or{display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:.85rem;margin-top:2px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.pw{position:relative}
+.pw input{padding-right:70px}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;font-weight:600;color:var(--gold-text);cursor:pointer;padding:0 10px;min-height:40px}
+.email-chip{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--ivory);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.95rem}
+.email-chip span{word-break:break-all;font-weight:600}
+.linkish{background:none;border:0;color:var(--gold-text);font-weight:600;cursor:pointer;padding:8px 0;text-decoration:underline;text-underline-offset:3px;justify-self:start}
+.auth-err{background:#FBE3D9;color:#8A2D14;border-radius:10px;padding:10px 12px;font-size:.92rem}
+.auth-ok{background:#E3F0E2;color:var(--ok);border-radius:10px;padding:12px 14px}
+#trips{width:min(640px,calc(100vw - 24px))}
+.trip{display:grid;grid-template-columns:104px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.trip:last-child{border-bottom:0}
+.trip img{width:104px;height:78px;object-fit:cover;border-radius:10px}
+.trip h4{margin:0;font-family:var(--sans);font-size:1.05rem}
+.trip p{margin:2px 0;color:var(--ink-2);font-size:.92rem}
+.trip .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;border-radius:999px;padding:4px 10px;background:var(--cream);color:var(--ink-2)}
+.pill.ok{background:#E3F0E2;color:var(--ok)}
+.pill.warn{background:#FFF1D6;color:#7A5200}
+.pill.bad{background:#FBE3D9;color:#8A2D14}
+.btn-sm{min-height:40px;padding:0 14px;font-size:.92rem}
+@media (max-width:520px){.trip{grid-template-columns:72px 1fr}.trip img{width:72px;height:56px}}
+
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{transition:none!important;animation:none!important}
@@ -444,7 +493,23 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <a href="#faq">FAQ</a>
       <a href="#host" class="host-link">Become a host</a>
     </nav>
-    <a class="btn btn-ink" href="#fleet">Book a car</a>
+    <div class="acct" id="acct">
+      <div class="acct-out" id="acct-out">
+        <button class="login-link" type="button" data-auth="login">Log in</button>
+        <button class="btn btn-ink" type="button" data-auth="signup">Sign up</button>
+      </div>
+      <div class="acct-wrap" id="acct-in" hidden>
+        <button class="avatar-btn" type="button" id="acct-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="acct-menu" aria-label="Account menu">
+          <span class="avatar" id="acct-avatar" aria-hidden="true"></span><span class="acct-first" id="acct-first"></span>
+        </button>
+        <div class="acct-menu" id="acct-menu" role="menu" hidden>
+          <div class="who"><b id="acct-name"></b><span id="acct-email"></span></div>
+          <button type="button" role="menuitem" id="m-trips">My trips</button>
+          <a role="menuitem" href="#fleet" id="m-book">Book a car</a>
+          <button type="button" role="menuitem" id="m-logout">Log out</button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -639,12 +704,71 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
   </div>
 </dialog>
 
+<dialog id="auth" aria-labelledby="auth-title">
+  <div class="auth-head">
+    <h3 id="auth-title">Log in</h3>
+    <button class="x" type="button" id="auth-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <form class="auth-body" id="auth-form" novalidate>
+    <p class="auth-sub" id="auth-sub"></p>
+    <div class="auth-err" id="auth-err" role="alert" hidden></div>
+    <div class="auth-step" data-step="start">
+      <div id="g-area" hidden><div class="g-wrap" id="g-btn"></div><div class="or">or</div></div>
+      <div class="ctl"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" inputmode="email" spellcheck="false"></div>
+      <button class="btn btn-ink btn-block" type="submit">Continue with email</button>
+    </div>
+    <div class="auth-step" data-step="login" hidden>
+      <div class="email-chip"><span class="a-email-show"></span><button type="button" class="linkish" data-back>Change</button></div>
+      <div class="ctl"><label for="a-pass">Password</label><div class="pw"><input id="a-pass" type="password" autocomplete="current-password"><button type="button" data-show="a-pass" aria-label="Show password">Show</button></div></div>
+      <button class="btn btn-ink btn-block" type="submit">Log in</button>
+      <button type="button" class="linkish" id="a-forgot">Forgot password?</button>
+    </div>
+    <div class="auth-step" data-step="signup" hidden>
+      <div class="email-chip"><span class="a-email-show"></span><button type="button" class="linkish" data-back>Change</button></div>
+      <div class="row2">
+        <div class="ctl"><label for="a-first">First name</label><input id="a-first" autocomplete="given-name"></div>
+        <div class="ctl"><label for="a-last">Last name</label><input id="a-last" autocomplete="family-name"></div>
+      </div>
+      <p class="fine" style="margin-top:-6px">Use the name on your driver's license.</p>
+      <div class="ctl"><label for="a-phone">Mobile phone <span style="font-weight:400;color:var(--ink-3)">(optional, for trip texts)</span></label><input id="a-phone" type="tel" autocomplete="tel" inputmode="tel"></div>
+      <div class="ctl"><label for="a-newpass">Create a password</label><div class="pw"><input id="a-newpass" type="password" autocomplete="new-password" aria-describedby="a-newpass-help"><button type="button" data-show="a-newpass" aria-label="Show password">Show</button></div><p class="help" id="a-newpass-help">At least 8 characters.</p></div>
+      <button class="btn btn-ink btn-block" type="submit">Agree and sign up</button>
+      <p class="fine">By selecting Agree and sign up, you agree to the <a href="/rental-agreement" target="_blank" rel="noopener">Ace Fares Rental Agreement</a> terms that apply when you book, and to receive trip emails.</p>
+    </div>
+    <div class="auth-step" data-step="name" hidden>
+      <div class="row2">
+        <div class="ctl"><label for="n-first">First name</label><input id="n-first" autocomplete="given-name"></div>
+        <div class="ctl"><label for="n-last">Last name</label><input id="n-last" autocomplete="family-name"></div>
+      </div>
+      <p class="fine" style="margin-top:-6px">Use the name on your driver's license.</p>
+      <button class="btn btn-ink btn-block" type="submit">Save and continue</button>
+    </div>
+    <div class="auth-step" data-step="sent" hidden>
+      <div class="auth-ok" id="sent-text" role="status"></div>
+      <button type="button" class="linkish" data-back>Back to log in</button>
+    </div>
+    <div class="auth-step" data-step="reset" hidden>
+      <div class="ctl"><label for="r-pass">New password</label><div class="pw"><input id="r-pass" type="password" autocomplete="new-password"><button type="button" data-show="r-pass" aria-label="Show password">Show</button></div><p class="help">At least 8 characters.</p></div>
+      <button class="btn btn-ink btn-block" type="submit">Save password and log in</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="trips" aria-labelledby="trips-title">
+  <div class="dlg-head">
+    <div><h3 id="trips-title">My trips</h3><p id="trips-sub">Your bookings and ID check</p></div>
+    <button class="x" type="button" id="trips-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="dlg-body" id="trips-list" style="gap:0;padding-top:4px"></div>
+</dialog>
+
 <dialog id="done" aria-labelledby="done-title">
   <div class="done-body">
     <span class="done-mark" id="done-mark" aria-hidden="true"></span>
     <h3 id="done-title"></h3>
     <p id="done-text" role="status"></p>
     <div class="done-sum" id="done-sum" hidden></div>
+    <a class="btn btn-gold btn-block" id="done-verify" href="#" hidden>Verify your license now</a>
     <button class="btn btn-ink btn-block" type="button" id="done-close">Done</button>
   </div>
 </dialog>
@@ -1093,10 +1217,12 @@ async function loadAvailability(){
   if (cal.open) renderCal();
 }
 async function startCheckout(loc){
+  if (!ACCOUNT.user) { openAuth({ reason: "book", then: () => startCheckout(loc) }); return; }   // like Turo: sign in to book
   const go = $("#b-go"), notice = $("#b-notice");
   go.disabled = true; go.classList.add("loading"); notice.hidden = true; notice.classList.remove("err");
   try {
     const r = await api("/checkout", { method: "POST", body: JSON.stringify({ car: current.id, from: bFrom.value, to: bTo.value, fromTime: $("#b-from-t").value, toTime: $("#b-to-t").value, location: loc.id }) }, 20000);
+    if (r.status === 401) { ACCOUNT.user = null; renderAccount(); go.disabled = false; go.classList.remove("loading"); openAuth({ reason: "book", then: () => startCheckout(loc) }); return; }
     if (r.ok && r.data.checkout) { location.href = r.data.checkout; return; }   // our own checkout page
     if (r.ok && r.data.url) { location.href = r.data.url; return; }             // Stripe's hosted page
     if (r.status === 409) loadAvailability();
@@ -1121,7 +1247,10 @@ const DONE_ICON = {
   wait: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   bad: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>'
 };
-function showDone(kind, title, text, d){
+function showDone(kind, title, text, d, verifyHref){
+  $("#done-verify").hidden = !verifyHref; if (verifyHref) $("#done-verify").href = verifyHref;
+  $("#done-close").textContent = verifyHref ? "I'll do it later" : "Done";
+  $("#done-close").className = verifyHref ? "btn btn-line btn-block" : "btn btn-ink btn-block";
   $("#done-mark").className = "done-mark" + (kind === "ok" ? "" : " " + kind);
   $("#done-mark").innerHTML = DONE_ICON[kind];
   $("#done-title").textContent = title; $("#done-text").textContent = text;
@@ -1156,7 +1285,11 @@ async function handleReturn(){
         $("#done").close(); location.href = `/checkout.html?car=${encodeURIComponent(r.data.carId)}&ref=${encodeURIComponent(r.data.ref)}&failed=1`; return;
       }
       if (r.ok && r.data.status === "confirmed") {
-        showDone("ok", "You're booked!", `A receipt is on its way${r.data.email ? " to " + r.data.email : ""}. We'll text you to set up the handoff.`, r.data); loadAvailability(); return;
+        const needId = r.data.carId && r.data.ref && !["verified", "review", "processing"].includes(r.data.verification);
+        showDone("ok", "You're booked!", `A receipt is on its way${r.data.email ? " to " + r.data.email : ""}.` + (needId
+          ? " Next, verify your driver's license with a quick photo and selfie. It takes about 2 minutes and is required before pickup."
+          : " We'll text you to set up the handoff."), r.data, needId ? `/verify.html?car=${encodeURIComponent(r.data.carId)}&ref=${encodeURIComponent(r.data.ref)}` : "");
+        loadAvailability(); return;
       }
       if (r.ok && r.data.status === "conflict") {
         showDone("bad", "Those dates were just taken", "Someone else booked this car a moment before your payment finished. You'll get a full refund, and we'll text you to find other dates.", r.data); return;
@@ -1400,6 +1533,187 @@ $("#host-form").addEventListener("submit", e => {
 
 paintDateBtns();
 renderFleet();
+/* accounts: log in / sign up with email or Google (lib/auth.mjs) */
+const ACCOUNT = { user: null, config: null, after: null, email: "", step: "start", resetToken: "", gReady: false };
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const authApi = (path, body) => api("/auth/" + path, body === undefined ? {} : { method: "POST", body: JSON.stringify(body) }, 15000);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function renderAccount(){
+  const u = ACCOUNT.user;
+  $("#acct-out").hidden = !!u; $("#acct-in").hidden = !u;
+  if (!u) { $("#acct-menu").hidden = true; return; }
+  const ini = ((u.firstName || "")[0] || "") + ((u.lastName || "")[0] || "") || (u.email || "?")[0];
+  $("#acct-avatar").innerHTML = u.picture ? `<img src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer">` : esc(ini);
+  $("#acct-first").textContent = u.firstName || "Account";
+  $("#acct-name").textContent = u.name || u.email; $("#acct-email").textContent = u.email;
+}
+async function loadAccount(){
+  try {
+    if (location.protocol === "file:") throw new Error("file");
+    const [me, cfg] = await Promise.all([authApi("me"), authApi("config")]);
+    ACCOUNT.user = me.ok ? me.data.user : null; ACCOUNT.config = cfg.ok ? cfg.data : {};
+  } catch { ACCOUNT.config = ACCOUNT.config || {}; }
+  renderAccount();
+}
+const authDlg = $("#auth");
+function authErr(m){ $("#auth-err").hidden = !m; $("#auth-err").textContent = m || ""; }
+function authStep(step){
+  ACCOUNT.step = step; authErr("");
+  document.querySelectorAll("#auth [data-step]").forEach(el => { el.hidden = el.dataset.step !== step; });
+  document.querySelectorAll("#auth .a-email-show").forEach(el => { el.textContent = ACCOUNT.email; });
+  const titles = { login: ["Welcome back", ""], signup: ["Finish signing up", "Just a few details and you're in."], name: ["One more step", "Add your name as it appears on your driver's license."], sent: ["Check your email", ""], reset: ["Choose a new password", "Then you'll be logged in."] };
+  if (titles[step]) { $("#auth-title").textContent = titles[step][0]; $("#auth-sub").textContent = titles[step][1]; $("#auth-sub").hidden = !titles[step][1]; }
+  const first = document.querySelector(`#auth [data-step="${step}"] input`);
+  if (first && authDlg.open) setTimeout(() => first.focus(), 30);
+}
+function openAuth({ mode = "login", reason = "", then = null } = {}){
+  ACCOUNT.after = then;
+  $("#auth-title").textContent = reason === "book" ? "Log in to book" : mode === "signup" ? "Sign up" : "Log in or sign up";
+  $("#auth-sub").textContent = reason === "book" ? "Sign in or create a free account to book. It takes less than a minute." : "Welcome to Ace Fares.";
+  $("#auth-sub").hidden = false;
+  authStep("start");
+  $("#a-email").value = ACCOUNT.email || "";
+  if (!authDlg.open) authDlg.showModal();
+  setTimeout(() => $("#a-email").focus(), 30);
+  setupGoogle();
+}
+async function setupGoogle(){
+  const id = ACCOUNT.config && ACCOUNT.config.googleClientId;
+  $("#g-area").hidden = !id;
+  if (!id) return;
+  try {
+    if (!(window.google && google.accounts && google.accounts.id)) await new Promise((res, rej) => {
+      const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+    if (!ACCOUNT.gReady) { google.accounts.id.initialize({ client_id: id, callback: onGoogle, ux_mode: "popup", cancel_on_tap_outside: true, itp_support: true }); ACCOUNT.gReady = true; }
+    const box = $("#g-btn"); box.innerHTML = "";
+    google.accounts.id.renderButton(box, { type: "standard", theme: "outline", size: "large", text: "continue_with", shape: "pill", logo_alignment: "center", width: Math.min(392, Math.max(240, box.clientWidth || 320)) });
+  } catch { $("#g-area").hidden = true; }
+}
+async function onGoogle(resp){
+  authErr("");
+  try {
+    const r = await authApi("google", { credential: resp.credential });
+    if (r.ok) return signedIn(r.data.user, r.data.needsName);
+    authErr(r.data.message || "Google sign-in didn't work. Try again, or use your email.");
+  } catch { authErr("We couldn't reach the server. Check your connection and try again."); }
+}
+function signedIn(user, needsName){
+  ACCOUNT.user = user; renderAccount();
+  if (needsName) { $("#n-first").value = user.firstName || ""; $("#n-last").value = user.lastName || ""; authStep("name"); return; }
+  authDlg.close();
+  toast(`You're logged in${user.firstName ? ", " + user.firstName : ""}.`);
+  const next = ACCOUNT.after; ACCOUNT.after = null;
+  if (next) next();
+}
+function setBusy(btn, on){ if (!btn) return; btn.disabled = on; btn.classList.toggle("loading", on); }
+$("#auth-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const step = ACCOUNT.step, btn = document.querySelector(`#auth [data-step="${step}"] button[type=submit]`);
+  if (btn && btn.disabled) return;
+  authErr(""); setBusy(btn, true);
+  try {
+    if (step === "start") {
+      const email = $("#a-email").value.trim();
+      if (!EMAIL_OK.test(email)) return authErr("Enter a valid email address.");
+      const r = await authApi("lookup", { email });
+      if (!r.ok) return authErr(r.data.message || "Something went wrong. Please try again.");
+      ACCOUNT.email = email;
+      if (r.data.exists && !r.data.hasPassword) return authErr(ACCOUNT.config && ACCOUNT.config.googleClientId ? "This email signs in with Google. Use Continue with Google above." : "This account signs in with Google, which isn't available right now. Use Forgot password to set a password.");
+      authStep(r.data.exists ? "login" : "signup");
+    } else if (step === "login") {
+      const password = $("#a-pass").value;
+      if (!password) return authErr("Enter your password.");
+      const r = await authApi("login", { email: ACCOUNT.email, password });
+      if (r.ok) { $("#a-pass").value = ""; return signedIn(r.data.user); }
+      authErr(r.data.message || "That didn't work. Please try again.");
+    } else if (step === "signup") {
+      const body = { email: ACCOUNT.email, firstName: $("#a-first").value.trim(), lastName: $("#a-last").value.trim(), phone: $("#a-phone").value.trim(), password: $("#a-newpass").value };
+      if (!body.firstName || !body.lastName) return authErr("Enter your first and last name.");
+      if (body.password.length < 8) return authErr("Use at least 8 characters for your password.");
+      const r = await authApi("signup", body);
+      if (r.ok) { $("#a-newpass").value = ""; return signedIn(r.data.user); }
+      if (r.data.error === "email_taken") authStep("login");
+      authErr(r.data.message || "That didn't work. Please try again.");
+    } else if (step === "name") {
+      const r = await authApi("profile", { firstName: $("#n-first").value.trim(), lastName: $("#n-last").value.trim(), phone: (ACCOUNT.user && ACCOUNT.user.phone) || "" });
+      if (r.ok) return signedIn(r.data.user);
+      authErr(r.data.message || "That didn't work. Please try again.");
+    } else if (step === "reset") {
+      const password = $("#r-pass").value;
+      if (password.length < 8) return authErr("Use at least 8 characters for your password.");
+      const r = await authApi("reset", { token: ACCOUNT.resetToken, password });
+      if (r.ok) { $("#r-pass").value = ""; ACCOUNT.resetToken = ""; return signedIn(r.data.user); }
+      authErr(r.data.message || "That didn't work. Please ask for a new link.");
+    }
+  } catch { authErr("We couldn't reach the server. Check your connection and try again."); }
+  finally { setBusy(btn, false); }
+});
+$("#a-forgot").addEventListener("click", async e => {
+  const b = e.currentTarget; if (b.disabled) return; b.disabled = true; authErr("");
+  try {
+    const r = await authApi("forgot", { email: ACCOUNT.email });
+    if (r.ok && r.data.emailEnabled) { $("#sent-text").textContent = `If there's an account for ${ACCOUNT.email}, we've emailed a link to reset your password. It works for 60 minutes.`; authStep("sent"); }
+    else authErr(r.ok ? `Password reset by email isn't available yet. Text us at ${SITE.phone} and we'll help.` : (r.data.message || "That didn't work. Please try again."));
+  } catch { authErr("We couldn't reach the server. Check your connection and try again."); }
+  b.disabled = false;
+});
+document.querySelectorAll("#auth [data-back]").forEach(b => b.addEventListener("click", () => { authStep("start"); $("#auth-title").textContent = "Log in or sign up"; $("#auth-sub").hidden = true; $("#a-email").value = ACCOUNT.email; setupGoogle(); }));
+document.querySelectorAll("#auth [data-show]").forEach(b => b.addEventListener("click", () => {
+  const i = $("#" + b.dataset.show), show = i.type === "password"; i.type = show ? "text" : "password";
+  b.textContent = show ? "Hide" : "Show"; b.setAttribute("aria-label", show ? "Hide password" : "Show password");
+}));
+$("#auth-close").addEventListener("click", () => { ACCOUNT.after = null; authDlg.close(); });
+document.querySelectorAll("[data-auth]").forEach(b => b.addEventListener("click", () => openAuth({ mode: b.dataset.auth })));
+// account menu
+$("#acct-btn").addEventListener("click", e => { e.stopPropagation(); const open = $("#acct-menu").hidden; $("#acct-menu").hidden = !open; $("#acct-btn").setAttribute("aria-expanded", String(open)); });
+document.addEventListener("click", e => { if (!$("#acct-menu").hidden && !e.target.closest(".acct-wrap")) { $("#acct-menu").hidden = true; $("#acct-btn").setAttribute("aria-expanded", "false"); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#acct-menu").hidden) { $("#acct-menu").hidden = true; $("#acct-btn").focus(); } });
+$("#m-book").addEventListener("click", () => { $("#acct-menu").hidden = true; });
+$("#m-logout").addEventListener("click", async () => {
+  $("#acct-menu").hidden = true;
+  try { await authApi("logout", {}); } catch {}
+  if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+  ACCOUNT.user = null; renderAccount(); toast("You're logged out.");
+});
+// my trips
+const TRIP_STATUS = { confirmed: ["ok", "Booked"], hold: ["warn", "Awaiting payment"], cancelled: ["bad", "Cancelled"], conflict: ["bad", "Refund pending"] };
+const ID_STATUS = { verified: ["ok", "ID verified"], review: ["warn", "ID being reviewed"], processing: ["warn", "ID check processing"], started: ["", "ID check not finished"], retry: ["bad", "ID check needs a retry"], canceled: ["bad", "ID check cancelled"], not_started: ["", "ID not verified yet"] };
+async function openTrips(){
+  $("#acct-menu").hidden = true;
+  const list = $("#trips-list");
+  list.innerHTML = '<p class="fine" style="padding:16px 0">Loading your trips...</p>';
+  if (!$("#trips").open) $("#trips").showModal();
+  let r; try { r = await authApi("trips"); } catch { list.innerHTML = '<p class="notice err" style="margin:12px 0">We couldn\'t load your trips. Check your connection and try again.</p>'; return; }
+  if (r.status === 401) { $("#trips").close(); ACCOUNT.user = null; renderAccount(); openAuth({ then: openTrips }); return; }
+  const trips = (r.data && r.data.trips) || [];
+  if (!trips.length) { list.innerHTML = '<p style="padding:16px 0;margin:0">No trips yet. <a href="#fleet" id="trips-find">Find a car</a> to book your first one.</p>'; $("#trips-find").addEventListener("click", () => $("#trips").close()); return; }
+  list.innerHTML = trips.map(t => {
+    const st = TRIP_STATUS[t.status] || ["", t.status], id = ID_STATUS[t.verification] || ID_STATUS.not_started;
+    const q = `car=${encodeURIComponent(t.car)}&ref=${encodeURIComponent(t.ref)}`;
+    const act = t.status === "confirmed" && !["verified", "review", "processing"].includes(t.verification) ? `<a class="btn btn-gold btn-sm" href="/verify.html?${q}">Verify your license</a>`
+      : t.status === "hold" ? `<a class="btn btn-ink btn-sm" href="/checkout.html?${q}">Finish booking</a>` : "";
+    return `<div class="trip"><img src="images/${esc(t.photo)}-sm.webp" alt="" width="104" height="78"><div>
+      <h4>${esc(t.carName)}</h4><p>${nice(t.from)}, ${tLabel(t.fromTime)} to ${nice(t.to)}, ${tLabel(t.toTime)}</p><p>${esc(t.location)}${t.total ? " · " + money(t.total / 100) : ""}</p>
+      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>${t.status === "confirmed" ? `<span class="pill ${id[0]}">${id[1]}</span>` : ""}${act}</div></div></div>`;
+  }).join("");
+}
+$("#m-trips").addEventListener("click", openTrips);
+$("#trips-close").addEventListener("click", () => $("#trips").close());
+// links from emails and other pages: ?reset=..., ?login=1&next=/checkout.html?..., ?trips=1
+async function handleAccountLinks(){
+  const q = new URLSearchParams(location.search);
+  const reset = q.get("reset"), login = q.get("login"), next = q.get("next") || "", trips = q.get("trips");
+  if (!reset && !login && !trips) return;
+  history.replaceState(null, "", location.pathname + location.hash);
+  await accountReady;
+  if (reset) { ACCOUNT.resetToken = reset; authDlg.showModal(); authStep("reset"); return; }
+  const go = next.startsWith("/") && !next.startsWith("//") ? () => { location.href = next; } : null;
+  if (login) { if (ACCOUNT.user) { if (go) go(); } else openAuth({ reason: go ? "book" : "", then: go }); return; }
+  if (trips) { if (ACCOUNT.user) openTrips(); else openAuth({ then: openTrips }); }
+}
+const accountReady = loadAccount();
+handleAccountLinks();
 $("#done-close").addEventListener("click", () => $("#done").close());
 loadAvailability();
 handleReturn();
