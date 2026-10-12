@@ -32,9 +32,27 @@ export const WEBHOOK_SECRET = "whsec_test_secret";
 const real = new Stripe("sk_test_dummy");
 
 export function fakeStripe({ failCreate = false } = {}) {
-  const sessions = new Map(); let n = 0; const calls = { create: [], expire: [] };
+  const sessions = new Map(), intents = new Map(); let n = 0, k = 0;
+  const calls = { create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [] };
+  const noSuch = () => { const e = new Error("No such payment_intent"); e.type = "StripeInvalidRequestError"; return e; };
   return {
-    calls, sessions,
+    calls, sessions, intents,
+    paymentIntents: {
+      async create(params, opts) {
+        calls.piCreate.push({ params, opts });
+        if (failCreate) { const e = new Error("Stripe is down"); e.type = "StripeAPIError"; throw e; }
+        const id = `pi_test_${++k}`;
+        const pi = { id, object: "payment_intent", client_secret: `${id}_secret_abc`, amount: params.amount, amount_received: 0, currency: params.currency,
+          status: "requires_payment_method", metadata: { ...params.metadata }, description: params.description, receipt_email: null };
+        intents.set(id, pi); return pi;
+      },
+      async retrieve(id) { const pi = intents.get(id); if (!pi) throw noSuch(); return pi; },
+      async update(id, params) { calls.piUpdate.push({ id, params }); const pi = intents.get(id); if (!pi) throw noSuch();
+        Object.assign(pi, params, { metadata: { ...pi.metadata, ...(params.metadata || {}) } }); return pi; },
+      async cancel(id) { calls.piCancel.push(id); const pi = intents.get(id); if (!pi) throw noSuch(); pi.status = "canceled"; return pi; },
+    },
+    // simulate the renter paying on the site's checkout page
+    payIntent(id, status = "succeeded") { const pi = intents.get(id); pi.status = status; if (status === "succeeded") pi.amount_received = pi.amount; return pi; },
     checkout: { sessions: {
       async create(params, opts) {
         calls.create.push({ params, opts });

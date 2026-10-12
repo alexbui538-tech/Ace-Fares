@@ -2,7 +2,7 @@
 // Uses Stripe's real webhook signature code, so signature checks are genuine.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler, agreementPageHandler } from "../lib/handlers.mjs";
+import { availabilityHandler, checkoutHandler, checkoutDetailsHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler, agreementPageHandler } from "../lib/handlers.mjs";
 import { localBlobs, fakeStripe, signedEvent, post, get, WEBHOOK_SECRET, NOW } from "./helpers.mjs";
 
 let blobs; before(async () => { blobs = await localBlobs(); }); after(async () => { await blobs.stop(); });
@@ -13,7 +13,8 @@ const setup = (opts = {}) => {
   const mailer = opts.mailer || null, siteUrl = "https://acefares.test";
   return { stripe, mailer,
     avail: availabilityHandler({ store, now }),
-    checkout: checkoutHandler({ store, stripe, siteUrl, now, requireTerms: !!opts.requireTerms }),
+    checkout: checkoutHandler({ store, stripe, siteUrl, now, requireTerms: !!opts.requireTerms, publishableKey: opts.pk || "" }),
+    details: checkoutDetailsHandler({ store, stripe, publishableKey: opts.pk || "", now }),
     cancel: cancelHandler({ store, stripe, now }),
     status: bookingStatusHandler({ store, stripe, now, mailer, siteUrl }),
     hook: webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET, now, mailer, siteUrl }),
@@ -200,4 +201,108 @@ test("rental agreement page renders and flags unfinished terms", async () => {
   assert.equal(res.status, 200); assert.match(res.headers.get("content-type"), /text\/html/);
   assert.match(html, /Rental Agreement/); assert.match(html, /Who may drive/); assert.match(html, /at least 21/);
   assert.match(html, /\[to be set\]/); assert.match(html, /Draft/);
+});
+
+
+/* ---------- on-site checkout page (Stripe Payment Element) ---------- */
+const PK = "pk_test_123";
+const renter = { name: "Jordan Lee", email: "Jordan@Example.com", phone: "(214) 555-0100", agree: true };
+
+test("on-site checkout: hold + payment created, summary shown, details saved, paid webhook confirms and emails once", async () => {
+  const mailer = fakeMailer(), s = setup({ pk: PK, mailer });
+  const r = await j(await s.checkout(post("/api/checkout", body({ car: "bmw", from: "2027-05-06", to: "2027-05-09", location: "dallas-delivery" }))));
+  assert.equal(r.status, 200); assert.match(r.data.checkout, /^\/checkout\.html\?car=bmw&ref=[0-9a-f-]{36}$/);
+  assert.equal(s.stripe.calls.create.length, 0, "no hosted Stripe page");
+  const pc = s.stripe.calls.piCreate[0];
+  assert.equal(pc.params.amount, r.data.total); assert.deepEqual(pc.params.automatic_payment_methods, { enabled: true });
+  // Thu May 6 2027 + Fri + Sat = 139 + 2*199 = 537, 10% off = 483.30, +$100 delivery, 10% tax on 583.30 = 58.33 -> 641.63
+  assert.equal(r.data.total, 64163);
+  const ref = r.data.ref;
+
+  const g = await j(await s.details(get(`/api/checkout-details?car=bmw&ref=${ref}`)));
+  assert.equal(g.status, 200); assert.equal(g.data.publishableKey, PK); assert.equal(g.data.clientSecret, "pi_test_1_secret_abc");
+  assert.equal(g.data.summary.total, 64163); assert.equal(g.data.summary.weekdays, 1); assert.equal(g.data.summary.weekends, 2);
+  assert.equal(g.data.summary.miles, 300); assert.equal(g.data.summary.location, "Delivery"); assert.equal(g.data.summary.photo, "bmw-1");
+
+  // renter details: checked, saved, and passed to Stripe for the receipt
+  for (const [bad, code] of [[{ name: "" }, "bad_name"], [{ email: "nope" }, "bad_email"], [{ phone: "123" }, "bad_phone"], [{ agree: false }, "agree_required"]]) {
+    const x = await j(await s.details(post("/api/checkout-details", { car: "bmw", ref, ...renter, ...bad })));
+    assert.equal(x.status, 400); assert.equal(x.data.error, code);
+  }
+  const d = await j(await s.details(post("/api/checkout-details", { car: "bmw", ref, ...renter })));
+  assert.equal(d.status, 200, JSON.stringify(d.data));
+  assert.equal(s.stripe.calls.piUpdate.at(-1).params.receipt_email, "jordan@example.com");
+
+  // pays -> webhook -> confirmed, emailed once, dates blocked
+  const pi = s.stripe.payIntent("pi_test_1");
+  assert.equal((await s.hook(signedEvent("payment_intent.succeeded", pi))).status, 200);
+  assert.equal((await s.hook(signedEvent("payment_intent.succeeded", pi))).status, 200);   // retry is harmless
+  assert.equal(mailer.sent.length, 1); assert.equal(mailer.sent[0].to, "jordan@example.com");
+  const st = await j(await s.status(get("/api/booking?payment_intent=pi_test_1")));
+  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 64163); assert.equal(st.data.email, "jordan@example.com");
+  const all = await j(await s.admin(new Request("https://x/api/admin/bookings", { headers: { "x-admin-key": "secret-admin" } })));
+  const bk = all.data.bmw.find(x => x.id === ref);
+  assert.equal(bk.customer.name, "Jordan Lee"); assert.equal(bk.termsAccepted, true); assert.equal(bk.amountPaid, 64163);
+  assert.equal((await s.checkout(post("/api/checkout", body({ car: "bmw", from: "2027-05-07", to: "2027-05-08" })))).status, 409);
+  // the checkout link no longer offers a payment form
+  const g2 = await j(await s.details(get(`/api/checkout-details?car=bmw&ref=${ref}`)));
+  assert.equal(g2.data.status, "confirmed"); assert.equal(g2.data.clientSecret, undefined);
+});
+
+test("on-site checkout: confirmation page confirms even before the webhook arrives", async () => {
+  const s = setup({ pk: PK });
+  const r = await j(await s.checkout(post("/api/checkout", body({ car: "van", from: "2027-06-01", to: "2027-06-03" }))));
+  await s.details(post("/api/checkout-details", { car: "van", ref: r.data.ref, ...renter }));
+  s.stripe.payIntent("pi_test_1");
+  assert.equal((await j(await s.status(get("/api/booking?payment_intent=pi_test_1")))).data.status, "confirmed");
+});
+
+test("on-site checkout: declined card keeps the dates for a retry; a failed delayed payment releases them", async () => {
+  const s = setup({ pk: PK });
+  const a = await j(await s.checkout(post("/api/checkout", body({ car: "srx", from: "2027-07-01", to: "2027-07-03" }))));
+  await s.hook(signedEvent("payment_intent.payment_failed", s.stripe.intents.get("pi_test_1")));
+  const st = await j(await s.status(get("/api/booking?payment_intent=pi_test_1")));
+  assert.equal(st.data.status, "failed"); assert.equal(st.data.ref, a.data.ref);
+  assert.equal((await j(await s.avail(get("/api/availability")))).data.cars.srx.filter(x => x.from === "2027-07-01").length, 1, "still held");
+
+  const b = await j(await s.checkout(post("/api/checkout", body({ car: "srx", from: "2027-08-01", to: "2027-08-03" }))));
+  await s.hook(signedEvent("payment_intent.processing", s.stripe.payIntent("pi_test_2", "processing")));
+  await s.hook(signedEvent("payment_intent.payment_failed", s.stripe.payIntent("pi_test_2", "requires_payment_method")));
+  assert.equal((await j(await s.avail(get("/api/availability")))).data.cars.srx.filter(x => x.from === "2027-08-01").length, 0, "released");
+  assert.ok(b.data.ref);
+});
+
+test("on-site checkout: Back cancels the payment and frees the dates", async () => {
+  const s = setup({ pk: PK });
+  const r = await j(await s.checkout(post("/api/checkout", body({ car: "escalade", from: "2027-09-01", to: "2027-09-03" }))));
+  await s.cancel(post("/api/cancel", { car: "escalade", ref: r.data.ref }));
+  assert.deepEqual(s.stripe.calls.piCancel, ["pi_test_1"]);
+  assert.equal((await j(await s.avail(get("/api/availability")))).data.cars.escalade.filter(x => x.from === "2027-09-01").length, 0);
+  const g = await j(await s.details(get(`/api/checkout-details?car=escalade&ref=${r.data.ref}`)));
+  assert.equal(g.data.clientSecret, undefined);
+});
+
+test("on-site checkout: an expired hold is renewed if the dates are still free, refused if someone took them", async () => {
+  let t = NOW; const s = setup({ pk: PK, now: () => t });
+  const r1 = await j(await s.checkout(post("/api/checkout", body({ car: "van", from: "2027-10-01", to: "2027-10-03" }))));
+  t += 40 * 60e3;   // renter took 40 minutes; hold lapsed but nobody else booked
+  assert.equal((await s.details(post("/api/checkout-details", { car: "van", ref: r1.data.ref, ...renter }))).status, 200);
+  const r2 = await j(await s.checkout(post("/api/checkout", body({ car: "van", from: "2027-11-01", to: "2027-11-03" }))));
+  t += 40 * 60e3;   // this one lapsed and someone else grabbed the dates
+  await s.checkout(post("/api/checkout", body({ car: "van", from: "2027-11-02", to: "2027-11-04" })));
+  const x = await j(await s.details(post("/api/checkout-details", { car: "van", ref: r2.data.ref, ...renter })));
+  assert.equal(x.status, 409); assert.equal(x.data.error, "unavailable");
+});
+
+test("on-site checkout: without a publishable key the site still uses Stripe's hosted page", async () => {
+  const s = setup();
+  const r = await j(await s.checkout(post("/api/checkout", body({ car: "srx", from: "2027-12-01", to: "2027-12-03" }))));
+  assert.match(r.data.url, /^https:\/\/checkout\.stripe\.com\//); assert.equal(s.stripe.calls.piCreate.length, 0);
+});
+
+test("on-site checkout: bad links are rejected", async () => {
+  const s = setup({ pk: PK });
+  assert.equal((await s.details(get("/api/checkout-details?car=bmw&ref=not-a-ref"))).status, 404);
+  assert.equal((await s.details(get("/api/checkout-details?car=bmw&ref=00000000-0000-0000-0000-000000000000"))).status, 404);
+  assert.equal((await s.status(get("/api/booking?payment_intent=<x>"))).status, 400);
 });

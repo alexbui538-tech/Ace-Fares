@@ -148,3 +148,23 @@ If an email ever fails, the booking still goes through, and the failure is saved
 2. In Netlify, add `REQUIRE_TERMS` = `true`, then redeploy.
 
 Renters then must tick "I have read and agree to the Ace Fares Rental Agreement" before paying, and each booking records `termsAccepted: true`.
+
+## On-site checkout page (like Turo's)
+
+After **Book and pay securely**, renters go to the site's own checkout page, `/checkout.html`. It has their details, Stripe's secure payment form, and an "I agree" box on the left, and a trip summary on the right with the car photo, dates, pickup spot, price breakdown, miles included and total. Card numbers are typed into Stripe's secure fields and never reach Ace Fares' server.
+
+- **Dates are held while they pay.** A countdown shows the 35-minute hold. If it runs out, pressing Book trip still works as long as nobody else has taken the dates.
+- **Declined card:** the renter sees Stripe's message and can try again. The dates stay held.
+- **Change trip** releases the dates and cancels the payment.
+- **Payment methods** are whatever you turn on in Stripe (Settings → Payment methods): card, Google Pay, Apple Pay, and any pay-later options Stripe approves for your business.
+
+**To turn it on:**
+1. In Netlify, add `STRIPE_PUBLISHABLE_KEY`. Copy it from Stripe → Developers → API keys → **Publishable key**: `pk_test_…` while testing, `pk_live_…` when live. Then go to Deploys → Trigger deploy.
+2. In Stripe → Developers → Webhooks → your endpoint, add these events: `payment_intent.succeeded`, `payment_intent.processing`, `payment_intent.payment_failed`, `payment_intent.canceled`.
+3. For Apple Pay and Google Pay, go to Stripe → Settings → Payment method domains and add `acefaresrental.netlify.app`, plus your own domain later.
+
+Until step 1 is done, Book and pay securely keeps using Stripe's hosted payment page, so nothing breaks in the meantime.
+
+Routes: `GET /api/checkout-details?car=&ref=` returns the trip summary and starts the payment form. `POST /api/checkout-details` saves the renter's name, email, phone and agreement, and refreshes the hold, right before paying.
+
+Tests: `node tests/checkout.e2e.mjs` runs 23 browser checks: opening the page, the totals match, required fields, paying, the confirmation and email, a declined card, Change trip, a blocked payment form, and a dead link.
