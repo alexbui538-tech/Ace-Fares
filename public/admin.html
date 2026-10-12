@@ -136,7 +136,7 @@ function render(data){
   const today = new Date().toISOString().slice(0, 10);
   let html = `<div class="bar"><span class="grow">Upcoming paid bookings and anything in checkout. Refunds are done in your Stripe dashboard. Deposit holds release on their own 72 hours after return unless you keep or collect them.</span>
     <label><input type="checkbox" id="all" ${showAll ? "checked" : ""}> Show past and cancelled</label>
-    <button class="line" id="refresh">Refresh</button><button class="line" id="out">Sign out</button></div>`;
+    <button class="line" id="refresh">Refresh</button><button class="danger" id="reset">Clear all bookings</button><button class="line" id="out">Sign out</button></div>`;
   for (const [car, name] of Object.entries(CARS)) {
     const list = (data[car] || []).filter(b => showAll || ((b.status === "confirmed" || b.status === "conflict" || (b.status === "hold" && Date.parse(b.expiresAt) > Date.now())) && b.to >= today))
       .sort((a, b) => a.from < b.from ? -1 : 1);
@@ -161,6 +161,14 @@ function render(data){
   const app = document.getElementById("app"); app.innerHTML = html;
   document.getElementById("all").onchange = e => { showAll = e.target.checked; render(data); };
   document.getElementById("refresh").onclick = load;
+  document.getElementById("reset").onclick = async () => {
+    const typed = prompt("This empties every car's calendar so all dates are open again, and releases any deposit holds still on cards.\nNothing is deleted: the bookings are saved in an archive.\nRefunds aren't made automatically.\n\nType RESET to confirm:");
+    if (typed !== "RESET") return;
+    const r = await fetch("/api/admin/reset", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify({ confirm: "RESET" }) });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) { toast(`Calendars cleared: ${d.archived} booking${d.archived === 1 ? "" : "s"} archived${d.released ? `, ${d.released} deposit hold${d.released === 1 ? "" : "s"} released` : ""}.`); load(); }
+    else toast(d.message || "That didn't work. Please try again.");
+  };
   document.getElementById("out").onclick = () => { try { sessionStorage.removeItem("af-admin"); } catch {} location.reload(); };
   app.querySelectorAll("button[data-dep]").forEach(btn => btn.onclick = () => depositAction(btn));
   app.querySelectorAll("button.danger").forEach(btn => btn.onclick = async () => {

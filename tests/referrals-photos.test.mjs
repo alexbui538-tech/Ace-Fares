@@ -207,3 +207,21 @@ test("photos: only real image files are accepted", () => {
   assert.equal(sniffImage(new TextEncoder().encode("\0\0\0\x18ftypheic\0\0").buffer), "image/heic");
   assert.equal(sniffImage(new TextEncoder().encode("<svg xmlns=").buffer), null);
 });
+
+test("owner can clear every calendar: bookings archived (not deleted), dates open, deposit holds released", async () => {
+  const { adminResetHandler, availabilityHandler } = await import("../lib/handlers.mjs");
+  const s = setup();
+  const me = await s.a("signup", { method: "POST", body: person("jo@example.com", "Jo") });
+  const b = await bookAndPay(s, me.cookie, { car: "bmw", from: "2027-03-01", to: "2027-03-04", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" });
+  await s.repo.note("bmw", b.id, { deposit: { status: "held", paymentIntentId: b.paymentIntentId, amount: 50000 } });
+  const reset = adminResetHandler({ store: s.store, stripe: s.stripe, adminKey: "owner-key", now: s.now });
+  const call = (body, key = "owner-key") => reset(req("/api/admin/reset", { method: "POST", body, headers: { "x-admin-key": key } })).then(j);
+  assert.equal((await call({ confirm: "RESET" }, "wrong")).status, 401);
+  assert.equal((await call({})).data.error, "confirm_required");
+  const r = await call({ confirm: "RESET" });
+  assert.equal(r.status, 200); assert.equal(r.data.archived, 1); assert.equal(r.data.released, 1);
+  assert.deepEqual(await s.repo.all("bmw"), []);
+  const avail = await j(await availabilityHandler({ store: s.store })(req("/api/availability")));
+  assert.deepEqual(avail.data.cars.bmw, []);
+  assert.equal((await s.store.getWithMetadata(`${r.data.archive}-car-bmw`)).data.bookings[0].id, b.id);
+});

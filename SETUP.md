@@ -295,3 +295,15 @@ To change the photo list, edit `SHOTS` in `lib/inspections.mjs`.
 - **To change the hour,** edit `IDENTITY_DUE_MINUTES` in `lib/catalog.mjs`.
 - **Photos:** on the verification page, renters can photograph their license with the camera, pick it from their photo library, or upload a file. The selfie is always taken live with the camera; that's what stops someone using a photo of another person.
 - **Consent:** the checkbox reads "I agree that Ace Fares Rental may use its identity verification provider", with a **Terms and conditions** link that opens the full Texas biometric notice.
+
+
+## Clear all bookings (start fresh)
+
+The **Clear all bookings** button on your bookings page does the following:
+- **Empties every car's calendar**, so all dates are open again.
+- **Releases any deposit holds** still on renters' cards.
+- **Cancels unpaid checkouts.**
+- **Deletes nothing.** The bookings are first copied into an archive in the `bookings` store (`archive-<time>-car-<id>`).
+- **Doesn't make refunds.** Refund any real payments in your Stripe dashboard.
+
+You type RESET to confirm.
