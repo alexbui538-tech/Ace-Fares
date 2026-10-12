@@ -98,7 +98,7 @@ ok(Number(shown) === expect, `trip total on the page ($${shown}) matches what th
 ok(await page.isVisible("#acct-out") && !(await page.isVisible("#acct-in")), "header shows Log in / Sign up when logged out");
 await page.click("#b-go");
 await page.waitForSelector("#auth[open]");
-ok((await page.textContent("#auth-title")).includes("Log in to book"), "Book and pay while logged out opens 'Log in to book'");
+ok((await page.textContent("#auth-title")).includes("Log in or sign up"), "when login is required (REQUIRE_ACCOUNT=true): Book and pay while logged out asks to log in");
 await page.screenshot({ path: "e2e-auth.png" });
 await page.fill("#a-email", "nope"); await page.click("#auth [data-step=start] button[type=submit]");
 ok((await page.textContent("#auth-err")).includes("valid email"), "sign-in: a bad email gets a clear message");

@@ -148,7 +148,7 @@ test("forgot password: emails a one-time link that sets a new password and signs
 
 /* ---------- booking requires an account ---------- */
 
-test("booking needs a signed-in account; the trip is saved to it and only that account can pay for it", async () => {
+test("when login is required: booking needs a signed-in account, the trip is saved to it, and the checkout link works without logging in", async () => {
   const s = setup();
   const none = await j(await s.checkout(req("/api/checkout", { method: "POST", body: trip })));
   assert.equal(none.status, 401); assert.equal(none.data.error, "login_required");
@@ -161,9 +161,11 @@ test("booking needs a signed-in account; the trip is saved to it and only that a
   // checkout page: prefilled for the owner, closed to others
   const mine = await j(await s.details(req(`/api/checkout-details?car=srx&ref=${b.id}`, { cookie: me.cookie })));
   assert.equal(mine.status, 200); assert.deepEqual(mine.data.prefill, { name: "Jordan Lee", email: "jordan@example.com", phone: "(214) 555-0100" });
-  assert.equal((await s.details(req(`/api/checkout-details?car=srx&ref=${b.id}`))).status, 401);
+  const anon = await j(await s.details(req(`/api/checkout-details?car=srx&ref=${b.id}`)));
+  assert.equal(anon.status, 200); assert.equal(anon.data.prefill, undefined);       // never forced to log in; no account details shown
   const other = await s.a("signup", { method: "POST", body: { ...jordan, email: "other@example.com" } });
-  assert.equal((await s.details(req(`/api/checkout-details?car=srx&ref=${b.id}`, { cookie: other.cookie }))).status, 404);
+  const theirs = await j(await s.details(req(`/api/checkout-details?car=srx&ref=${b.id}`, { cookie: other.cookie })));
+  assert.equal(theirs.data.prefill.email, "other@example.com");                        // their own details, not Jordan's
   // My trips
   s.stripe.payIntent(b.paymentIntentId);
   await s.repo.confirm("srx", b.id, { paymentIntent: b.paymentIntentId });
@@ -227,26 +229,26 @@ test("ID check result: verified, needs review (under 21 / name mismatch), or try
   assert.equal((await s.a("trips", { cookie: me.cookie })).data.trips[0].verification, "verified");
 });
 
-test("ID check: an under-21 renter, a different name or an expiring license is flagged for the owner", () => {
+test("ID check: an under-18 renter, a different name or an expiring license is flagged for the owner", () => {
   const b = { from: "2027-03-02", to: "2027-03-05", customer: { name: "Jordan Lee" } };
   const lic = { document: { expiration_date: { day: 1, month: 1, year: 2030 } } };
-  assert.deepEqual(checkResult(b, { first_name: "JORDAN", last_name: "LEE", dob: { day: 2, month: 3, year: 2006 } }, lic).checks, { age: true, expiry: true, name: true });   // 21 on pickup day
-  assert.equal(checkResult(b, { first_name: "Jordan", last_name: "Lee", dob: { day: 3, month: 3, year: 2006 } }, lic).checks.age, false);
+  assert.deepEqual(checkResult(b, { first_name: "JORDAN", last_name: "LEE", dob: { day: 2, month: 3, year: 2009 } }, lic).checks, { age: true, expiry: true, name: true });   // 18 on pickup day
+  assert.equal(checkResult(b, { first_name: "Jordan", last_name: "Lee", dob: { day: 3, month: 3, year: 2009 } }, lic).checks.age, false);
   assert.equal(checkResult(b, { first_name: "Sam", last_name: "Smith", dob: { day: 1, month: 1, year: 1990 } }, lic).checks.name, false);
   assert.equal(checkResult(b, { first_name: "Jordan", last_name: "Lee", dob: { day: 1, month: 1, year: 1990 } }, { document: { expiration_date: { day: 4, month: 3, year: 2027 } } }).checks.expiry, false);
   assert.equal(checkResult({ ...b, customer: { name: "Maria de la Cruz" } }, { first_name: "Maria", last_name: "De La Cruz", dob: { day: 1, month: 1, year: 1990 } }, lic).checks.name, true);
 });
 
-test("an under-21 result is marked for review and the owner is emailed", async () => {
+test("an under-18 result is marked for review and the owner is emailed", async () => {
   const s = setup();
   const me = await s.a("signup", { method: "POST", body: jordan });
   const ref = await paidTrip(s, me.cookie);
   await s.verify(req("/api/verify", { method: "POST", body: { car: "srx", ref, consent: true }, cookie: me.cookie }));
   const vsId = (await s.repo.get("srx", ref)).verification.sessionId;
-  await s.hook(signedEvent("identity.verification_session.verified", s.stripe.finishIdentity(vsId, { dob: { day: 1, month: 1, year: 2008 } })));
+  await s.hook(signedEvent("identity.verification_session.verified", s.stripe.finishIdentity(vsId, { dob: { day: 1, month: 1, year: 2010 } })));
   const v = (await s.repo.get("srx", ref)).verification;
   assert.equal(v.status, "review"); assert.equal(v.checks.age, false);
-  assert.equal(s.notices.length, 1); assert.match(s.notices[0].text, /under 21/);
+  assert.equal(s.notices.length, 1); assert.match(s.notices[0].text, /under 18/);
 });
 
 test("license images and face data are deleted at Stripe 90 days after the return", async () => {

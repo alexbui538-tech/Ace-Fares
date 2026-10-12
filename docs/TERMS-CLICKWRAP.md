@@ -1,6 +1,6 @@
 # Ace Fares: clickwrap signature, deposit hold and smoking policy
 
-**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft5`.
+**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft6`.
 
 Everything below is already live in the code. The agreement text comes from `lib/agreement.mjs`, and the checkout page, the `/rental-agreement` page and the confirmation email all read from it. Change the wording only there, and bump `AGREEMENT_VERSION` when you do.
 

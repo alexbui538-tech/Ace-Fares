@@ -200,7 +200,7 @@ test("rental agreement page renders and flags unfinished terms", async () => {
   const res = await agreementPageHandler()(get("/rental-agreement"));
   const html = await res.text();
   assert.equal(res.status, 200); assert.match(res.headers.get("content-type"), /text\/html/);
-  assert.match(html, /Rental Agreement/); assert.match(html, /Who may drive/); assert.match(html, /at least 21/);
+  assert.match(html, /Rental Agreement/); assert.match(html, /Who may drive/); assert.match(html, /at least 18/);
   assert.match(html, /\[to be set\]/); assert.match(html, /Draft/);
 });
 

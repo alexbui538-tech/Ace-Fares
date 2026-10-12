@@ -177,7 +177,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
           </div>
           <p class="help under">By providing a phone number, you consent to receive automated text messages with trip or account updates from Ace Fares. Message and data rates may apply. Reply STOP to opt out.</p>
           <div class="ctl" id="c-email"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="name@example.com"><p class="err">Enter a valid email address.</p></div>
-          <div class="ctl" id="c-age"><label for="age">Age</label><select id="age"><option value="">Select your age</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25+">25 or older</option><option value="under21">Under 21</option></select><p class="err" id="age-err">Select your age.</p></div>
+          <div class="ctl" id="c-age"><label for="age">Age</label><select id="age"><option value="">Select your age</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25+">25 or older</option><option value="under18">Under 18</option></select><p class="err" id="age-err">Select your age.</p></div>
           <p class="help" id="details-help">We'll email your confirmation and rental agreement. Your Ace Fares account is created from these details, so you can see your trip and verify your license.</p>
         </section>
 
@@ -402,10 +402,10 @@ function check() {
     ["last", v("last").length >= 1],
     ["phone", v("phone").replace(/\D/g, "").length >= ($("#cc").value.trim() === "+1" ? 10 : 7)],
     ["email", /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email"))],
-    ["age", !!v("age") && v("age") !== "under21"],
+    ["age", !!v("age") && v("age") !== "under18"],
     ["ins-co", insChoice() !== "own" || v("ins-co").length >= 2],
   ];
-  $("#age-err").textContent = v("age") === "under21" ? "Drivers must be at least 21 to book." : "Select your age.";
+  $("#age-err").textContent = v("age") === "under18" ? "Drivers must be at least 18 to book." : "Select your age.";
   let first = null;
   for (const [id, ok] of tests) { $("#c-" + id).classList.toggle("bad", !ok); if (!ok && !first) first = id; }
   const agreed = $("#agree").checked;

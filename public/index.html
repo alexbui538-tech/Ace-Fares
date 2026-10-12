@@ -411,6 +411,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 .done-body{padding:28px;display:grid;gap:14px;text-align:center}
 .done-body h3{font-size:1.9rem}
 .done-body p{margin:0;color:var(--ink-2)}
+.done-body p b{color:var(--ink);background:#FFF1D6;padding:1px 5px;border-radius:5px}
 .done-mark{width:64px;height:64px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;background:#E3F0E2;color:var(--ok)}
 .done-mark.wait{background:var(--cream);color:var(--gold-text)}
 .done-mark.bad{background:#FBE3D9;color:#8A2D14}
@@ -915,7 +916,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 const SITE = {
   phone: "(972) 994-6413",
   email: "acefaresrental@gmail.com",
-  minAge: 21,
+  minAge: 18,
   instagram: "https://www.instagram.com/acefaresrental/",
   tiktok: "https://www.tiktok.com/@acefares_rental",
 
@@ -1319,6 +1320,8 @@ function showDone(kind, title, text, d, verifyHref){
   $("#done-mark").className = "done-mark" + (kind === "ok" ? "" : " " + kind);
   $("#done-mark").innerHTML = DONE_ICON[kind];
   $("#done-title").textContent = title; $("#done-text").textContent = text;
+  // emphasize the ID deadline
+  if (text.includes("within the next hour")) $("#done-text").innerHTML = esc(text).replace("within the next hour", "<b>within the next hour</b>");
   $("#done-sum").hidden = !d;
   if (d) $("#done-sum").innerHTML = `<div><span>Car</span><b>${d.car}</b></div>
     <div><span>Pickup</span><b>${nice(d.from)}, ${tLabel(d.fromTime)}</b></div>
@@ -1635,8 +1638,8 @@ function authStep(step){
 }
 function openAuth({ mode = "login", reason = "", then = null } = {}){
   ACCOUNT.after = then;
-  $("#auth-title").textContent = reason === "book" ? "Log in to book" : mode === "signup" ? "Sign up" : "Log in or sign up";
-  $("#auth-sub").textContent = reason === "book" ? "Sign in or create a free account to book. It takes less than a minute." : "Welcome to Ace Fares.";
+  $("#auth-title").textContent = mode === "signup" ? "Sign up" : "Log in or sign up";
+  $("#auth-sub").textContent = reason === "book" ? "Log in or create a free account to continue." : "Welcome to Ace Fares.";
   $("#auth-sub").hidden = false;
   authStep("start");
   $("#auth-invite").hidden = !INVITE.valid; if (INVITE.valid) $("#auth-invite").textContent = `Invite from ${INVITE.firstName || "a friend"} applied: $50 off your first trip when you sign up.`;
