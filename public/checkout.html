@@ -270,7 +270,11 @@ function initPayment(pk, clientSecret) {
   });
   $("#pay").innerHTML = "";
   el.mount("#pay");
-  el.on && el.on("loaderror", () => { showErr($("#pay-err"), "The secure payment form couldn't load. Please refresh the page."); });
+  el.on && el.on("loaderror", ev => {
+    console.error("[checkout] Stripe payment form failed to load", ev && ev.error && ev.error.message);
+    showErr($("#pay-err"), "The secure payment form couldn't load. Please refresh the page.");
+    $("#pay-btn").disabled = true;
+  });
 }
 
 function check() {

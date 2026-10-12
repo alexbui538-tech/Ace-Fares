@@ -165,6 +165,8 @@ After **Book and pay securely**, renters go to the site's own checkout page, `/c
 
 Until step 1 is done, Book and pay securely keeps using Stripe's hosted payment page, so nothing breaks in the meantime.
 
+**The publishable key must match the secret key:** `pk_test_` goes with `sk_test_`, and `pk_live_` goes with `sk_live_`. If they don't match, the site logs a warning and keeps using Stripe's hosted payment page instead of showing a broken form. When you go live, switch both keys, and the webhook secret, at the same time.
+
 Routes: `GET /api/checkout-details?car=&ref=` returns the trip summary and starts the payment form. `POST /api/checkout-details` saves the renter's name, email, phone and agreement, and refreshes the hold, right before paying.
 
 Tests: `node tests/checkout.e2e.mjs` runs 23 browser checks: opening the page, the totals match, required fields, paying, the confirmation and email, a declined card, Change trip, a blocked payment form, and a dead link.
