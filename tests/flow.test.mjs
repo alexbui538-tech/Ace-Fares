@@ -3,6 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { availabilityHandler, checkoutHandler, checkoutDetailsHandler, cancelHandler, bookingStatusHandler, webhookHandler, adminHandler, adminCancelHandler, agreementPageHandler } from "../lib/handlers.mjs";
+import { AGREEMENT_VERSION } from "../lib/agreement.mjs";
 import { localBlobs, fakeStripe, signedEvent, post, get, WEBHOOK_SECRET, NOW } from "./helpers.mjs";
 
 let blobs; before(async () => { blobs = await localBlobs(); }); after(async () => { await blobs.stop(); });
@@ -206,7 +207,7 @@ test("rental agreement page renders and flags unfinished terms", async () => {
 
 /* ---------- on-site checkout page (Stripe Payment Element) ---------- */
 const PK = "pk_test_123";
-const renter = { name: "Jordan Lee", email: "Jordan@Example.com", phone: "(214) 555-0100", agree: true };
+const renter = { name: "Jordan Lee", email: "Jordan@Example.com", phone: "(214) 555-0100", agree: true, termsVersion: AGREEMENT_VERSION };
 
 test("on-site checkout: hold + payment created, summary shown, details saved, paid webhook confirms and emails once", async () => {
   const mailer = fakeMailer(), s = setup({ pk: PK, mailer });

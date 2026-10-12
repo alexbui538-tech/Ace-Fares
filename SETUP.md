@@ -134,7 +134,7 @@ Each rental day is priced by its day of the week. The return day isn't charged, 
 
 After every paid booking, the renter automatically gets an email from your Gmail with the booking details and the **full rental agreement**, filled in with their name and trip. You get a copy if `OWNER_EMAIL` is set. The agreement is also at **/rental-agreement**. Its wording lives in `lib/agreement.mjs`.
 
-**The agreement is a draft template, not legal advice.** Fill in the `POLICY` values: extra-mile rate, late fee, fuel fee, cleaning and smoking fees, ticket fee, cancellation policy, and whether out-of-state driving is allowed. Until they're filled in, they show as "[to be set]" and the page says "Draft". Have a Texas attorney review it before relying on it.
+**The agreement is a draft template, not legal advice.** Fill in the `POLICY` values: extra-mile rate, late fee, fuel fee, cleaning fee, ticket fee, cancellation policy, and whether out-of-state driving is allowed. The smoking fee ($150) and the deposits are already set in `lib/catalog.mjs`. Until they're filled in, they show as "[to be set]" and the page says "Draft". Have a Texas attorney review it before relying on it.
 
 **Turn on the email:**
 1. Your Google account (acefaresrental@gmail.com) needs **2-Step Verification** on: myaccount.google.com → Security.
@@ -169,4 +169,15 @@ Until step 1 is done, Book and pay securely keeps using Stripe's hosted payment 
 
 Routes: `GET /api/checkout-details?car=&ref=` returns the trip summary and starts the payment form. `POST /api/checkout-details` saves the renter's name, email, phone and agreement, and refreshes the hold, right before paying.
 
-Tests: `node tests/checkout.e2e.mjs` runs 23 browser checks: opening the page, the totals match, required fields, paying, the confirmation and email, a declined card, Change trip, a blocked payment form, and a dead link.
+## Electronic signature (clickwrap), deposit hold and no-smoking policy
+
+The full text, code and the questions for your attorney are in **`docs/TERMS-CLICKWRAP.md`**.
+
+- **Signing:** the checkout page shows a "Key rental terms" box and the signature checkbox. **Book trip stays disabled until the box is checked.** When the renter pays, the server records the signing time, their IP address, browser, agreement version and a SHA-256 fingerprint of the exact text. It saves that record on the Stripe payment (Payments → the payment → Metadata: `contract_signed`, `contract_signed_at`, `signer_ip`, `contract_sha256`, `deposit_policy_ack`, `smoking_policy_ack` and more), on the booking, and as a full signed copy. The renter's email includes a "Signature record".
+- **Deposit hold:** Escalade $750, BMW $500, SRX $250 and Odyssey $250 (change these in `lib/catalog.mjs`). The card is saved at checkout. The hold goes on automatically 24 hours before pickup, or right after payment if pickup is sooner, and is released automatically 72 hours after return. Long rentals get the hold renewed before it expires.
+- **On your bookings page,** each booking shows its hold and the buttons **Collect…** (enter an amount and a reason, e.g. $150 smoking fee; the rest is released), **Release**, **Keep hold** (stops the automatic release while you check for damage) and **Try again**. If a hold fails, you get an email, if Gmail is set up.
+- **Stripe webhook:** no new events are needed. Deposit holds use the `payment_intent.*` events you already added, and they never change the rental booking itself.
+- **Holds longer than 7 days** need Stripe's *extended authorization*. It's included on IC+ pricing; on standard pricing, ask Stripe support to turn it on for vehicle rental. Without it, the site simply renews the hold every 7 days or so.
+- **The hourly job** (`deposit-holds`) appears in Netlify → Functions as a scheduled function. Scheduled functions only run on the live (published) site.
+
+Tests: `node tests/checkout.e2e.mjs` runs browser checks: opening the page, the totals match, required fields, paying, the confirmation and email, a declined card, Change trip, a blocked payment form, and a dead link.

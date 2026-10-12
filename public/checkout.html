@@ -85,6 +85,16 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .total{display:flex;justify-content:space-between;font-weight:700;font-size:1.12rem}
 .hold{margin-top:16px;display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink-2);background:var(--cream);border-radius:10px;padding:9px 12px}
 .hold b{font-variant-numeric:tabular-nums}
+.terms{background:var(--cream);border-radius:14px;padding:16px 18px;margin:0 0 16px}
+.terms h2{font-size:1.05rem;margin:0 0 8px}
+.keys{margin:0;padding:0 0 0 18px;display:grid;gap:8px;font-size:.93rem;color:var(--ink-2)}
+.keys b{color:var(--ink)}
+.terms .read{display:inline-block;margin-top:10px;font-weight:600;font-size:.93rem;color:var(--gold-text)}
+.terms .read span{font-weight:400;color:var(--ink-3)}
+#agree-text{font-size:.93rem}
+.sign-hint{text-align:center;color:var(--ink-3);font-size:.86rem;margin:8px 0 0}
+.btn:disabled:not(.loading){opacity:.45;cursor:not-allowed}
+.dep{margin-top:10px;display:flex;justify-content:space-between;gap:12px;color:var(--ink-2);font-size:.92rem}
 .ended{max-width:560px;margin:40px auto;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:28px;text-align:center}
 .ended h1{margin-bottom:10px}
 .ended p{color:var(--ink-2);margin:0 0 20px}
@@ -146,12 +156,24 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
           <p class="notice err" id="pay-err" role="alert" hidden></p>
         </section>
 
+        <section class="terms" aria-labelledby="h-terms">
+          <h2 id="h-terms">Key rental terms</h2>
+          <ul class="keys">
+            <li><b>Security deposit hold: <span id="t-deposit"></span></b> A temporary hold on your card through Stripe, not a charge. It goes on <span id="t-timing"></span> and is released within <span id="t-release"></span> hours after you return the car if nothing is owed. Your bank may take up to 10 business days to clear it.</li>
+            <li><b>No smoking or vaping: zero tolerance.</b> A non-negotiable <span id="t-smoke"></span> fee applies if we find any sign of smoking or vaping in the car.</li>
+            <li><b>Insurance:</b> show proof of your own auto insurance that covers rentals at pickup.</li>
+            <li><b>Disputes:</b> Texas law, Dallas County courts.</li>
+          </ul>
+          <a href="/rental-agreement" target="_blank" rel="noopener" class="read">Read the full rental agreement <span id="t-version"></span></a>
+        </section>
+
         <label class="agree" id="agree-row">
-          <input type="checkbox" id="agree">
-          <span>I agree to pay the trip total shown and to the Ace Fares <a href="/rental-agreement" target="_blank" rel="noopener">rental agreement</a>, including its cancellation terms. I'm at least 21 with a valid driver's license.</span>
+          <input type="checkbox" id="agree" aria-describedby="agree-text">
+          <span id="agree-text"></span>
         </label>
 
-        <button class="btn" type="submit" id="pay-btn">Book trip</button>
+        <button class="btn" type="submit" id="pay-btn" disabled>Book trip</button>
+        <p class="sign-hint" id="sign-hint">Check the box above to sign the rental agreement and continue.</p>
         <p class="fine"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Payments are processed securely by Stripe. Ace Fares never sees your full card number.</span></p>
       </form>
 
@@ -171,6 +193,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
         <div class="lines" id="sum-lines"></div>
         <hr>
         <div class="total"><span>Trip total</span><span id="sum-total"></span></div>
+        <div class="dep" id="sum-dep" hidden><span>Refundable deposit hold</span><span id="sum-dep-amt"></span></div>
         <div class="hold" id="hold" role="status"></div>
       </aside>
     </div>
@@ -191,7 +214,31 @@ const when = (d, t) => {
 };
 const STAR = '<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
 
-let stripe = null, elements = null, expiresAt = 0, busy = false;
+let stripe = null, elements = null, expiresAt = 0, busy = false, payBroken = false;
+let TERMS = null, agreedAt = null;   // agreedAt: when the box was checked (the server also records its own time and the IP)
+
+// Book trip stays disabled until the agreement box is checked
+function syncButton() {
+  const on = $("#agree").checked;
+  $("#pay-btn").disabled = !on || payBroken || busy;
+  $("#sign-hint").hidden = on;
+}
+$("#agree").addEventListener("change", e => {
+  agreedAt = e.target.checked ? new Date().toISOString() : null;
+  $("#agree-row").classList.remove("bad");
+  syncButton();
+});
+
+function renderTerms(t) {
+  TERMS = t;
+  $("#agree-text").textContent = t.clickwrap;
+  $("#t-deposit").textContent = whole(t.deposit);
+  $("#t-timing").textContent = t.depositTiming;
+  $("#t-release").textContent = t.releaseHours;
+  $("#t-smoke").textContent = whole(t.smokingFee);
+  $("#t-version").textContent = `(version ${t.version})`;
+  if (t.deposit) { $("#sum-dep").hidden = false; $("#sum-dep-amt").textContent = whole(t.deposit); }
+}
 
 async function api(path, opts = {}) {
   const res = await fetch("/api" + path, { ...opts, headers: { "content-type": "application/json" } });
@@ -244,7 +291,7 @@ function initPayment(pk, clientSecret) {
   if (!window.Stripe) {
     $("#pay").innerHTML = "";
     showErr($("#pay-err"), "The secure payment form couldn't load. Check your connection or turn off ad blockers for this page, then refresh.");
-    $("#pay-btn").disabled = true; return;
+    payBroken = true; syncButton(); return;
   }
   stripe = window.Stripe(pk);
   elements = stripe.elements({
@@ -273,7 +320,7 @@ function initPayment(pk, clientSecret) {
   el.on && el.on("loaderror", ev => {
     console.error("[checkout] Stripe payment form failed to load", ev && ev.error && ev.error.message);
     showErr($("#pay-err"), "The secure payment form couldn't load. Please refresh the page.");
-    $("#pay-btn").disabled = true;
+    payBroken = true; syncButton();
   });
 }
 
@@ -295,17 +342,19 @@ function check() {
 
 $("#form").addEventListener("submit", async e => {
   e.preventDefault();
-  if (busy || !stripe) return;
+  if (busy || !stripe || !$("#agree").checked) return;
   $("#top-err").hidden = true; $("#pay-err").hidden = true;
   if (!check()) return;
   const btn = $("#pay-btn"); busy = true; btn.disabled = true; btn.classList.add("loading");
-  const done = () => { busy = false; btn.disabled = false; btn.classList.remove("loading"); };
+  const done = () => { busy = false; btn.classList.remove("loading"); syncButton(); };
   try {
     const sub = await elements.submit();                       // checks the card fields first
     if (sub.error) { showErr($("#pay-err"), sub.error.message || "Check your payment details."); return done(); }
     const name = $("#name").value.trim(), email = $("#email").value.trim(), phone = $("#phone").value.trim();
-    const d = await api("/checkout-details", { method: "POST", body: JSON.stringify({ car: CAR, ref: REF, name, email, phone, agree: true }) });
+    const d = await api("/checkout-details", { method: "POST", body: JSON.stringify({ car: CAR, ref: REF, name, email, phone,
+      agree: true, agreedAt: agreedAt || new Date().toISOString(), termsVersion: TERMS && TERMS.version }) });
     if (!d.ok) {
+      if (d.data.error === "terms_changed") { $("#top-err").hidden = false; $("#top-err").innerHTML = `${d.data.message} <a href="${location.href}">Refresh</a>`; $("#top-err").scrollIntoView({ block: "center" }); return done(); }
       if (d.status === 409 || d.status === 410) return ended(d.status === 409 && d.data.error === "unavailable" ? "Those dates were just booked" : "This checkout has ended", d.data.message);
       showErr($("#top-err"), d.data.message || "Something went wrong. Please try again.");
       $("#top-err").scrollIntoView({ block: "center" }); return done();
@@ -342,6 +391,8 @@ $("#back").addEventListener("click", async () => {
   if (r.data.paymentIntent || st === "confirmed") { location.replace(`/?booking=success&payment_intent=${encodeURIComponent(r.data.paymentIntent || "")}`); return; }
   if (!r.data.clientSecret) return ended();
   renderSummary(r.data.summary);
+  if (r.data.terms) renderTerms(r.data.terms);
+  syncButton();
   expiresAt = Date.parse(r.data.expiresAt); tick(); setInterval(tick, 1000);
   $("#loading").hidden = true; $("#page").hidden = false;
   if (Q.get("failed")) showErr($("#top-err"), "Your payment didn't go through, so you haven't been charged. Try again or choose another payment method.");

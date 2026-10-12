@@ -31,9 +31,10 @@ export async function localBlobs() {
 export const WEBHOOK_SECRET = "whsec_test_secret";
 const real = new Stripe("sk_test_dummy");
 
-export function fakeStripe({ failCreate = false } = {}) {
-  const sessions = new Map(), intents = new Map(); let n = 0, k = 0;
-  const calls = { create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [] };
+export function fakeStripe({ failCreate = false, declineHolds = false, clock = () => Date.now() } = {}) {
+  const sessions = new Map(), intents = new Map(), customers = new Map(); let n = 0, k = 0, cu = 0;
+  const calls = { create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [], piCapture: [], cusCreate: [], cusUpdate: [] };
+  const fake = { declineHolds };
   const noSuch = () => { const e = new Error("No such payment_intent"); e.type = "StripeInvalidRequestError"; return e; };
   return {
     calls, sessions, intents,
@@ -41,18 +42,36 @@ export function fakeStripe({ failCreate = false } = {}) {
       async create(params, opts) {
         calls.piCreate.push({ params, opts });
         if (failCreate) { const e = new Error("Stripe is down"); e.type = "StripeAPIError"; throw e; }
+        if (opts && opts.idempotencyKey) { for (const p of intents.values()) if (p._key === opts.idempotencyKey) return p; }
         const id = `pi_test_${++k}`;
-        const pi = { id, object: "payment_intent", client_secret: `${id}_secret_abc`, amount: params.amount, amount_received: 0, currency: params.currency,
-          status: "requires_payment_method", metadata: { ...params.metadata }, description: params.description, receipt_email: null };
-        intents.set(id, pi); return pi;
+        const pi = { id, object: "payment_intent", client_secret: `${id}_secret_abc`, amount: params.amount, amount_received: 0, amount_capturable: 0, currency: params.currency,
+          status: "requires_payment_method", metadata: { ...params.metadata }, description: params.description, receipt_email: null,
+          customer: params.customer || null, payment_method: params.payment_method || null, capture_method: params.capture_method || "automatic",
+          setup_future_usage: params.setup_future_usage || null, _key: opts && opts.idempotencyKey };
+        intents.set(id, pi);
+        if (params.confirm && params.capture_method === "manual") {
+          if (fake.declineHolds) { const e = new Error("Your card was declined."); e.type = "StripeCardError"; e.code = "card_declined"; pi.status = "requires_payment_method"; throw e; }
+          pi.status = "requires_capture"; pi.amount_capturable = pi.amount;
+          pi.latest_charge = { id: "ch_" + id, payment_method_details: { card: { capture_before: Math.floor(clock() / 1000) + 7 * 86400, extended_authorization: { status: "disabled" } } } };
+        }
+        return pi;
       },
       async retrieve(id) { const pi = intents.get(id); if (!pi) throw noSuch(); return pi; },
       async update(id, params) { calls.piUpdate.push({ id, params }); const pi = intents.get(id); if (!pi) throw noSuch();
         Object.assign(pi, params, { metadata: { ...pi.metadata, ...(params.metadata || {}) } }); return pi; },
       async cancel(id) { calls.piCancel.push(id); const pi = intents.get(id); if (!pi) throw noSuch(); pi.status = "canceled"; return pi; },
+      async capture(id, params = {}) { calls.piCapture.push({ id, params }); const pi = intents.get(id); if (!pi) throw noSuch();
+        if (pi.status !== "requires_capture") { const e = new Error("This PaymentIntent could not be captured"); e.type = "StripeInvalidRequestError"; throw e; }
+        pi.status = "succeeded"; pi.amount_received = params.amount_to_capture ?? pi.amount; return pi; },
+    },
+    customers: {
+      async create(params) { calls.cusCreate.push(params); const id = `cus_test_${++cu}`; const c = { id, ...params }; customers.set(id, c); return c; },
+      async update(id, params) { calls.cusUpdate.push({ id, params }); const c = customers.get(id); Object.assign(c, params); return c; },
     },
     // simulate the renter paying on the site's checkout page
-    payIntent(id, status = "succeeded") { const pi = intents.get(id); pi.status = status; if (status === "succeeded") pi.amount_received = pi.amount; return pi; },
+    payIntent(id, status = "succeeded") { const pi = intents.get(id); pi.status = status; pi.payment_method = pi.payment_method || "pm_test_visa";
+      if (status === "succeeded") pi.amount_received = pi.amount; return pi; },
+    fake,
     checkout: { sessions: {
       async create(params, opts) {
         calls.create.push({ params, opts });
@@ -67,7 +86,9 @@ export function fakeStripe({ failCreate = false } = {}) {
     } },
     webhooks: real.webhooks,
     // simulate the renter paying
-    pay(id) { const s = sessions.get(id); Object.assign(s, { payment_status: "paid", status: "complete", payment_intent: "pi_test_" + id, customer_details: { name: "Test Renter", email: "renter@example.com", phone: "+12145550100" } }); return s; },
+    pay(id) { const s = sessions.get(id);
+      const pid = "pi_hosted_" + id; intents.set(pid, { id: pid, status: "succeeded", amount: s.amount_total, amount_received: s.amount_total, customer: "cus_hosted_" + id, payment_method: "pm_test_visa", metadata: { ...s.metadata } });
+      Object.assign(s, { payment_status: "paid", status: "complete", payment_intent: pid, customer: "cus_hosted_" + id, customer_details: { name: "Test Renter", email: "renter@example.com", phone: "+12145550100" } }); return s; },
   };
 }
 

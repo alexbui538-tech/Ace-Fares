@@ -38,6 +38,10 @@ td small{display:block;color:var(--ink-3)}
 .pill.confirmed{background:#E3F0E2;color:var(--ok)}
 .pill.hold{background:#FDF3DC;color:#7A5A12}
 .pill.conflict{background:#FBE3D9;color:var(--bad)}
+.dep{font-size:.86rem}
+.dep .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.dep button{min-height:32px;padding:0 10px;font-size:.82rem;background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.dep .warn{color:var(--bad)}
 .empty{color:var(--ink-3);padding:14px 12px;margin:0}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--ivory);padding:10px 16px;border-radius:10px}
 </style>
@@ -76,9 +80,38 @@ function renderLogin(err){
   try { if (err) sessionStorage.setItem("af-admin-err", err); } catch {}
   location.reload();
 }
+const dollars = c => "$" + (c / 100).toFixed(2);
+function depositCell(car, b){
+  const d = b.deposit; if (!d || !d.status || b.status !== "confirmed" && d.status !== "held") return "";
+  const btn = (action, label) => `<button data-dep="${action}" data-car="${car}" data-id="${esc(b.id)}" data-max="${d.amount || 0}">${label}</button>`;
+  let t = "", acts = "";
+  if (d.status === "scheduled") t = `${dollars(d.amount)} goes on ${new Date(d.placeAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+  else if (d.status === "held") {
+    t = `<b>${dollars(d.amount)} held</b><small>until ${new Date(d.captureBefore).toLocaleDateString()}${d.extended ? " (extended)" : ""}${d.keep ? " · kept: won't auto-release" : ""}</small>${d.renewError ? `<small class="warn">Renewal failed: ${esc(d.renewError)}</small>` : ""}`;
+    acts = btn("capture", "Collect…") + btn("release", "Release") + (d.keep ? btn("unkeep", "Auto-release") : btn("keep", "Keep hold"));
+  } else if (d.status === "failed") { t = `<span class="warn">Hold failed</span><small>${esc(d.error || "")}</small>`; acts = btn("place", "Try again"); }
+  else if (d.status === "captured") t = `Collected ${dollars(d.capturedAmount || 0)}${d.captureNote ? `<small>${esc(d.captureNote)}</small>` : ""}`;
+  else if (d.status === "released") t = `Released<small>${esc(d.releaseReason || "")}</small>`;
+  return t + (acts ? `<div class="acts">${acts}</div>` : "");
+}
+async function depositAction(btn){
+  const action = btn.dataset.dep, body = { car: btn.dataset.car, id: btn.dataset.id, action };
+  if (action === "capture") {
+    const max = (Number(btn.dataset.max) / 100).toFixed(2);
+    const amt = prompt(`Amount to collect from the deposit (up to $${max}). The rest is released automatically:`, "150");
+    if (amt == null) return;
+    body.amount = Number(String(amt).replace(/[$,]/g, ""));
+    body.note = prompt("Reason (the renter sees this on your itemized statement), e.g. Smoking remediation fee, photos sent 10/14:", "") || "";
+  } else if (action === "release" && !confirm("Release the whole deposit hold now?")) return;
+  btn.disabled = true;
+  const r = await fetch("/api/admin/deposit", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (r.ok) { toast({ capture: "Collected. The rest of the hold is released.", release: "Hold released.", keep: "Hold kept: it won't auto-release.", unkeep: "Hold will auto-release after return.", place: data.deposit && data.deposit.status === "held" ? "Hold placed." : "Hold failed again." }[action]); load(); }
+  else { btn.disabled = false; toast(data.message || "Couldn't do that. Try again."); }
+}
 function render(data){
   const today = new Date().toISOString().slice(0, 10);
-  let html = `<div class="bar"><span class="grow">Upcoming paid bookings and anything in checkout. Refunds are done in your Stripe dashboard.</span>
+  let html = `<div class="bar"><span class="grow">Upcoming paid bookings and anything in checkout. Refunds are done in your Stripe dashboard. Deposit holds release on their own 72 hours after return unless you keep or collect them.</span>
     <label><input type="checkbox" id="all" ${showAll ? "checked" : ""}> Show past and cancelled</label>
     <button class="line" id="refresh">Refresh</button><button class="line" id="out">Sign out</button></div>`;
   for (const [car, name] of Object.entries(CARS)) {
@@ -86,7 +119,7 @@ function render(data){
       .sort((a, b) => a.from < b.from ? -1 : 1);
     html += `<h2 class="car">${name}</h2><div class="wrap">`;
     if (!list.length) { html += `<p class="empty">No bookings to show.</p></div>`; continue; }
-    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th></th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>Deposit hold</th><th></th></tr></thead><tbody>`;
     for (const b of list) {
       const c = b.customer || {};
       const canCancel = b.status === "confirmed" || b.status === "hold" || b.status === "conflict";
@@ -94,7 +127,8 @@ function render(data){
         <td>${esc(c.name) || `<small>${b.status === "hold" ? "Not paid yet" : "No details recorded"}</small>`}${c.phone ? `<small><a href="tel:${esc(c.phone)}">${esc(c.phone)}</a></small>` : ""}${c.email ? `<small><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></small>` : ""}</td>
         <td>${PLACES[b.location] || esc(b.location)}</td>
         <td>${money(b.amountPaid || (b.status === "confirmed" ? b.total : 0))}</td>
-        <td><span class="pill ${esc(b.status)}">${LABEL[b.status] || esc(b.status)}</span></td>
+        <td><span class="pill ${esc(b.status)}">${LABEL[b.status] || esc(b.status)}</span>${b.signature ? `<small title="Fingerprint ${esc(b.signature.sha256)}">Signed ${esc(new Date(b.signature.signedAt).toLocaleString())}<br>IP ${esc(b.signature.ip)} · v${esc(b.signature.agreementVersion)}</small>` : ""}</td>
+        <td class="dep">${depositCell(car, b)}</td>
         <td>${canCancel ? `<button class="danger" data-car="${car}" data-id="${esc(b.id)}">Cancel</button>` : ""}</td></tr>`;
     }
     html += `</tbody></table></div>`;
@@ -103,6 +137,7 @@ function render(data){
   document.getElementById("all").onchange = e => { showAll = e.target.checked; render(data); };
   document.getElementById("refresh").onclick = load;
   document.getElementById("out").onclick = () => { try { sessionStorage.removeItem("af-admin"); } catch {} location.reload(); };
+  app.querySelectorAll("button[data-dep]").forEach(btn => btn.onclick = () => depositAction(btn));
   app.querySelectorAll("button.danger").forEach(btn => btn.onclick = async () => {
     if (!confirm("Cancel this booking? The dates open up again. If they paid, refund them in Stripe.")) return;
     btn.disabled = true;

@@ -105,12 +105,16 @@ ok(/holding these dates/.test(await p.textContent("#hold")), "hold countdown is 
 ok(await p.evaluate(() => window.__pk) === PK, "Stripe started with the publishable key from the server");
 if (SHOTS) await p.screenshot({ path: `${SHOTS}/checkout-desktop.png`, fullPage: true });
 
+ok(await p.isDisabled("#pay-btn"), "Book trip is disabled until the agreement box is checked");
+ok(/By checking this box, I am electronically signing/.test(await p.textContent("#agree-text")) && /\$750/.test(await p.textContent("#agree-text")), "clickwrap words with the deposit amount are next to the box");
+ok((await p.textContent("#t-deposit")) === "$750" && (await p.textContent("#t-smoke")) === "$150" && !(await p.isHidden("#sum-dep")), "key terms and deposit shown");
+await p.check("#agree");
+ok(!(await p.isDisabled("#pay-btn")), "checking the box enables Book trip");
+await p.uncheck("#agree"); ok(await p.isDisabled("#pay-btn"), "unchecking disables it again");
+await p.check("#agree");
 await p.click("#pay-btn");
 ok(await p.locator("#c-name.bad").count() === 1 && p.url().includes("checkout.html"), "empty details: asks for the name, nothing charged");
 await fill(p);
-await p.click("#pay-btn"); await p.waitForTimeout(200);
-ok(await p.locator("#agree-row.bad").count() === 1, "agreement box must be ticked");
-await p.check("#agree");
 await Promise.all([p.waitForURL(/booking=success|\/$|\/#/), p.click("#pay-btn")]);
 await p.waitForSelector("#done[open]"); await p.waitForTimeout(500);
 ok((await p.textContent("#done-title")).includes("You're booked"), "after paying: You're booked!");
@@ -118,6 +122,9 @@ ok((await p.textContent("#done-text")).includes("jordan@example.com"), "confirma
 ok(mailer.sent.length === 1 && mailer.sent[0].to === "jordan@example.com", "confirmation + agreement emailed once");
 const bk = (await makeRepo(store).all("escalade")).find(b => b.from === D(10));
 ok(bk && bk.status === "confirmed" && bk.customer.phone === "(214) 555-0100" && bk.termsAccepted, "booking saved with renter details and agreement");
+ok(bk && bk.signature && /^[0-9a-f]{64}$/.test(bk.signature.sha256) && bk.signature.clientTime && bk.signature.depositAck && bk.signature.smokingAck, "signature recorded with time, fingerprint and policy acknowledgments");
+ok(bk && bk.deposit && bk.deposit.status === "scheduled", "deposit hold scheduled for 24h before pickup");
+ok(/Signature record/.test(mailer.sent[0].html), "email includes the signature record");
 if (SHOTS) await p.screenshot({ path: `${SHOTS}/checkout-done.png` });
 
 /* 2. declined card, phone size */
