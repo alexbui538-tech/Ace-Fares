@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Trip photos | Ace Fares Rentals</title>
+<link rel="icon" href="images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ivory:#FBF8F1; --paper:#FFFFFF; --cream:#F3ECDD; --line:#E4DCCB;
+  --ink:#15130F; --ink-2:#514A3D; --ink-3:#6F6757;
+  --gold:#AF8135; --gold-text:#84601F; --gold-bright:#DAA336;
+  --navy:#0F1A34; --ok:#2F6B3A; --bad:#A3321F;
+  --serif:"DM Serif Display",Georgia,serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ivory);color:var(--ink);font:400 1rem/1.55 var(--sans)}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px}
+.top{background:rgba(251,248,241,.96);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top .in{max-width:980px;margin:0 auto;padding:0 16px;height:64px;display:flex;align-items:center;gap:14px}
+.top img{height:42px;width:auto;border-radius:4px}
+.who{font-size:.85rem;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--cream);color:var(--gold-text)}
+.back{margin-left:auto;display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:600;color:var(--ink-2);text-decoration:none}
+main{max-width:980px;margin:0 auto;padding:20px 16px 72px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.9rem,4vw,2.4rem);line-height:1.1;margin:0 0 6px}
+.lede{color:var(--ink-2);margin:0 0 18px}
+.tripcard{display:grid;grid-template-columns:88px 1fr;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px;margin:0 0 18px}
+.tripcard img{width:88px;height:64px;object-fit:cover;border-radius:10px;background:var(--cream)}
+.tripcard b{display:block}
+.tripcard span{font-size:.9rem;color:var(--ink-2)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--cream);border-radius:12px;padding:4px;margin:0 0 18px}
+.tabs button{border:0;background:none;border-radius:9px;min-height:44px;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.tabs button[aria-selected="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tabs small{font-weight:600;color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:0 0 18px}
+.shot{position:relative;background:var(--paper);border:1.5px dashed var(--line);border-radius:14px;overflow:hidden;display:grid;grid-template-rows:auto 1fr;cursor:pointer;text-align:left;padding:0;min-height:180px}
+.shot:hover{border-color:var(--gold)}
+.shot.has{border-style:solid;border-color:#BFD9BE}
+.shot .pic{aspect-ratio:4/3;background:var(--ivory);display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
+.shot .pic img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .txt{padding:10px 12px}
+.shot b{display:flex;align-items:center;gap:6px;font-size:.98rem}
+.shot small{display:block;color:var(--ink-3);font-size:.82rem;line-height:1.35;margin-top:2px}
+.shot .tick{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--ok);color:#fff;display:flex;align-items:center;justify-content:center}
+.shot .opt{font-weight:500;color:var(--ink-3);font-size:.8rem}
+.shot.busy .pic::after{content:"Uploading...";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(251,248,241,.8);font-weight:600;color:var(--ink)}
+.shot.locked{cursor:default}
+.damage-row{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 12px}
+.damage-row img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 16px}
+.panel h2{font-size:1.1rem;margin:0 0 12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ctl label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+.ctl input,.ctl select,.ctl textarea{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;background:var(--paper)}
+.ctl textarea{min-height:80px;padding:10px 12px;resize:vertical}
+.ctl input:focus,.ctl select:focus,.ctl textarea:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(218,163,54,.25)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:12px;border:0;font-weight:700;font-size:1.04rem;cursor:pointer;background:var(--gold-bright);color:var(--ink);text-decoration:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.loading{color:transparent;position:relative;pointer-events:none}
+.btn.loading::after{content:"";position:absolute;width:22px;height:22px;border:2.5px solid var(--ink);border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint{text-align:center;color:var(--ink-3);font-size:.86rem;margin:8px 0 0}
+.notice{border-radius:12px;padding:12px 14px;margin:0 0 16px;font-size:.95rem}
+.notice.err{background:#FBE3D9;color:#7A2A13}
+.notice.ok{background:#E3F0E2;color:var(--ok)}
+.readings{display:flex;gap:16px;flex-wrap:wrap;font-size:.95rem;color:var(--ink-2)}
+.readings b{color:var(--ink)}
+.other summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.other .grid{margin-top:12px}
+.ended{max-width:520px;margin:40px auto;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:28px;text-align:center}
+.keyform{max-width:420px;margin:40px auto;display:grid;gap:12px}
+#viewer{border:0;padding:0;background:transparent;max-width:min(96vw,1100px);max-height:92vh}
+#viewer::backdrop{background:rgba(15,26,52,.85)}
+#viewer img{max-width:100%;max-height:84vh;border-radius:12px;display:block}
+#viewer p{color:#fff;margin:8px 0 0;font-size:.85rem}
+@media (max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:10px}.shot{min-height:150px}.shot small{display:none}.row2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.btn.loading::after{animation-duration:2s}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <a href="/" aria-label="Ace Fares, home"><img src="images/logo@2x.png" alt="Ace Fares" width="98" height="42"></a>
+    <span class="who" id="who" hidden></span>
+    <a class="back" id="back" href="/?trips=1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span id="back-txt">My trips</span></a>
+  </div>
+</header>
+
+<main>
+  <p id="loading" role="status" style="text-align:center;color:var(--ink-3);padding:40px 0">Loading your trip...</p>
+  <form class="keyform" id="keyform" hidden>
+    <h1>Host photos</h1>
+    <p class="lede" style="margin:0">Enter your admin key to take the Ace Fares photos for this trip.</p>
+    <div class="ctl"><label for="key">Admin key</label><input id="key" type="password" autocomplete="current-password"></div>
+    <p class="notice err" id="key-err" hidden></p>
+    <button class="btn" type="submit">Continue</button>
+  </form>
+  <div class="ended" id="ended" hidden><h1 id="ended-title">We couldn't find that trip</h1><p id="ended-text" style="color:var(--ink-2)"></p><a class="btn" href="/?trips=1" style="max-width:260px;margin:0 auto">My trips</a></div>
+
+  <div id="page" hidden>
+    <h1 id="title">Pickup photos</h1>
+    <p class="lede" id="lede"></p>
+    <div class="tripcard"><img id="t-img" alt=""><div><b id="t-car"></b><span id="t-dates"></span></div></div>
+    <div class="tabs" role="tablist" aria-label="Inspection step">
+      <button type="button" role="tab" id="tab-pickup" data-stage="pickup" aria-selected="true">Pickup <small id="tab-pickup-ok"></small></button>
+      <button type="button" role="tab" id="tab-return" data-stage="return" aria-selected="false">Return <small id="tab-return-ok"></small></button>
+    </div>
+    <div class="notice err" id="err" role="alert" hidden></div>
+    <div class="notice ok" id="done-note" role="status" hidden></div>
+
+    <div class="grid" id="shots"></div>
+
+    <div class="panel" id="read-panel">
+      <h2>Readings</h2>
+      <div class="row2">
+        <div class="ctl"><label for="odo">Mileage on the odometer</label><input id="odo" inputmode="numeric" autocomplete="off" placeholder="e.g. 41200"></div>
+        <div class="ctl"><label for="fuel">Fuel level</label><select id="fuel"><option value="">Choose...</option></select></div>
+      </div>
+      <div class="ctl" style="margin-top:12px"><label for="notes">Notes <span style="font-weight:400;color:var(--ink-3)">(optional: existing damage, warning lights, anything to flag)</span></label><textarea id="notes" maxlength="1000"></textarea></div>
+    </div>
+    <button class="btn" type="button" id="submit" disabled>Submit pickup photos</button>
+    <p class="hint" id="submit-hint">Take every photo and add the readings to submit.</p>
+
+    <details class="other panel" id="other" style="margin-top:22px" hidden>
+      <summary id="other-title">Ace Fares' photos</summary>
+      <div class="readings" id="other-read"></div>
+      <div class="grid" id="other-shots"></div>
+    </details>
+  </div>
+  <input type="file" id="file" accept="image/*" capture="environment" hidden>
+</main>
+<dialog id="viewer"><img id="viewer-img" alt=""><p id="viewer-cap"></p></dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const Q = new URLSearchParams(location.search), CAR = Q.get("car") || "", REF = Q.get("ref") || "";
+const HOST = Q.get("as") === "host";
+let KEY = ""; try { KEY = sessionStorage.getItem("af-admin") || ""; } catch {}
+let STAGE = Q.get("stage") === "return" ? "return" : "pickup";
+let D = null, pending = null;
+const urls = new Map();
+const CAM = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const TICK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const when = (d, t) => { const [h, m] = (t || "10:00").split(":").map(Number); return new Date(d + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) + `, ${(h % 12) || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+const stamp = iso => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ROLE = () => D && D.role;
+const OTHER = () => ROLE() === "host" ? "renter" : "host";
+const q = `car=${encodeURIComponent(CAR)}&ref=${encodeURIComponent(REF)}`;
+
+async function api(path, opts = {}) {
+  const res = await fetch("/api/inspection" + path, { ...opts, headers: { ...(opts.body && !(opts.body instanceof Blob) ? { "content-type": "application/json" } : {}), ...(HOST && KEY ? { "x-admin-key": KEY } : {}), ...(opts.headers || {}) } });
+  let data = {}; try { data = await res.json(); } catch {}
+  return { ok: res.ok, status: res.status, data };
+}
+async function imgUrl(key) {
+  if (urls.has(key)) return urls.get(key);
+  const res = await fetch(`/api/inspection/img?${q}&key=${encodeURIComponent(key)}`, { headers: HOST && KEY ? { "x-admin-key": KEY } : {} });
+  if (!res.ok) return "";
+  const u = URL.createObjectURL(await res.blob()); urls.set(key, u); return u;
+}
+function ended(t, x) { $("#loading").hidden = true; $("#page").hidden = true; $("#ended").hidden = false; $("#ended-title").textContent = t; $("#ended-text").textContent = x || ""; }
+function showErr(m) { $("#err").hidden = !m; $("#err").textContent = m || ""; if (m) $("#err").scrollIntoView({ block: "center", behavior: "smooth" }); }
+
+async function load() {
+  const r = await api(`?${q}`);
+  if (r.status === 401) {
+    if (HOST) { KEY = ""; try { sessionStorage.removeItem("af-admin"); } catch {} return askKey(KEY ? "That admin key isn't right." : ""); }
+    location.replace(`/?login=1&next=${encodeURIComponent(location.pathname + location.search)}`); return;
+  }
+  if (!r.ok) return ended(r.status === 409 ? "Not ready yet" : "We couldn't find that trip", r.data.message);
+  D = r.data;
+  $("#loading").hidden = true; $("#keyform").hidden = true; $("#page").hidden = false;
+  render();
+}
+function askKey(msg) { $("#loading").hidden = true; $("#keyform").hidden = false; $("#key-err").hidden = !msg; $("#key-err").textContent = msg || ""; $("#key").focus(); }
+$("#keyform").addEventListener("submit", e => { e.preventDefault(); KEY = $("#key").value.trim(); if (!KEY) return; try { sessionStorage.setItem("af-admin", KEY); } catch {} load(); });
+
+async function render() {
+  const t = D.trip, mine = D.stages[STAGE][ROLE()], other = D.stages[STAGE][OTHER()];
+  $("#who").hidden = false; $("#who").textContent = ROLE() === "host" ? "Host: Ace Fares" : "Renter";
+  if (ROLE() === "host") { $("#back").href = "/admin.html"; $("#back-txt").textContent = "Bookings"; }
+  $("#t-img").src = `images/${t.photo}-sm.webp`; $("#t-car").textContent = t.carName;
+  $("#t-dates").textContent = `${when(t.from, t.fromTime)} to ${when(t.to, t.toTime)} · ${t.location || ""}${ROLE() === "host" && t.renter ? " · " + t.renter : ""}`;
+  $("#title").textContent = `${STAGE === "pickup" ? "Pickup" : "Return"} photos`;
+  $("#lede").textContent = (ROLE() === "host" ? "Ace Fares' photos. " : "") + (STAGE === "pickup"
+    ? "Before driving off, walk around the car and take each photo below. They're time-stamped and saved as the record of the car's condition."
+    : "When you return the car, take the same photos again so we can compare mileage, fuel and condition.");
+  for (const s of ["pickup", "return"]) {
+    $("#tab-" + s).setAttribute("aria-selected", String(s === STAGE));
+    $("#tab-" + s + "-ok").textContent = D.stages[s][ROLE()].done ? "✓ done" : "";
+  }
+  const fuel = $("#fuel"); if (fuel.options.length < 2) for (const f of D.fuelLevels) fuel.add(new Option(f === "E" ? "Empty" : f === "F" ? "Full" : f, f));
+  const locked = !!mine.done;
+  $("#done-note").hidden = !locked;
+  if (locked) $("#done-note").textContent = `Submitted ${stamp(mine.done.completedAt)}: ${mine.done.odometer.toLocaleString()} miles, fuel ${mine.done.fuel}. These photos are saved and can't be changed.`;
+  $("#read-panel").hidden = locked; $("#submit").hidden = locked; $("#submit-hint").hidden = locked;
+  $("#shots").innerHTML = D.shots.map(s => {
+    const has = mine.shots[s.id], list = Array.isArray(has) ? has : has ? [has] : [];
+    const label = `${esc(s.label)}${s.optional ? ' <span class="opt">optional</span>' : ""}`;
+    return `<button type="button" class="shot${list.length ? " has" : ""}${locked ? " locked" : ""}" data-shot="${s.id}" ${locked && !list.length ? "disabled" : ""}>
+      <div class="pic" style="position:relative">${list.length && !s.multiple ? `<img data-key="${esc(list[0].key)}" alt="${esc(s.label)}">` : CAM}</div>
+      ${list.length && !s.multiple ? `<span class="tick" aria-label="Done">${TICK}</span>` : ""}
+      <div class="txt"><b>${label}</b><small>${list.length && !s.multiple ? `Taken ${stamp(list[0].takenAt)}${locked ? "" : " · tap to retake"}` : s.multiple ? (list.length ? `${list.length} added${locked ? "" : " · tap to add more"}` : esc(s.hint)) : esc(s.hint)}</small></div>
+      ${s.multiple && list.length ? `<div class="damage-row">${list.map(p => `<img data-key="${esc(p.key)}" alt="Damage photo">`).join("")}</div>` : ""}
+    </button>`;
+  }).join("");
+  // other side's photos (read-only)
+  const oDone = other.done, oCount = Object.values(other.shots).flat().length;
+  $("#other").hidden = !oCount;
+  $("#other-title").textContent = `${OTHER() === "host" ? "Ace Fares'" : "Renter's"} ${STAGE} photos${oDone ? ` (submitted ${stamp(oDone.completedAt)})` : " (in progress)"}`;
+  $("#other-read").innerHTML = oDone ? `<span>Mileage <b>${oDone.odometer.toLocaleString()}</b></span><span>Fuel <b>${esc(oDone.fuel)}</b></span>${oDone.notes ? `<span>Notes: ${esc(oDone.notes)}</span>` : ""}` : "";
+  $("#other-shots").innerHTML = D.shots.flatMap(s => { const v = other.shots[s.id]; return (Array.isArray(v) ? v : v ? [v] : []).map(p =>
+    `<button type="button" class="shot has locked" data-view="${esc(p.key)}"><div class="pic"><img data-key="${esc(p.key)}" alt="${esc(s.label)}"></div><div class="txt"><b>${esc(s.label)}</b><small>${stamp(p.takenAt)}</small></div></button>`); }).join("");
+  if (D.milesDriven != null) $("#done-note").textContent += ` Miles driven this trip: ${D.milesDriven.toLocaleString()}.`;
+  syncSubmit();
+  document.querySelectorAll("img[data-key]").forEach(async img => { img.src = await imgUrl(img.dataset.key); });
+}
+function syncSubmit() {
+  if (!D) return;
+  const mine = D.stages[STAGE][ROLE()];
+  const missing = D.shots.filter(s => !s.optional && !mine.shots[s.id]);
+  const ok = !missing.length && /^\d{1,6}$/.test($("#odo").value.replace(/[, ]/g, "")) && $("#fuel").value;
+  $("#submit").disabled = !ok;
+  $("#submit").textContent = `Submit ${STAGE} photos`;
+  $("#submit-hint").textContent = missing.length ? `${missing.length} photo${missing.length > 1 ? "s" : ""} to go: ${missing.map(s => s.label).join(", ")}.` : ok ? "Once submitted, these photos can't be changed." : "Add the mileage and fuel level to submit.";
+}
+["input", "change"].forEach(ev => { $("#odo").addEventListener(ev, syncSubmit); $("#fuel").addEventListener(ev, syncSubmit); });
+
+// take / upload a photo
+$("#shots").addEventListener("click", e => {
+  const tile = e.target.closest(".shot"); if (!tile || tile.classList.contains("locked") || tile.classList.contains("busy")) {
+    const img = e.target.closest("img[data-key]"); if (img && img.src) openViewer(img.src, ""); return;
+  }
+  pending = tile.dataset.shot; $("#file").value = ""; $("#file").click();
+});
+$("#other-shots").addEventListener("click", e => { const img = e.target.closest(".shot") && e.target.closest(".shot").querySelector("img"); if (img && img.src) openViewer(img.src, img.alt); });
+function openViewer(src, cap) { $("#viewer-img").src = src; $("#viewer-cap").textContent = cap || ""; $("#viewer").showModal(); }
+$("#viewer").addEventListener("click", () => $("#viewer").close());
+
+async function shrink(file) {
+  // phone photos can be 5-12 MB: resize to 1600px on the long side, JPEG ~82%
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.82));
+    if (blob && blob.size) return blob;
+  } catch {}
+  return file;           // e.g. HEIC the browser can't draw: send the original
+}
+$("#file").addEventListener("change", async () => {
+  const f = $("#file").files[0], shot = pending; if (!f || !shot) return;
+  const tile = document.querySelector(`.shot[data-shot="${shot}"]`); tile && tile.classList.add("busy"); showErr("");
+  try {
+    const blob = await shrink(f);
+    if (blob.size > 5 * 1024 * 1024) { showErr("That photo is too large. Try taking it again."); return; }
+    const r = await api(`/photo?${q}&stage=${STAGE}&shot=${shot}&clientTime=${encodeURIComponent(new Date(f.lastModified || Date.now()).toISOString())}`, { method: "POST", body: blob, headers: { "content-type": blob.type || "image/jpeg" } });
+    if (r.status === 401) return load();
+    if (!r.ok) { showErr(r.data.message || "That photo didn't upload. Please try again."); return; }
+    await refresh();
+  } catch { showErr("That photo didn't upload. Check your connection and try again."); }
+  finally { tile && tile.classList.remove("busy"); }
+});
+async function refresh() { const odo = $("#odo").value, fuel = $("#fuel").value, notes = $("#notes").value; const r = await api(`?${q}`); if (r.ok) { D = r.data; await render(); $("#odo").value = odo; $("#fuel").value = fuel; $("#notes").value = notes; syncSubmit(); } }
+
+$("#submit").addEventListener("click", async () => {
+  const btn = $("#submit"); if (btn.disabled) return;
+  if (!confirm(`Submit your ${STAGE} photos? After this they're saved as the record and can't be changed.`)) return;
+  btn.classList.add("loading"); showErr("");
+  try {
+    const r = await api("/complete", { method: "POST", body: JSON.stringify({ car: CAR, ref: REF, stage: STAGE, odometer: $("#odo").value, fuel: $("#fuel").value, notes: $("#notes").value }) });
+    if (!r.ok) { showErr(r.data.message || "That didn't go through. Please try again."); return; }
+    await refresh(); window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch { showErr("That didn't go through. Check your connection and try again."); }
+  finally { btn.classList.remove("loading"); }
+});
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  STAGE = b.dataset.stage; history.replaceState(null, "", `${location.pathname}?${q}&stage=${STAGE}${HOST ? "&as=host" : ""}`);
+  $("#odo").value = ""; $("#fuel").value = ""; $("#notes").value = ""; showErr(""); render();
+}));
+
+(async () => {
+  if (!CAR || !REF) return ended("We couldn't find that trip", "Open My trips to see your bookings.");
+  if (HOST && !KEY) return askKey("");
+  try { await load(); } catch { ended("We couldn't load your trip", "Check your connection and refresh this page."); }
+})();
+</script>
+</body>
+</html>

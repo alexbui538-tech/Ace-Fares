@@ -100,6 +100,16 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .ended p{color:var(--ink-2);margin:0 0 20px}
 .ended .btn{max-width:280px;margin:0 auto;text-decoration:none}
 .skeleton{color:var(--ink-3);padding:40px 0;text-align:center}
+.ins{display:grid;gap:10px}
+.ins-opt{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--paper);cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start}
+.ins-opt:has(input:checked){border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.ins-opt input[type=radio]{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ink)}
+.ins-opt b{display:block}
+.ins-opt .sub{font-size:.9rem;color:var(--ink-2)}
+.ins-fields{grid-column:2;margin-top:8px}
+.ins-fields .ctl{margin-bottom:8px}
+.ins-fields a{color:var(--gold-text);font-weight:600}
+.lines .credit,.lines .credit span:last-child{color:var(--ok)}
 
 @media (max-width:900px){
   .grid{grid-template-columns:1fr;gap:28px}
@@ -150,6 +160,36 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
           <p class="help">We'll email your confirmation and rental agreement, and text you to arrange the handoff.</p>
         </section>
 
+        <section aria-labelledby="h-ins">
+          <h2 id="h-ins">Insurance</h2>
+          <div class="ins" role="radiogroup" aria-labelledby="h-ins">
+            <label class="ins-opt" id="opt-own">
+              <input type="radio" name="ins" value="own" checked>
+              <div>
+                <b>I have my own auto insurance</b>
+                <span class="sub">It must cover you in a rental car at Texas minimum limits or more. Bring proof at pickup.</span>
+                <div class="ins-fields" id="own-fields">
+                  <div class="row2">
+                    <div class="ctl" id="c-ins-co"><label for="ins-co">Insurance company</label><input id="ins-co" autocomplete="off" placeholder="e.g. State Farm"><p class="err">Enter your insurance company.</p></div>
+                    <div class="ctl"><label for="ins-pol">Policy number <span style="color:var(--ink-3)">(optional)</span></label><input id="ins-pol" autocomplete="off"></div>
+                  </div>
+                </div>
+              </div>
+            </label>
+            <label class="ins-opt" id="opt-roamly" hidden>
+              <input type="radio" name="ins" value="roamly">
+              <div>
+                <b>Get covered with Roamly</b>
+                <span class="sub">Don't have insurance that covers rentals? Get a policy from our insurance partner, Roamly.</span>
+                <div class="ins-fields" id="roamly-fields" hidden>
+                  <a id="roamly-link" href="#" target="_blank" rel="noopener">Get a Roamly quote (opens in a new tab)</a>
+                  <p class="help" style="margin-top:6px">Finish your Roamly policy before pickup and bring proof of it. Your booking isn't covered until you do.</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </section>
+
         <section aria-labelledby="h-pay">
           <h2 id="h-pay">Payment</h2>
           <div id="pay"><div class="pay-loading">Loading secure payment form...</div></div>
@@ -161,7 +201,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
           <ul class="keys">
             <li><b>Security deposit hold: <span id="t-deposit"></span></b> A temporary hold on your card through Stripe, not a charge. It goes on <span id="t-timing"></span> and is released within <span id="t-release"></span> hours after you return the car if nothing is owed. Your bank may take up to 10 business days to clear it.</li>
             <li><b>No smoking or vaping: zero tolerance.</b> A non-negotiable <span id="t-smoke"></span> fee applies if we find any sign of smoking or vaping in the car.</li>
-            <li><b>Insurance:</b> show proof of your own auto insurance that covers rentals at pickup.</li>
+            <li><b>Insurance:</b> show proof at pickup of insurance that covers you in a rental car.</li>
             <li><b>Disputes:</b> Texas law, Dallas County courts.</li>
           </ul>
           <a href="/rental-agreement" target="_blank" rel="noopener" class="read">Read the full rental agreement <span id="t-version"></span></a>
@@ -269,6 +309,7 @@ function renderSummary(s) {
   }
   let html = rows.map(([a, b]) => `<div><span>${a}</span><span>${b}</span></div>`).join("");
   if (s.discount) html += `<div class="disc"><span>${s.discountLabel}</span><span>−${money(s.discount)}</span></div>`;
+  for (const c of s.credits || []) html += `<div class="credit"><span>${c.label}</span><span>−${money(c.amount)}</span></div>`;
   html += `<div><span>${s.location}</span><span>${s.fee ? money(s.fee) : "Free"}</span></div>`;
   html += `<div><span>Texas rental tax (${s.taxPct}%)</span><span>${money(s.tax)}</span></div>`;
   html += `<div><span>Distance included</span><span>${s.miles.toLocaleString()} miles</span></div><small>Extra miles, tolls and fuel are billed after the trip.</small>`;
@@ -324,12 +365,19 @@ function initPayment(pk, clientSecret) {
   });
 }
 
+const insChoice = () => (document.querySelector('input[name="ins"]:checked') || {}).value || "own";
+function syncIns() {
+  const c = insChoice();
+  $("#own-fields").hidden = c !== "own"; $("#roamly-fields").hidden = c !== "roamly";
+}
+document.querySelectorAll('input[name="ins"]').forEach(r => r.addEventListener("change", syncIns));
 function check() {
   const v = id => $("#" + id).value.trim();
   const tests = [
     ["name", v("name").length >= 2],
     ["email", /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email"))],
     ["phone", v("phone").replace(/\D/g, "").length >= 10],
+    ["ins-co", insChoice() !== "own" || v("ins-co").length >= 2],
   ];
   let first = null;
   for (const [id, ok] of tests) { $("#c-" + id).classList.toggle("bad", !ok); if (!ok && !first) first = id; }
@@ -352,7 +400,8 @@ $("#form").addEventListener("submit", async e => {
     if (sub.error) { showErr($("#pay-err"), sub.error.message || "Check your payment details."); return done(); }
     const name = $("#name").value.trim(), email = $("#email").value.trim(), phone = $("#phone").value.trim();
     const d = await api("/checkout-details", { method: "POST", body: JSON.stringify({ car: CAR, ref: REF, name, email, phone,
-      agree: true, agreedAt: agreedAt || new Date().toISOString(), termsVersion: TERMS && TERMS.version }) });
+      agree: true, agreedAt: agreedAt || new Date().toISOString(), termsVersion: TERMS && TERMS.version,
+      insurance: { choice: insChoice(), company: $("#ins-co").value.trim(), policy: $("#ins-pol").value.trim() } }) });
     if (!d.ok) {
       if (d.status === 401) { location.href = `/?login=1&next=${encodeURIComponent(location.pathname + location.search)}`; return; }
       if (d.data.error === "terms_changed") { $("#top-err").hidden = false; $("#top-err").innerHTML = `${d.data.message} <a href="${location.href}">Refresh</a>`; $("#top-err").scrollIntoView({ block: "center" }); return done(); }
@@ -395,6 +444,7 @@ $("#back").addEventListener("click", async () => {
   renderSummary(r.data.summary);
   if (r.data.prefill) for (const k of ["name", "email", "phone"]) if (r.data.prefill[k] && !$("#" + k).value) $("#" + k).value = r.data.prefill[k];
   if (r.data.terms) renderTerms(r.data.terms);
+  if (r.data.insurance && r.data.insurance.roamlyUrl) { $("#opt-roamly").hidden = false; $("#roamly-link").href = r.data.insurance.roamlyUrl; }
   syncButton();
   expiresAt = Date.parse(r.data.expiresAt); tick(); setInterval(tick, 1000);
   $("#loading").hidden = true; $("#page").hidden = false;

@@ -26,8 +26,9 @@ test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't cha
   assert.equal(b.rental, 2 * 199 * 100);
   const s = quote(v({ car: "srx", from: "2026-11-08", to: "2026-11-10" }));   // Sun + Mon
   assert.equal(s.rental, (69 + 49) * 100);
-  const vn = quote(v({ car: "van", from: "2026-11-06", to: "2026-11-09" }));  // van is $59 every day
-  assert.equal(vn.rental, 3 * 59 * 100);
+  const vn = quote(v({ car: "van", from: "2026-11-06", to: "2026-11-09" }));  // Fri, Sat, Sun at the van weekend rate
+  assert.equal(vn.rental, 3 * 129 * 100);
+  assert.equal(quote(v({ car: "van", from: "2026-11-09", to: "2026-11-11" })).rental, 2 * 89 * 100);   // Mon + Tue
 });
 
 test("DFW airport fee is $125", () => {
@@ -37,12 +38,14 @@ test("DFW airport fee is $125", () => {
 test("30 days: 25% monthly discount, still 10% tax", () => {
   const q = quote(v({ car: "van", from: "2026-11-01", to: "2026-12-01" }));
   assert.equal(q.days, 30); assert.equal(q.discountPct, 25); assert.equal(q.taxPct, 10);
-  assert.equal(q.rental, 177000); assert.equal(q.discount, 44250); assert.equal(q.tax, 13275); assert.equal(q.total, 146025);
+  // Nov 2026: 17 Mon-Thu days at $89 + 13 Fri-Sun days at $129 = $3,190
+  assert.equal(q.weekdays, 17); assert.equal(q.weekends, 13);
+  assert.equal(q.rental, 319000); assert.equal(q.discount, 79750); assert.equal(q.tax, 23925); assert.equal(q.total, 263175);
 });
 
 test("31 days: 6.25% tax", () => {
   const q = quote(v({ car: "van", from: "2026-11-01", to: "2026-12-02" }));
-  assert.equal(q.taxPct, 6.25); assert.equal(q.tax, Math.round((182900 - 45725) * 0.0625));
+  assert.equal(q.taxPct, 6.25); assert.equal(q.rental, 327900); assert.equal(q.tax, Math.round((327900 - 81975) * 0.0625));
 });
 
 test("rejects bad requests with clear messages", () => {
@@ -56,4 +59,14 @@ test("rejects bad requests with clear messages", () => {
 test("today is computed in Dallas time", () => {
   // 11pm Dallas on Oct 12 is already Oct 13 in UTC
   assert.equal(todayIn("America/Chicago", new Date("2026-10-13T04:00:00Z")), "2026-10-12");
+});
+
+test("referral discount and Ace Fares credit come off the rental before tax, never below $1", () => {
+  const base = v({ car: "srx", from: "2026-11-09", to: "2026-11-11" });           // Mon + Tue = $98
+  const q = quote({ ...base, credits: [{ code: "welcome", label: "Friend referral: first trip", amount: 5000 }] });
+  assert.equal(q.credit, 5000); assert.equal(q.tax, Math.round((9800 - 5000) * 0.10)); assert.equal(q.total, 9800 - 5000 + q.tax);
+  const big = quote({ ...base, credits: [{ code: "welcome", label: "w", amount: 5000 }, { code: "credit", label: "c", amount: 10000 }] });
+  assert.deepEqual(big.credits.map(c => c.amount), [5000, 4700]);               // rental can't go below $1
+  assert.equal(big.total, 100 + Math.round(100 * 0.10));
+  assert.equal(quote(base).credit, 0);
 });

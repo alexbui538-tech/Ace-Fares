@@ -96,7 +96,7 @@ async function startCheckout(p, car, a, b, loc) {
   await p.waitForSelector("#page:not([hidden])");
 }
 const fill = async (p, name = "Jordan Lee") => {
-  await p.fill("#name", name); await p.fill("#email", "jordan@example.com"); await p.fill("#phone", "(214) 555-0100");
+  await p.fill("#name", name); await p.fill("#email", "jordan@example.com"); await p.fill("#phone", "(214) 555-0100"); await p.fill("#ins-co", "State Farm");
 };
 
 /* 1. happy path, desktop */

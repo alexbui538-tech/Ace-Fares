@@ -1,6 +1,6 @@
 # Ace Fares: clickwrap signature, deposit hold and smoking policy
 
-**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft3`.
+**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft4`.
 
 Everything below is already live in the code. The agreement text comes from `lib/agreement.mjs`, and the checkout page, the `/rental-agreement` page and the confirmation email all read from it. Change the wording only there, and bump `AGREEMENT_VERSION` when you do.
 
@@ -23,7 +23,7 @@ Settings live in `lib/catalog.mjs`:
 
 The checkout page fills in the trip total and the deposit for the car:
 
-> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft3) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
+> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft4) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
 
 A **"Key rental terms"** box appears directly above the checkbox:
 

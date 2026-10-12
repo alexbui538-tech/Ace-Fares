@@ -422,6 +422,27 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 @media (max-width:520px){.row2{grid-template-columns:1fr}}
 
 
+/* refer a friend */
+.refer-band{padding:8px 0 56px}
+.refer-card{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;background:var(--navy);color:var(--on-navy);border-radius:var(--radius-card);padding:22px 26px}
+.refer-card .amt{width:92px;height:92px;border-radius:16px;background:var(--gold-bright);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.refer-card .amt b{font-family:var(--serif);font-weight:400;font-size:2.1rem}
+.refer-card .amt small{font-size:.74rem;font-weight:600;margin-top:4px}
+.refer-card h2{font-size:1.7rem;color:var(--on-navy);margin:0}
+.refer-card p{margin:6px 0 0;color:var(--on-navy-2);max-width:60ch}
+@media (max-width:760px){.refer-card{grid-template-columns:1fr;text-align:left}.refer-card .btn{width:100%}}
+.invite-bar{background:var(--gold-bright);color:var(--ink);text-align:center;padding:10px 16px;font-weight:600;font-size:.95rem}
+.invite-bar button{background:none;border:0;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:inherit;padding:4px}
+.auth-invite{background:#E3F0E2;color:var(--ok);border-radius:10px;padding:10px 12px;font-size:.92rem;font-weight:600}
+#refer{width:min(520px,calc(100vw - 24px))}
+.ref-link{display:flex;gap:8px}
+.ref-link input{flex:1;min-width:0;min-height:48px;border:1.5px solid var(--line);border-radius:var(--radius-ctl);padding:0 12px;background:var(--ivory);font:inherit}
+.ref-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ref-stats div{background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.ref-stats b{display:block;font-size:1.35rem}
+.ref-stats span{font-size:.85rem;color:var(--ink-3)}
+.ref-steps{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink-2)}
+.acct-menu .credit{display:block;margin-top:4px;color:var(--ok);font-weight:600;font-size:.85rem}
 /* account: log in / sign up (Turo-style), account menu, my trips */
 .acct{display:flex;align-items:center;gap:6px}
 .acct-out{display:flex;align-items:center;gap:6px}
@@ -478,6 +499,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 </head>
 <body>
 
+<div class="invite-bar" id="invite-bar" role="status" hidden></div>
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Ace Fares, home">
@@ -503,8 +525,9 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
           <span class="avatar" id="acct-avatar" aria-hidden="true"></span><span class="acct-first" id="acct-first"></span>
         </button>
         <div class="acct-menu" id="acct-menu" role="menu" hidden>
-          <div class="who"><b id="acct-name"></b><span id="acct-email"></span></div>
+          <div class="who"><b id="acct-name"></b><span id="acct-email"></span><span class="credit" id="acct-credit" hidden></span></div>
           <button type="button" role="menuitem" id="m-trips">My trips</button>
+          <button type="button" role="menuitem" id="m-refer">Refer a friend</button>
           <a role="menuitem" href="#fleet" id="m-book">Book a car</a>
           <button type="button" role="menuitem" id="m-logout">Log out</button>
         </div>
@@ -569,6 +592,19 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     </div>
   </section>
 
+  <section class="refer-band" id="refer-band" aria-labelledby="refer-title">
+    <div class="wrap">
+      <div class="refer-card">
+        <div class="amt" aria-hidden="true"><b>$100</b><small>for you</small></div>
+        <div>
+          <h2 id="refer-title">Refer a friend: give $50, get $100</h2>
+          <p>Share your link. Your friend gets $50 off their first trip, and when they finish a trip longer than three days, you get $100 in Ace Fares credit.</p>
+        </div>
+        <button class="btn btn-gold" type="button" id="refer-cta">Get your invite link</button>
+      </div>
+    </div>
+  </section>
+
   <section class="how" id="how" aria-labelledby="how-title">
     <div class="wrap">
       <h2 id="how-title">How it works</h2>
@@ -576,7 +612,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <ol class="steps">
         <li><h3>Choose your car and dates</h3><p>Pick a car from the fleet, set your trip dates and choose pickup or delivery. You see the full price before you pay.</p></li>
         <li><h3>Book and pay online</h3><p>Checkout is handled securely by Stripe. You get a confirmation by email, and we text you to set a handoff time.</p></li>
-        <li><h3>Pick up and drive</h3><p>Meet us at the car or get it delivered. At the end of your trip, return it to the same spot with the same fuel level.</p></li>
+        <li><h3>Pick up and drive</h3><p>Meet us at the car or get it delivered. We each snap a few photos of the car on our phones (all sides, mileage and fuel), and you're off. Do the same when you return it.</p></li>
       </ol>
       <div class="needs">
         <h3>What you'll need</h3>
@@ -712,6 +748,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
   <form class="auth-body" id="auth-form" novalidate>
     <p class="auth-sub" id="auth-sub"></p>
     <div class="auth-err" id="auth-err" role="alert" hidden></div>
+    <div class="auth-invite" id="auth-invite" hidden></div>
     <div class="auth-step" data-step="start">
       <div id="g-area" hidden><div class="g-wrap" id="g-btn"></div><div class="or">or</div></div>
       <div class="ctl"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" inputmode="email" spellcheck="false"></div>
@@ -752,6 +789,26 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <button class="btn btn-ink btn-block" type="submit">Save password and log in</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="refer" aria-labelledby="refer-dlg-title">
+  <div class="dlg-head">
+    <div><h3 id="refer-dlg-title">Give $50, get $100</h3><p>Invite friends to Ace Fares</p></div>
+    <button class="x" type="button" id="refer-close" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="dlg-body" id="refer-body">
+    <ol class="ref-steps">
+      <li>Share your link with a friend.</li>
+      <li>They get <b>$50 off</b> their first trip.</li>
+      <li>When they finish a trip longer than three days, you get <b>$100</b> in Ace Fares credit, used automatically on your next booking.</li>
+    </ol>
+    <div class="ctl"><label for="ref-url">Your invite link</label>
+      <div class="ref-link"><input id="ref-url" readonly><button class="btn btn-ink" type="button" id="ref-copy">Copy</button></div>
+    </div>
+    <button class="btn btn-gold btn-block" type="button" id="ref-share" hidden>Share link</button>
+    <div class="ref-stats"><div><b id="ref-credit">$0</b><span>Your credit</span></div><div><b id="ref-friends">0</b><span>Friends who earned you credit</span></div></div>
+    <p class="fine" id="ref-terms"></p>
+  </div>
 </dialog>
 
 <dialog id="trips" aria-labelledby="trips-title">
@@ -897,7 +954,7 @@ const CARS = [
     features:["AC","Bluetooth","GPS","Backup camera","Convertible top","Heated seats","Cognac leather interior","Premium sound","xDrive AWD","100 miles/day included"],
     tags:["Convertible","V8","Cognac leather","AWD"],
     photos:[["bmw-1","Blue BMW 650i convertible with the top down"],["bmw-2","BMW 650i front view"],["bmw-3","BMW 650i rear three-quarter view"],["bmw-4","BMW 650i rear view, top down"],["bmw-5","BMW cognac leather front seats"],["bmw-6","BMW cognac leather rear seats"]], }
-  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:59, weekend:59, miles:200,
+  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:89, weekend:129, miles:200,
     location:"Dallas, TX", rating:5, reviews:0, seats:8, color:"Lunar Silver",
     desc:"The family hauler for DFW. Seats 8 with heated leather seats, tri-zone climate control and Magic Slide second-row seats. A 280 hp V6, Honda Sensing safety features, and Apple CarPlay and Android Auto make every mile easy.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","8-passenger seating","Leather interior","Sliding doors","Magic Slide 2nd row","Honda Sensing safety suite","Apple CarPlay / Android Auto","Tri-zone climate control","9-speed automatic","280 hp V6","200 miles/day included"],
@@ -906,10 +963,12 @@ const CARS = [
 ];
 
 const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
-  ["Why are weekends priced differently?","The Escalade, SRX and BMW have lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Your trip total shows the exact split before you pay."],
+  ["Why are weekends priced differently?","Every car has lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Your trip total shows the exact split before you pay."],
   ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100 and DFW Airport handoff is $125. Both are shown in your trip total before you pay."],
   ["What if I drive more than the included miles?","Extra miles are charged per mile after your trip. Ask us for the rate before you book if you're planning a long drive."],
-  ["Do I need my own insurance?","Yes, please have proof of your current auto insurance ready. We'll check it when we confirm your booking."],
+  ["Do I need my own insurance?","Yes. At checkout you tell us your auto insurance company, and you bring proof at pickup. Your policy needs to cover you in a rental car."],
+  ["What photos do I take at pickup and return?","When you pick up the car, you and we each take photos on our phones through this site: the front, back and both sides, the odometer (mileage), the fuel gauge and the interior, plus close-ups of any existing damage. You do the same when you return it. The photos are time-stamped and saved, so we both have a clear record of the car's condition. Open My trips to take them."],
+  ["How does Refer a friend work?","Log in and choose Refer a friend in your account menu to get your link. A friend who signs up with it gets $50 off their first trip. When they finish a trip longer than three days, you get $100 in Ace Fares credit, applied automatically to your next booking."],
   ["How old do I need to be?",`Drivers must be at least ${SITE.minAge} years old with a valid driver's license.`],
   ["Can you meet me at the airport?","Yes. We can hand the car over at DFW International Airport. Share your flight details when we confirm and we'll be there when you land."],
   ["How do tolls work?","Many Dallas highways are toll roads. Any tolls charged during your trip are added to your final bill after the car is returned."],
@@ -1546,6 +1605,8 @@ function renderAccount(){
   $("#acct-avatar").innerHTML = u.picture ? `<img src="${esc(u.picture)}" alt="" referrerpolicy="no-referrer">` : esc(ini);
   $("#acct-first").textContent = u.firstName || "Account";
   $("#acct-name").textContent = u.name || u.email; $("#acct-email").textContent = u.email;
+  $("#acct-credit").hidden = !(u.credit > 0 || u.welcome);
+  $("#acct-credit").textContent = u.credit > 0 ? `${money(u.credit / 100)} Ace Fares credit` : u.welcome ? "$50 off your first trip" : "";
 }
 async function loadAccount(){
   try {
@@ -1572,6 +1633,7 @@ function openAuth({ mode = "login", reason = "", then = null } = {}){
   $("#auth-sub").textContent = reason === "book" ? "Sign in or create a free account to book. It takes less than a minute." : "Welcome to Ace Fares.";
   $("#auth-sub").hidden = false;
   authStep("start");
+  $("#auth-invite").hidden = !INVITE.valid; if (INVITE.valid) $("#auth-invite").textContent = `Invite from ${INVITE.firstName || "a friend"} applied: $50 off your first trip when you sign up.`;
   $("#a-email").value = ACCOUNT.email || "";
   if (!authDlg.open) authDlg.showModal();
   setTimeout(() => $("#a-email").focus(), 30);
@@ -1593,7 +1655,7 @@ async function setupGoogle(){
 async function onGoogle(resp){
   authErr("");
   try {
-    const r = await authApi("google", { credential: resp.credential });
+    const r = await authApi("google", { credential: resp.credential, invite: INVITE.code || undefined });
     if (r.ok) return signedIn(r.data.user, r.data.needsName);
     authErr(r.data.message || "Google sign-in didn't work. Try again, or use your email.");
   } catch { authErr("We couldn't reach the server. Check your connection and try again."); }
@@ -1628,7 +1690,7 @@ $("#auth-form").addEventListener("submit", async e => {
       if (r.ok) { $("#a-pass").value = ""; return signedIn(r.data.user); }
       authErr(r.data.message || "That didn't work. Please try again.");
     } else if (step === "signup") {
-      const body = { email: ACCOUNT.email, firstName: $("#a-first").value.trim(), lastName: $("#a-last").value.trim(), phone: $("#a-phone").value.trim(), password: $("#a-newpass").value };
+      const body = { email: ACCOUNT.email, firstName: $("#a-first").value.trim(), lastName: $("#a-last").value.trim(), phone: $("#a-phone").value.trim(), password: $("#a-newpass").value, invite: INVITE.code || undefined };
       if (!body.firstName || !body.lastName) return authErr("Enter your first and last name.");
       if (body.password.length < 8) return authErr("Use at least 8 characters for your password.");
       const r = await authApi("signup", body);
@@ -1693,9 +1755,12 @@ async function openTrips(){
     const q = `car=${encodeURIComponent(t.car)}&ref=${encodeURIComponent(t.ref)}`;
     const act = t.status === "confirmed" && !["verified", "review", "processing"].includes(t.verification) ? `<a class="btn btn-gold btn-sm" href="/verify.html?${q}">Verify your license</a>`
       : t.status === "hold" ? `<a class="btn btn-ink btn-sm" href="/checkout.html?${q}">Finish booking</a>` : "";
+    const ph = t.photos || {};
+    const photoBtn = t.status !== "confirmed" ? "" : !ph.pickup ? `<a class="btn btn-line btn-sm" href="/inspect.html?${q}&stage=pickup">Pickup photos</a>`
+      : !ph.return ? `<a class="btn btn-line btn-sm" href="/inspect.html?${q}&stage=return">Return photos</a>` : `<span class="pill ok">Photos done</span>`;
     return `<div class="trip"><img src="images/${esc(t.photo)}-sm.webp" alt="" width="104" height="78"><div>
       <h4>${esc(t.carName)}</h4><p>${nice(t.from)}, ${tLabel(t.fromTime)} to ${nice(t.to)}, ${tLabel(t.toTime)}</p><p>${esc(t.location)}${t.total ? " · " + money(t.total / 100) : ""}</p>
-      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>${t.status === "confirmed" ? `<span class="pill ${id[0]}">${id[1]}</span>` : ""}${act}</div></div></div>`;
+      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>${t.status === "confirmed" ? `<span class="pill ${id[0]}">${id[1]}</span>` : ""}${act}${photoBtn}</div></div></div>`;
   }).join("");
 }
 $("#m-trips").addEventListener("click", openTrips);
@@ -1714,6 +1779,54 @@ async function handleAccountLinks(){
 }
 const accountReady = loadAccount();
 handleAccountLinks();
+/* refer a friend: invite links (?invite=CODE) and the Refer a friend window */
+const INVITE = { code: "", valid: false, firstName: "" };
+async function loadInvite(){
+  const q = new URLSearchParams(location.search);
+  let code = (q.get("invite") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (code) { try { localStorage.setItem("af-invite", code); } catch {} history.replaceState(null, "", location.pathname + location.hash); }
+  else { try { code = localStorage.getItem("af-invite") || ""; } catch {} }
+  if (!code) return;
+  try {
+    const r = await authApi("invite?code=" + encodeURIComponent(code));
+    if (!r.ok || !r.data.valid) { try { localStorage.removeItem("af-invite"); } catch {} return; }
+    Object.assign(INVITE, { code, valid: true, firstName: r.data.firstName });
+    await accountReady;
+    if (ACCOUNT.user) return;                                 // existing accounts can't use an invite
+    const bar = $("#invite-bar"); bar.hidden = false;
+    bar.innerHTML = `${esc(INVITE.firstName || "A friend")} invited you: $50 off your first trip. <button type="button" id="invite-go">Sign up to claim it</button>`;
+    $("#invite-go").addEventListener("click", () => openAuth({ mode: "signup" }));
+  } catch {}
+}
+async function openRefer(){
+  $("#acct-menu").hidden = true;
+  if (!ACCOUNT.user) { openAuth({ then: openRefer }); return; }
+  if (!$("#refer").open) $("#refer").showModal();
+  $("#ref-url").value = "Loading...";
+  try {
+    const r = await authApi("referral");
+    if (r.status === 401) { $("#refer").close(); ACCOUNT.user = null; renderAccount(); openAuth({ then: openRefer }); return; }
+    if (!r.ok) { $("#ref-url").value = "Couldn't load your link. Try again."; return; }
+    $("#ref-url").value = /^https?:\/\//.test(r.data.link || "") ? r.data.link : location.origin + "/?invite=" + r.data.code;
+    $("#ref-credit").textContent = money((r.data.credit || 0) / 100);
+    $("#ref-friends").textContent = r.data.friendsRewarded || 0;
+    $("#ref-terms").textContent = r.data.terms || "";
+    $("#ref-share").hidden = !navigator.share;
+  } catch { $("#ref-url").value = "Couldn't load your link. Try again."; }
+}
+$("#ref-copy").addEventListener("click", async () => {
+  const v = $("#ref-url").value; if (!/^https?:/.test(v)) return;
+  try { await navigator.clipboard.writeText(v); } catch { $("#ref-url").select(); document.execCommand && document.execCommand("copy"); }
+  $("#ref-copy").textContent = "Copied"; setTimeout(() => { $("#ref-copy").textContent = "Copy"; }, 2000);
+});
+$("#ref-share").addEventListener("click", () => {
+  const v = $("#ref-url").value;
+  navigator.share({ title: "Ace Fares", text: "Get $50 off your first car rental with Ace Fares in Dallas:", url: v }).catch(() => {});
+});
+$("#refer-close").addEventListener("click", () => $("#refer").close());
+$("#m-refer").addEventListener("click", openRefer);
+$("#refer-cta").addEventListener("click", openRefer);
+loadInvite();
 $("#done-close").addEventListener("click", () => $("#done").close());
 loadAvailability();
 handleReturn();

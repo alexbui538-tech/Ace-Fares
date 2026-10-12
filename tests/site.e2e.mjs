@@ -9,6 +9,8 @@ import { availabilityHandler, checkoutHandler, cancelHandler, bookingStatusHandl
 import { makeRepo } from "../lib/bookings.mjs";
 import { makeAuth } from "../lib/auth.mjs";
 import { verifyHandler } from "../lib/identity.mjs";
+import { makeReferrals } from "../lib/referrals.mjs";
+import { inspectionHandler } from "../lib/inspections.mjs";
 import { quote } from "../lib/pricing.mjs";
 import { memoryStore, fakeStripe, signedEvent, WEBHOOK_SECRET } from "./helpers.mjs";
 
@@ -20,7 +22,10 @@ const D = day => iso(new Date(nm.getFullYear(), nm.getMonth(), day));
 
 const store = memoryStore(), stripe = fakeStripe(), users = memoryStore(), mails = [];
 let base = "", apiDown = false;
-const auth = makeAuth({ store: users, bookingsStore: store, secret: "e2e-secret", mailer: { send: async m => { mails.push(m); } }, log: { error() {}, warn() {}, log() {} } });
+const referrals = makeReferrals({ users, bookingsStore: store, siteUrl: "" });
+const photos = memoryStore();
+const auth = makeAuth({ store: users, bookingsStore: store, secret: "e2e-secret", mailer: { send: async m => { mails.push(m); } }, referrals, log: { error() {}, warn() {}, log() {} } });
+const inspection = inspectionHandler({ photos, store, userOf: auth.userOf, adminKey: "owner-key-123" });
 const checkoutFor = siteUrl => checkoutHandler({ store, stripe, siteUrl, userOf: auth.userOf, requireAccount: true, linkBooking: auth.linkBooking });
 const H = {
   "/api/availability": availabilityHandler({ store }),
@@ -34,13 +39,13 @@ const H = {
 };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, base);
-  const h = url.pathname.startsWith("/api/auth/") ? auth.handler : H[url.pathname];
+  const h = url.pathname.startsWith("/api/auth/") ? auth.handler : url.pathname.startsWith("/api/inspection") ? inspection : H[url.pathname];
   if (h) {
     if (apiDown && url.pathname === "/api/checkout") { res.writeHead(500, { "content-type": "application/json" }); return res.end("{}"); }
     const chunks = []; for await (const c of req) chunks.push(c);
     // siteUrl is read when checkout runs
     const r = await (url.pathname === "/api/checkout" ? checkoutFor(base) : h)(new Request(url, { method: req.method, headers: req.headers, body: chunks.length ? Buffer.concat(chunks) : undefined }));
-    res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(await r.text());
+    res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(Buffer.from(await r.arrayBuffer()));
   }
   try {
     const f = await readFile(join(ROOT, url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname)));
@@ -160,6 +165,54 @@ ok((await page.textContent("#auth-err")).includes("don't match"), "log in: wrong
 await page.fill("#a-pass", "riley-pass-2027"); await page.click("#auth [data-step=login] button[type=submit]");
 await page.waitForSelector("#acct-in:not([hidden])");
 ok(!(await page.isVisible("#auth")), "log in with email + password works");
+
+// refer a friend: link in the account menu, invite bar for the friend
+await page.click("#refer-cta"); await page.waitForSelector("#refer[open]");
+await page.waitForFunction(() => /invite=[A-Z2-9]{7}$/.test(document.querySelector("#ref-url").value));
+const invite = await page.inputValue("#ref-url");
+ok(/^http:\/\/localhost:\d+\/\?invite=[A-Z2-9]{7}$/.test(invite), "Refer a friend shows the renter's invite link");
+await page.screenshot({ path: "e2e-refer.png" });
+await page.click("#refer-close");
+const friend = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+await friend.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+await friend.goto(invite); await friend.waitForSelector("#invite-bar:not([hidden])");
+ok((await friend.textContent("#invite-bar")).includes("Riley invited you: $50 off"), "invite link: friend sees 'Riley invited you: $50 off your first trip'");
+await friend.click("#invite-go"); await friend.waitForSelector("#auth[open]");
+ok(await friend.isVisible("#auth-invite"), "invite link: the sign-up window shows the $50 invite");
+await friend.fill("#a-email", "casey@example.com"); await friend.click("#auth [data-step=start] button[type=submit]");
+await friend.waitForSelector("#auth [data-step=signup]:not([hidden])");
+await friend.fill("#a-first", "Casey"); await friend.fill("#a-last", "Nguyen"); await friend.fill("#a-newpass", "casey-pass-1");
+await friend.click("#auth [data-step=signup] button[type=submit]"); await friend.waitForSelector("#acct-in:not([hidden])");
+await friend.click("#acct-btn");
+ok((await friend.textContent("#acct-credit")).includes("$50 off your first trip"), "the friend's account has $50 off their first trip");
+await friend.close();
+
+// pickup photos: renter takes every shot on the photo page
+const tripRef = new URL(base + verifyHref).searchParams.get("ref");
+page.on("dialog", d => d.accept());
+await page.goto(`${base}/inspect.html?car=escalade&ref=${tripRef}&stage=pickup`); await page.waitForSelector("#page:not([hidden])");
+ok(await page.locator("#shots .shot").count() === 9 && await page.isDisabled("#submit"), "photo page: 9 photo boxes, Submit disabled until done");
+const pic = join(ROOT, "images", "escalade-1-sm.webp");
+for (const shot of ["front", "back", "driver", "passenger", "odometer", "fuel", "interior_front", "interior_back", "damage"]) {
+  const [fc] = await Promise.all([page.waitForEvent("filechooser"), page.click(`.shot[data-shot="${shot}"]`)]);
+  await fc.setFiles(pic);
+  await page.waitForSelector(`.shot.has[data-shot="${shot}"]`);
+}
+await page.fill("#odo", "41,200"); await page.selectOption("#fuel", "3/4"); await page.fill("#notes", "Small chip on the windshield");
+ok(!(await page.isDisabled("#submit")), "photo page: Submit turns on with every photo plus mileage and fuel");
+await page.screenshot({ path: "e2e-inspect.png", fullPage: true });
+await page.click("#submit"); await page.waitForSelector("#done-note:not([hidden])");
+ok((await page.textContent("#done-note")).includes("41,200 miles"), "photo page: submitted with mileage and fuel, then locked");
+ok(photos.keys().filter(k => k.startsWith(`img/${tripRef}/pickup/renter/`)).length === 9, "every photo is saved in the photo database");
+ok(await page.evaluate(() => [...document.querySelectorAll("#shots img[data-key]")].every(i => i.complete && i.naturalWidth > 0)), "photo page: the saved photos show as thumbnails");
+// host side, with the admin key
+const hp = await browser.newPage(); hp.on("dialog", d => d.accept());
+await hp.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+await hp.goto(`${base}/inspect.html?car=escalade&ref=${tripRef}&stage=pickup&as=host`); await hp.waitForSelector("#keyform:not([hidden])");
+await hp.fill("#key", "owner-key-123"); await hp.click("#keyform button"); await hp.waitForSelector("#page:not([hidden])");
+ok((await hp.textContent("#who")).includes("Host") && (await hp.textContent("#other-title")).includes("Renter's pickup photos"), "host photo page: separate host checklist, renter's photos shown read-only");
+await hp.close();
+await page.goto(base + "/"); await page.waitForTimeout(400);
 
 // the new booking now blocks those dates for the next renter
 await page.click("[data-book=escalade]");

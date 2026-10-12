@@ -207,7 +207,7 @@ test("rental agreement page renders and flags unfinished terms", async () => {
 
 /* ---------- on-site checkout page (Stripe Payment Element) ---------- */
 const PK = "pk_test_123";
-const renter = { name: "Jordan Lee", email: "Jordan@Example.com", phone: "(214) 555-0100", agree: true, termsVersion: AGREEMENT_VERSION };
+const renter = { name: "Jordan Lee", email: "Jordan@Example.com", phone: "(214) 555-0100", agree: true, termsVersion: AGREEMENT_VERSION, insurance: { choice: "own", company: "State Farm", policy: "SF-123" } };
 
 test("on-site checkout: hold + payment created, summary shown, details saved, paid webhook confirms and emails once", async () => {
   const mailer = fakeMailer(), s = setup({ pk: PK, mailer });

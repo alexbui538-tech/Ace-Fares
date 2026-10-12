@@ -6,7 +6,10 @@ export function memoryStore({ delay = 0 } = {}) {
   const m = new Map(); let n = 0;
   const wait = () => delay ? new Promise(r => setTimeout(r, Math.random() * delay)) : Promise.resolve();
   return {
-    async getWithMetadata(k) { await wait(); const v = m.get(k); return v ? { data: JSON.parse(v.data), etag: v.etag, metadata: {} } : null; },
+    async getWithMetadata(k, o = {}) { await wait(); const v = m.get(k); if (!v) return null;
+      return o.type === "arrayBuffer" ? { data: v.raw, etag: v.etag, metadata: v.metadata || {} } : { data: JSON.parse(v.data), etag: v.etag, metadata: v.metadata || {} }; },
+    async set(k, data, o = {}) { await wait(); const etag = `"${++n}"`; m.set(k, { raw: data, data: "null", etag, metadata: o.metadata || {} }); return { modified: true, etag }; },
+    keys: () => [...m.keys()],
     async setJSON(k, data, o = {}) {
       await wait();
       const cur = m.get(k);

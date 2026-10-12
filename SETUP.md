@@ -129,20 +129,20 @@ Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `AD
 | Cadillac Escalade | $259 | $349 |
 | Cadillac SRX | $49 | $69 |
 | BMW 650i Convertible | $139 | $199 |
-| Honda Odyssey | $59 | $59 |
+| Honda Odyssey | $89 | $129 |
 
 Each rental day is priced by its day of the week. The return day isn't charged, so a Thursday pickup with a Monday return is one weekday plus three weekend days. Discounts and tax apply to the total. To change prices, edit `lib/catalog.mjs` **and** the matching `weekday`/`weekend` numbers in `public/index.html`. The tests fail if they don't match.
 
 ## Confirmation email and rental agreement
 
-After every paid booking, the renter automatically gets an email from your Gmail with the booking details and the **full rental agreement**, filled in with their name and trip. You get a copy if `OWNER_EMAIL` is set. The agreement is also at **/rental-agreement**. Its wording lives in `lib/agreement.mjs`.
+After every paid booking, the renter automatically gets an email from your Gmail with the booking details and the **full rental agreement**, filled in with their name and trip. Your business inbox gets a separate **New booking** alert: car, dates, renter, phone, email, amount paid, credits used, insurance, deposit, and a link to your pickup photos. It goes to `OWNER_EMAIL`, or to `GMAIL_USER` if that isn't set. Text alerts to (972) 994-6413 aren't on yet; see below. The agreement is also at **/rental-agreement**. Its wording lives in `lib/agreement.mjs`.
 
 **The agreement is a draft template, not legal advice.** Fill in the `POLICY` values: extra-mile rate, late fee, fuel fee, cleaning fee, ticket fee, cancellation policy, and whether out-of-state driving is allowed. The smoking fee ($150) and the deposits are already set in `lib/catalog.mjs`. Until they're filled in, they show as "[to be set]" and the page says "Draft". Have a Texas attorney review it before relying on it.
 
 **Turn on the email:**
 1. Your Google account (acefaresrental@gmail.com) needs **2-Step Verification** on: myaccount.google.com → Security.
 2. Create an **App password** at myaccount.google.com/apppasswords and copy the 16-character password.
-3. In Netlify, add `GMAIL_USER` = `acefaresrental@gmail.com`, `GMAIL_APP_PASSWORD` = the app password, and optionally `OWNER_EMAIL`. Then redeploy.
+3. In Netlify, add `GMAIL_USER` = `acefaresrental@gmail.com`, `GMAIL_APP_PASSWORD` = the app password, and optionally `OWNER_EMAIL` (where New booking alerts go; `GMAIL_USER` is used if it's empty). Then redeploy.
 
 If an email ever fails, the booking still goes through, and the failure is saved on the booking (`emailError`).
 
@@ -243,3 +243,45 @@ After paying, the confirmation shows **Verify your license now**. It also appear
 3. **Branding (optional):** under **Settings → Branding**, add your logo and colors. Stripe's ID screens use them.
 
 **About the Texas DMV:** Texas driver's licenses are kept by **Texas DPS**, not the DMV, and there's no public database a business can search. The closest thing is AAMVA's DLDV service. It only confirms that the name, date of birth, license number and expiration match state records, and it doesn't compare photos. It's sold only through approved identity companies such as Persona, Incode or Onfido, usually under a sales contract. If you want that later, it can be added next to the Stripe check.
+
+
+## New booking alerts
+
+Every paid booking emails your business inbox once, with the subject **New booking: car, dates (renter)**. This needs Gmail set up (`GMAIL_USER` and `GMAIL_APP_PASSWORD`).
+
+**Texts to (972) 994-6413 aren't set up.** Carriers' free "email to text" addresses no longer work reliably: AT&T shut its own down in June 2025, and T-Mobile's stopped delivering in late 2024. To get texts, the next step is a **Twilio** number, about $1–2 a month plus about 1¢ a text. It also needs a one-time carrier registration that takes a few days. Ask Claude to add it when you're ready.
+
+## Refer a friend: give $50, get $100
+
+- **Where renters find it:** every logged-in renter has an invite link (**Refer a friend** in the account menu, or the gold band under the fleet).
+- **The friend's $50:** a friend who opens the link sees "Name invited you: $50 off your first trip" and gets **$50 off their first trip** when they sign up.
+- **Your renter's $100:** when that friend's first trip of **4 or more days** (longer than three) has ended without being cancelled, the person who invited them gets **$100 in Ace Fares credit**.
+  - It's paid once per friend, by the hourly job, and they're emailed.
+  - Credit comes off their next booking automatically, before tax, never taking the rental below $1. It's taken off their balance once that trip is paid.
+- **Stripe records:** the referral discount and credit appear as their own lines at checkout and on the payment in Stripe (`credit_applied`, `credit_codes`).
+- **Your bookings page** shows the credits each booking used.
+- **To change the amounts,** edit `REFERRAL` in `lib/catalog.mjs`, which holds the $100 reward, the $50 friend discount and the 4-day minimum.
+- The program terms (no cash value, not transferable, no self-referrals) are shown in the Refer a friend window. Have your attorney look at them with the rest of the legal package.
+
+## Insurance choice at checkout
+
+The checkout page has an **Insurance** section:
+- **I have my own auto insurance.** The renter enters their insurance company (required) and policy number (optional). Both are saved on the booking, on the Stripe payment and in your New booking email.
+- **Get covered with Roamly.** This option is **hidden until you add `ROAMLY_URL`** in Netlify, for example your Roamly referral or quote link. Once it's set, renters can choose it. It opens Roamly in a new tab, and they must bring proof of their Roamly policy at pickup.
+
+Ace Fares doesn't sell insurance here: renters buy their own policy, so it stays consistent with section 6 of the rental agreement. If you'd rather charge renters a daily protection fee backed by your own Roamly policy, check with your insurer and a Texas attorney first. Rental companies selling coverage or damage waivers is regulated.
+
+## Pickup and return photos (photo database)
+
+At pickup and at return, **you and the renter each take photos** on the website: front, back, both sides, odometer, fuel gauge, front seats and dashboard, back seats and trunk, plus optional damage close-ups. Each of you also enters the mileage and fuel level.
+
+- **Renter:** opens it from **My trips → Pickup photos / Return photos**. The camera opens on their phone.
+- **You (host):** open it from your bookings page (**Photos**) or the link in the New booking email (`/inspect.html?...&as=host`), and enter your admin key once. You see your own checklist, plus the renter's photos read-only.
+- **Submitting is required:** the Submit button only turns on when every required photo and both readings are in.
+- **After submitting, that side's photos are locked** and can't be changed.
+- **Every picture is kept** in the private Netlify Blobs store `inspections`, retakes included. Each one is saved with who took it, the server time, the phone's own time, the file size and a SHA-256 fingerprint. There's also one record per booking listing every photo and reading.
+- **Your bookings page** shows who has done pickup and return, the mileage and fuel, and **miles driven** once both are in. You're emailed when a renter submits.
+- **Photo size:** phones shrink photos to about 1600 pixels before uploading, which keeps each one around 200–400 KB.
+- **The rental agreement** (section 14, version draft4) now describes this process.
+
+To change the photo list, edit `SHOTS` in `lib/inspections.mjs`.

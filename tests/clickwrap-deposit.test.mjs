@@ -11,7 +11,7 @@ import { localBlobs, fakeStripe, signedEvent, post, get, WEBHOOK_SECRET, NOW } f
 let blobs; before(async () => { blobs = await localBlobs(); }); after(async () => { await blobs.stop(); });
 const PK = "pk_test_123", KEY = "secret-admin";
 const j = async res => ({ status: res.status, data: await res.json() });
-const renter = { name: "Jordan Lee", email: "jordan@example.com", phone: "(214) 555-0100", agree: true, termsVersion: AGREEMENT_VERSION };
+const renter = { name: "Jordan Lee", email: "jordan@example.com", phone: "(214) 555-0100", agree: true, termsVersion: AGREEMENT_VERSION, insurance: { choice: "own", company: "State Farm", policy: "SF-123" } };
 const H = 3600e3;
 const quiet = { error() {}, warn() {}, log() {} };
 
