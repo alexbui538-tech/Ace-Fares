@@ -1,3 +1,9 @@
 node_modules/
 .env
 .netlify/
+
+# browser-test screenshots
+e2e-*.png
+!e2e-admin.png
+!e2e-confirmed.png
+!e2e-error.png
