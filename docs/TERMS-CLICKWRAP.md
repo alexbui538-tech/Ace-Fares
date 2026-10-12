@@ -1,6 +1,6 @@
 # Ace Fares: clickwrap signature, deposit hold and smoking policy
 
-**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft`.
+**Status: DRAFT FOR TEXAS ATTORNEY REVIEW.** This is a working template, not legal advice. Nothing here is approved, and it isn't guaranteed to be enforceable. Agreement version: `2026-10-12-draft2`.
 
 Everything below is already live in the code. The agreement text comes from `lib/agreement.mjs`, and the checkout page, the `/rental-agreement` page and the confirmation email all read from it. Change the wording only there, and bump `AGREEMENT_VERSION` when you do.
 
@@ -23,7 +23,7 @@ Settings live in `lib/catalog.mjs`:
 
 The checkout page fills in the trip total and the deposit for the car:
 
-> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
+> By checking this box, I am electronically signing the Ace Fares Rental Agreement (version 2026-10-12-draft2) and agree that my electronic signature is as legally binding as my handwritten signature. I confirm that I am at least 21, hold a valid driver's license, and carry auto insurance that covers me in a rental vehicle. I authorize Ace Fares to charge my payment method **[$TRIP TOTAL]** for this trip, to place a refundable **[$DEPOSIT]** security deposit hold on it, and to collect from that hold or my card any amounts I owe under the agreement, including the non-negotiable $150 smoking and vaping fee. I agree to receive the agreement and related records electronically.
 
 A **"Key rental terms"** box appears directly above the checkbox:
 
@@ -85,6 +85,25 @@ Ace Fares is not responsible for personal property left in the vehicle, or for i
 If we find any evidence of smoking or vaping when the vehicle is returned, including smoke or vapor odor, ash, cigarette or cigar butts, rolling papers, vape devices or cartridges, or burn marks, a smoking remediation fee of $150 applies. This fee is not negotiable. It is a pre-agreed amount reflecting the reasonable cost of odor treatment, deep cleaning and the time the vehicle is out of service, which are hard to measure exactly for each rental; it is not a penalty.
 
 We will notify you within 48 hours after return, with dated photos and a description of what we found. You authorize us to collect the fee from your security deposit hold or your card on file. Burn holes, stains or other damage are charged separately under section 7.
+
+### 13. Rules of use (gig work allowed)
+No pets unless we agree in advance. No racing, off-road driving or towing. Do not drive under the influence of alcohol or drugs, and do not use the vehicle for anything illegal. Travel outside Texas: [to be set].
+
+Gig work is allowed. You may use the vehicle to drive for rideshare, delivery and similar app-based gig platforms, such as Uber, Lyft, DoorDash, Uber Eats, Grubhub, Instacart, Amazon Flex and Walmart Spark, on these conditions:
+
+(a) Only you, the Renter named in this Agreement, may do gig work in the vehicle, and only on platforms that have approved you as a driver. You may not let anyone else drive the vehicle for gig work.
+
+(b) You must follow each platform's rules, including its requirements for vehicles, rentals and insurance. Whether a platform accepts this vehicle is up to the platform; if it does not, that is not a reason for a refund or an early-return credit.
+
+**(c) INSURANCE FOR GIG WORK. MOST PERSONAL AUTO POLICIES DO NOT COVER DRIVING FOR PAY. WHENEVER THE PLATFORM APP IS ON, YOU MUST BE COVERED BY THE PLATFORM'S INSURANCE AND BY YOUR OWN POLICY WITH A RIDESHARE OR DELIVERY ENDORSEMENT, OR BY COMMERCIAL AUTO COVERAGE, AT NO LESS THAN THE LIMITS IN SECTION 6. IF ANY LOSS IS NOT COVERED, YOU ARE PERSONALLY RESPONSIBLE FOR IT UNDER SECTION 7.**
+
+(d) Everything else in this Agreement applies during gig work, including the daily mileage limit and extra-mile charges, the cleaning fee and the no-smoking policy. Spilled food or drink, odors and debris left by passengers or deliveries are not normal wear. You are responsible for all tolls, parking and traffic tickets incurred while doing gig work.
+
+(e) Ace Fares is not a party to your agreement with any platform, does not employ you, and does not receive any of your earnings. You are responsible for your own taxes and platform obligations.
+
+(f) Commercial uses other than app-based gig work are not allowed without our written permission. These include limousine, charter or private-hire service outside a platform app, carrying goods for a business, subrenting the vehicle, and listing it on car-sharing sites such as Turo or Getaround.
+
+Section 6 also now says: "If you will drive for a rideshare or delivery platform, the extra insurance requirements in section 13 also apply."
 
 ### 17. Governing law and venue
 This Agreement is governed by the laws of the State of Texas. To the extent permitted by law, any lawsuit about this Agreement or the rental must be brought in the state courts located in Dallas County, Texas, including the justice courts for small claims, and both parties agree to venue there. This does not waive any right Texas law gives you to be sued in the county where you live or where you signed this Agreement.
@@ -198,6 +217,7 @@ To prove a signature later, rebuild the text for that version and booking from g
 - **Charges after damage.** Confirm that loss-of-use, appraisal and administrative charges are allowed and are worded acceptably.
 - **E-SIGN consumer consent.** Confirm whether the consent and disclosure wording in section 2 is enough, or whether the renter must show they can access electronic records before consenting.
 - **Insurance.** Confirm the insurance clause matches your actual commercial or fleet policy. Who holds each car's title also affects the "owner and lessor" wording.
+- **Gig work (section 13).** Confirm with your own insurer that your commercial or fleet policy allows renters to use the cars for rideshare and delivery. Many rental policies exclude it. Also confirm the platforms' current rules: Uber, for example, has had its own rules about which rental cars it accepts.
 - **Blanks still to fill.** Extra-mile rate, late fee, fuel fee, cleaning fee, ticket fee, cancellation policy and out-of-state travel.
 
 Sources:
