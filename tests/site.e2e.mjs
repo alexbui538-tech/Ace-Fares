@@ -107,6 +107,7 @@ await page.waitForSelector("#auth [data-step=signup]:not([hidden])");
 ok((await page.textContent("#auth [data-step=signup] .a-email-show")) === "Riley.Brooks@example.com", "new email: goes to the sign-up form with the email filled in");
 await page.fill("#a-first", "Riley"); await page.fill("#a-last", "Brooks"); await page.fill("#a-phone", "214-555-0188"); await page.fill("#a-newpass", "short");
 await page.click("#auth [data-step=signup] button[type=submit]");
+await page.waitForFunction(() => document.querySelector("#auth-err").textContent.includes("8 characters"), null, { timeout: 5000 }).catch(() => {});
 ok((await page.textContent("#auth-err")).includes("8 characters"), "sign-up: short password is refused");
 await page.fill("#a-newpass", "riley-pass-2027");
 await page.screenshot({ path: "e2e-signup.png" });
