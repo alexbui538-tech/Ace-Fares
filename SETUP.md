@@ -123,9 +123,9 @@ Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `AD
 
 | Car | Mon–Thu | Fri–Sun |
 |---|---|---|
-| Cadillac Escalade | $250 | $350 |
+| Cadillac Escalade | $259 | $349 |
 | Cadillac SRX | $49 | $69 |
-| BMW 650i Convertible | $140 | $200 |
+| BMW 650i Convertible | $139 | $199 |
 | Honda Odyssey | $59 | $59 |
 
 Each rental day is priced by its day of the week. The return day isn't charged, so a Thursday pickup with a Monday return is one weekday plus three weekend days. Discounts and tax apply to the total. To change prices, edit `lib/catalog.mjs` **and** the matching `weekday`/`weekend` numbers in `public/index.html`. The tests fail if they don't match.

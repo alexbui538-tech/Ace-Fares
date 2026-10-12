@@ -11,19 +11,19 @@ test("2-day SRX Wed-Thu: weekday rate $49, no discount, 10% tax", () => {
   assert.equal(q.tax, 980); assert.equal(q.total, 10780);
 });
 
-test("4-day Escalade Wed-Sat with delivery: 2 x $250 + 2 x $350, 10% off, fee taxed", () => {
+test("4-day Escalade Wed-Sat with delivery: 2 x $259 + 2 x $349, 10% off, fee taxed", () => {
   const q = quote(v({ location: "dallas-delivery" }));
   assert.equal(q.weekdays, 2); assert.equal(q.weekends, 2);
-  assert.equal(q.rental, 120000); assert.equal(q.discount, 12000); assert.equal(q.fee, 10000);
-  assert.equal(q.tax, 11800); assert.equal(q.total, 129800);
+  assert.equal(q.rental, 121600); assert.equal(q.discount, 12160); assert.equal(q.fee, 10000);
+  assert.equal(q.tax, 11944); assert.equal(q.total, 131384);
 });
 
 test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't charged", () => {
   // Thu Nov 5 pickup, Mon Nov 9 return = Thu + Fri + Sat + Sun
   const e = quote(v({ from: "2026-11-05", to: "2026-11-09" }));
-  assert.equal(e.weekdays, 1); assert.equal(e.weekends, 3); assert.equal(e.rental, (250 + 3 * 350) * 100);
+  assert.equal(e.weekdays, 1); assert.equal(e.weekends, 3); assert.equal(e.rental, (259 + 3 * 349) * 100);
   const b = quote(v({ car: "bmw", from: "2026-11-06", to: "2026-11-08" }));   // Fri + Sat
-  assert.equal(b.rental, 2 * 200 * 100);
+  assert.equal(b.rental, 2 * 199 * 100);
   const s = quote(v({ car: "srx", from: "2026-11-08", to: "2026-11-10" }));   // Sun + Mon
   assert.equal(s.rental, (69 + 49) * 100);
   const vn = quote(v({ car: "van", from: "2026-11-06", to: "2026-11-09" }));  // van is $59 every day
