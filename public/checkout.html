@@ -100,6 +100,11 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .ended p{color:var(--ink-2);margin:0 0 20px}
 .ended .btn{max-width:280px;margin:0 auto;text-decoration:none}
 .skeleton{color:var(--ink-3);padding:40px 0;text-align:center}
+.details-head{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.details-head h2{margin:0}
+.login-btn{margin-left:auto;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1.5px solid var(--ink);border-radius:10px;font-weight:600;text-decoration:none;color:var(--ink);background:var(--paper)}
+.login-btn:hover{background:var(--ink);color:var(--ivory)}
+.signed-as{margin-left:auto;font-size:.9rem;color:var(--ok);font-weight:600}
 .ins{display:grid;gap:10px}
 .ins-opt{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--paper);cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start}
 .ins-opt:has(input:checked){border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
@@ -151,13 +156,13 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
         <div class="notice err" id="top-err" role="alert" hidden></div>
 
         <section aria-labelledby="h-details">
-          <h2 id="h-details">Your details</h2>
+          <div class="details-head"><h2 id="h-details">Your details</h2><a class="login-btn" id="login-btn" href="/?login=1">Log in</a><span class="signed-as" id="signed-as" hidden></span></div>
           <div class="ctl" id="c-name"><label for="name">Full name, as on your driver's license</label><input id="name" autocomplete="name" required><p class="err">Enter your full name.</p></div>
           <div class="row2">
             <div class="ctl" id="c-email"><label for="email">Email</label><input id="email" type="email" autocomplete="email" required><p class="err">Enter a valid email address.</p></div>
             <div class="ctl" id="c-phone"><label for="phone">Mobile phone</label><input id="phone" type="tel" autocomplete="tel" required><p class="err">Enter a phone number we can text.</p></div>
           </div>
-          <p class="help">We'll email your confirmation and rental agreement, and text you to arrange the handoff.</p>
+          <p class="help" id="details-help">We'll email your confirmation and rental agreement, and text you to arrange the handoff. Your Ace Fares account is created from these details, so you can see your trip and verify your license. Already have an account? Log in.</p>
         </section>
 
         <section aria-labelledby="h-ins">
@@ -442,6 +447,10 @@ $("#back").addEventListener("click", async () => {
   if (r.data.paymentIntent || st === "confirmed") { location.replace(`/?booking=success&payment_intent=${encodeURIComponent(r.data.paymentIntent || "")}`); return; }
   if (!r.data.clientSecret) return ended();
   renderSummary(r.data.summary);
+  const back = encodeURIComponent(location.pathname + location.search);
+  $("#login-btn").href = `/?login=1&next=${back}`;
+  $("#login-btn").hidden = !!r.data.signedIn; $("#signed-as").hidden = !r.data.signedIn;
+  if (r.data.signedIn) { $("#signed-as").textContent = "✓ Logged in"; $("#details-help").textContent = "We'll email your confirmation and rental agreement, and text you to arrange the handoff. This trip is saved to your account."; }
   if (r.data.prefill) for (const k of ["name", "email", "phone"]) if (r.data.prefill[k] && !$("#" + k).value) $("#" + k).value = r.data.prefill[k];
   if (r.data.terms) renderTerms(r.data.terms);
   if (r.data.insurance && r.data.insurance.roamlyUrl) { $("#opt-roamly").hidden = false; $("#roamly-link").href = r.data.insurance.roamlyUrl; }

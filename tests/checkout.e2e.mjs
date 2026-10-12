@@ -26,7 +26,7 @@ const auth = makeAuth({ store: memoryStore(), bookingsStore: store, secret: "e2e
 const hook = webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET, mailer, siteUrl: "" });
 const H = {
   "/api/availability": availabilityHandler({ store }),
-  "/api/checkout-details": checkoutDetailsHandler({ store, stripe, publishableKey: PK, userOf: auth.userOf }),
+  "/api/checkout-details": checkoutDetailsHandler({ store, stripe, publishableKey: PK, userOf: auth.userOf, accounts: auth }),
   "/api/cancel": cancelHandler({ store, stripe }),
   "/api/booking": bookingStatusHandler({ store, stripe, mailer, siteUrl: "" }),
   "/api/stripe-webhook": hook,
@@ -38,7 +38,7 @@ const server = http.createServer(async (req, res) => {
     await hook(signedEvent("payment_intent.succeeded", pi));
     res.writeHead(200); return res.end("ok");
   }
-  const h = url.pathname === "/api/checkout" ? checkoutHandler({ store, stripe, siteUrl: base, publishableKey: PK, userOf: auth.userOf, requireAccount: true, linkBooking: auth.linkBooking })
+  const h = url.pathname === "/api/checkout" ? checkoutHandler({ store, stripe, siteUrl: base, publishableKey: PK, userOf: auth.userOf, requireAccount: false, linkBooking: auth.linkBooking })
     : url.pathname.startsWith("/api/auth/") ? auth.handler : H[url.pathname];
   if (h) {
     const chunks = []; for await (const c of req) chunks.push(c);
@@ -72,12 +72,14 @@ window.Stripe = function (pk) { window.__pk = pk; return {
 
 const browser = await chromium.launch();
 let renters = 0;
-async function newPage(w = 1280, h = 900, stripeJs = FAKE_STRIPE_JS) {
+async function newPage(w = 1280, h = 900, stripeJs = FAKE_STRIPE_JS, guest = false) {
   const p = await browser.newPage({ viewport: { width: w, height: h } });
   p.errs = []; p.on("pageerror", e => p.errs.push(e.message));
   // every renter books from a signed-in account (each page gets its own)
+  if (!guest) {
   const su = await p.request.post(base + "/api/auth/signup", { data: { email: `renter${++renters}@example.com`, password: "renter-pass-1", firstName: "Jordan", lastName: "Lee", phone: "(214) 555-0100" } });
   if (su.status() !== 201) throw new Error("test sign-up failed " + su.status());
+  }
   await p.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
   await p.route(/js\.stripe\.com/, r => stripeJs ? r.fulfill({ contentType: "application/javascript", body: stripeJs }) : r.abort());
   return p;
@@ -162,4 +164,17 @@ await x.goto(base + "/checkout.html?car=bmw&ref=00000000-0000-0000-0000-00000000
 ok(await x.isVisible("#ended"), "invalid checkout link: friendly 'ended' screen");
 
 for (const pg of [p, m, x]) ok(pg.errs.length === 0, "no page errors " + pg.errs.join(" | "));
+/* guest: books without logging in; checkout creates the account and signs them in */
+const gp = await newPage(1280, 900, FAKE_STRIPE_JS, true);
+await startCheckout(gp, "srx", 24, 26);
+ok(await gp.isVisible("#login-btn") && (await gp.getAttribute("#login-btn", "href")).startsWith("/?login=1&next=%2Fcheckout.html"), "guest: books without logging in; checkout shows a Log in button next to Your details");
+await gp.fill("#name", "Morgan Diaz"); await gp.fill("#email", "morgan@example.com"); await gp.fill("#phone", "(214) 555-0177"); await gp.fill("#ins-co", "GEICO");
+await gp.check("#agree");
+await Promise.all([gp.waitForURL(/booking=success/), gp.click("#pay-btn")]);
+await gp.waitForSelector("#done[open]"); await gp.waitForTimeout(600);
+ok((await gp.textContent("#done-title")).includes("You're booked"), "guest: paid and booked");
+ok(await gp.isVisible("#acct-in") && (await gp.textContent("#acct-first")) === "Morgan", "guest: their account was created and they're logged in");
+ok(await gp.isVisible("#done-verify"), "guest: can go straight on to verify their license");
+await gp.close();
+
 await browser.close(); server.close();

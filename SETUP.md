@@ -50,7 +50,7 @@ Set these in Netlify under **Site configuration → Environment variables**. Nev
 | `ADMIN_KEY` | Any long password you make up. It's used to view all bookings. |
 | `GOOGLE_CLIENT_ID` | Turns on **Continue with Google**. See "Set up Continue with Google" below. It isn't secret. |
 | `SESSION_SECRET` (optional) | Signs login cookies. If it's empty, the site makes a random key and keeps it in its private storage. |
-| `REQUIRE_ACCOUNT` (optional) | Set to `false` to let people book without an account. Accounts are required by default. |
+| `REQUIRE_ACCOUNT` (optional) | Set to `true` to make people log in before booking. By default, guests can book and checkout creates their account. |
 | `SITE_URL` (optional) | Your custom domain, once you have one. Netlify's own address is used until then. |
 
 Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database to set up.
@@ -187,7 +187,15 @@ Tests: `node tests/checkout.e2e.mjs` runs browser checks: opening the page, the 
 
 ## Renter accounts: log in / sign up (email or Google)
 
-Like Turo, renters sign in before they book. Clicking **Book and pay securely** while logged out opens a **Log in to book** window, and booking continues on its own once they're in. The header shows **Log in / Sign up**, or the renter's initials with a menu: **My trips**, **Book a car**, **Log out**.
+**Logging in is optional for booking.** Guests can book straight away.
+- On the checkout page, **Your details** has a **Log in** button for people who already have an account. It brings them back to the same checkout, filled in.
+- When a guest pays, their name, email and phone **automatically create their Ace Fares account**. They're signed in on that device, so My trips and the license check work right away.
+- **Later logins:** an account created at checkout has no password yet. When they log in later, the site emails them a link to set one, or they can use Continue with Google with the same email.
+- **Email that already has an account:** the trip is added to that account's trips, but nobody is signed in without the password.
+- **Hosted payment page:** if someone pays on Stripe's own payment page, the account is created from the details Stripe collected.
+- **To require login before booking again,** set `REQUIRE_ACCOUNT=true` in Netlify.
+
+The header shows **Log in / Sign up**, or the renter's initials with a menu: **My trips**, **Refer a friend**, **Book a car**, **Log out**.
 
 - **Email first:** the renter types their email. If an account exists they enter their password; if not, they get the sign-up form (first and last name as on their license, optional mobile number, password of 8+ characters).
 - **Continue with Google:** one tap, once `GOOGLE_CLIENT_ID` is set (steps below). If someone had already signed up with that email using a password nobody verified, Google sign-in takes over the account and removes that password.

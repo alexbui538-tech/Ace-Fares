@@ -782,6 +782,11 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <p class="fine" style="margin-top:-6px">Use the name on your driver's license.</p>
       <button class="btn btn-ink btn-block" type="submit">Save and continue</button>
     </div>
+    <div class="auth-step" data-step="setpw" hidden>
+      <div class="email-chip"><span class="a-email-show"></span><button type="button" class="linkish" data-back>Change</button></div>
+      <p style="margin:0">Your account was created when you booked, so it doesn't have a password yet. We'll email you a link to set one.</p>
+      <button class="btn btn-ink btn-block" type="button" id="a-setpw">Email me a link</button>
+    </div>
     <div class="auth-step" data-step="sent" hidden>
       <div class="auth-ok" id="sent-text" role="status"></div>
       <button type="button" class="linkish" data-back>Back to log in</button>
@@ -1278,7 +1283,6 @@ async function loadAvailability(){
   if (cal.open) renderCal();
 }
 async function startCheckout(loc){
-  if (!ACCOUNT.user) { openAuth({ reason: "book", then: () => startCheckout(loc) }); return; }   // like Turo: sign in to book
   const go = $("#b-go"), notice = $("#b-notice");
   go.disabled = true; go.classList.add("loading"); notice.hidden = true; notice.classList.remove("err");
   try {
@@ -1624,7 +1628,7 @@ function authStep(step){
   ACCOUNT.step = step; authErr("");
   document.querySelectorAll("#auth [data-step]").forEach(el => { el.hidden = el.dataset.step !== step; });
   document.querySelectorAll("#auth .a-email-show").forEach(el => { el.textContent = ACCOUNT.email; });
-  const titles = { login: ["Welcome back", ""], signup: ["Finish signing up", "Just a few details and you're in."], name: ["One more step", "Add your name as it appears on your driver's license."], sent: ["Check your email", ""], reset: ["Choose a new password", "Then you'll be logged in."] };
+  const titles = { setpw: ["Set your password", ""], login: ["Welcome back", ""], signup: ["Finish signing up", "Just a few details and you're in."], name: ["One more step", "Add your name as it appears on your driver's license."], sent: ["Check your email", ""], reset: ["Choose a new password", "Then you'll be logged in."] };
   if (titles[step]) { $("#auth-title").textContent = titles[step][0]; $("#auth-sub").textContent = titles[step][1]; $("#auth-sub").hidden = !titles[step][1]; }
   const first = document.querySelector(`#auth [data-step="${step}"] input`);
   if (first && authDlg.open) setTimeout(() => first.focus(), 30);
@@ -1683,7 +1687,8 @@ $("#auth-form").addEventListener("submit", async e => {
       const r = await authApi("lookup", { email });
       if (!r.ok) return authErr(r.data.message || "Something went wrong. Please try again.");
       ACCOUNT.email = email;
-      if (r.data.exists && !r.data.hasPassword) return authErr(ACCOUNT.config && ACCOUNT.config.googleClientId ? "This email signs in with Google. Use Continue with Google above." : "This account signs in with Google, which isn't available right now. Use Forgot password to set a password.");
+      if (r.data.exists && !r.data.hasPassword && r.data.google && ACCOUNT.config && ACCOUNT.config.googleClientId) return authErr("This email signs in with Google. Use Continue with Google above.");
+      if (r.data.exists && !r.data.hasPassword) { authStep("setpw"); return; }        // account made at checkout: no password yet
       authStep(r.data.exists ? "login" : "signup");
     } else if (step === "login") {
       const password = $("#a-pass").value;
@@ -1713,6 +1718,7 @@ $("#auth-form").addEventListener("submit", async e => {
   } catch { authErr("We couldn't reach the server. Check your connection and try again."); }
   finally { setBusy(btn, false); }
 });
+$("#a-setpw").addEventListener("click", () => $("#a-forgot").click());
 $("#a-forgot").addEventListener("click", async e => {
   const b = e.currentTarget; if (b.disabled) return; b.disabled = true; authErr("");
   try {

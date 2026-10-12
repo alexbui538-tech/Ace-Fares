@@ -225,3 +225,42 @@ test("owner can clear every calendar: bookings archived (not deleted), dates ope
   assert.deepEqual(avail.data.cars.bmw, []);
   assert.equal((await s.store.getWithMetadata(`${r.data.archive}-car-bmw`)).data.bookings[0].id, b.id);
 });
+
+test("guests can book: checkout creates their account and signs them in; an existing email gets the trip but no sign-in", async () => {
+  const s = setup();
+  const open = checkoutHandler({ store: s.store, stripe: s.stripe, siteUrl: "https://acefares.test", now: s.now, publishableKey: "pk_test_1", userOf: s.auth.userOf, requireAccount: false, linkBooking: s.auth.linkBooking });
+  const details = checkoutDetailsHandler({ store: s.store, stripe: s.stripe, publishableKey: "pk_test_1", now: s.now, userOf: s.auth.userOf, accounts: s.auth });
+  const trip = { car: "srx", from: "2027-03-01", to: "2027-03-03", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" };
+  const r = await j(await open(req("/api/checkout", { method: "POST", body: trip })));
+  assert.equal(r.status, 200);
+  const g = await j(await details(req(`/api/checkout-details?car=srx&ref=${r.data.ref}`)));
+  assert.equal(g.data.signedIn, false);
+  const p = await j(await details(req("/api/checkout-details", { method: "POST", body: { car: "srx", ref: r.data.ref, ...sign, name: "Morgan Diaz", email: "Morgan@Example.com", insurance: { choice: "own", company: "GEICO" } } })));
+  assert.equal(p.status, 200); assert.equal(p.data.account, "created"); assert.match(p.cookie, /^af_session=/);
+  const me = (await s.a("me", { cookie: p.cookie })).data.user;
+  assert.deepEqual([me.email, me.firstName, me.lastName, me.hasPassword], ["morgan@example.com", "Morgan", "Diaz", false]);
+  const b = await s.repo.get("srx", r.data.ref);
+  assert.equal(b.userId, me.id); assert.equal(b.accountCreatedAtCheckout, true);
+  assert.deepEqual((await s.a("trips", { cookie: p.cookie })).data.trips.map(t => t.ref), [r.data.ref]);
+  assert.deepEqual((await s.a("lookup", { method: "POST", body: { email: "morgan@example.com" } })).data, { exists: true, hasPassword: false, google: false });
+  // someone else books with an email that already has an account: the trip goes on that account, nobody is signed in
+  const r2 = await j(await open(req("/api/checkout", { method: "POST", body: { ...trip, from: "2027-04-01", to: "2027-04-03" } })));
+  const p2 = await j(await details(req("/api/checkout-details", { method: "POST", body: { car: "srx", ref: r2.data.ref, ...sign, name: "Morgan Diaz", email: "morgan@example.com", insurance: { choice: "own", company: "GEICO" } } })));
+  assert.equal(p2.data.account, "existing"); assert.equal(p2.cookie, "");
+  assert.equal((await s.repo.get("srx", r2.data.ref)).userId, me.id);
+  // signed-in renter: trip saved to their account
+  const jo = await s.a("signup", { method: "POST", body: person("jo@example.com", "Jo") });
+  const r3 = await j(await open(req("/api/checkout", { method: "POST", body: { ...trip, from: "2027-05-03", to: "2027-05-05" }, cookie: jo.cookie })));
+  assert.equal((await s.repo.get("srx", r3.data.ref)).userId, jo.data.user.id);
+});
+
+test("paid on Stripe's hosted page without an account: the account is created from Stripe's details", async () => {
+  const s = setup();
+  const open = checkoutHandler({ store: s.store, stripe: s.stripe, siteUrl: "https://acefares.test", now: s.now });
+  const hook = webhookHandler({ store: s.store, stripe: s.stripe, webhookSecret: WEBHOOK_SECRET, now: s.now, accounts: s.auth });
+  await open(req("/api/checkout", { method: "POST", body: { car: "van", from: "2027-03-01", to: "2027-03-03", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" } }));
+  const sid = [...s.stripe.sessions.keys()].at(-1);
+  await hook(signedEvent("checkout.session.completed", s.stripe.pay(sid)));
+  const b = await s.repo.get("van", s.stripe.sessions.get(sid).metadata.booking_id);
+  assert.ok(b.userId); assert.equal(b.accountEmail, "renter@example.com"); assert.equal(b.accountCreatedAtCheckout, true);
+});
