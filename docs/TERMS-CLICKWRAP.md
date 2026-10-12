@@ -95,7 +95,9 @@ Gig work is allowed. You may use the vehicle to drive for rideshare, delivery an
 
 (b) You must follow each platform's rules, including its requirements for vehicles, rentals and insurance. Whether a platform accepts this vehicle is up to the platform; if it does not, that is not a reason for a refund or an early-return credit.
 
-**(c) INSURANCE FOR GIG WORK. MOST PERSONAL AUTO POLICIES DO NOT COVER DRIVING FOR PAY. WHENEVER THE PLATFORM APP IS ON, YOU MUST BE COVERED BY THE PLATFORM'S INSURANCE AND BY YOUR OWN POLICY WITH A RIDESHARE OR DELIVERY ENDORSEMENT, OR BY COMMERCIAL AUTO COVERAGE, AT NO LESS THAN THE LIMITS IN SECTION 6. IF ANY LOSS IS NOT COVERED, YOU ARE PERSONALLY RESPONSIBLE FOR IT UNDER SECTION 7.**
+(c) Insurance for gig work:
+
+**MOST PERSONAL AUTO POLICIES DO NOT COVER DRIVING FOR PAY. WHENEVER THE PLATFORM APP IS ON, YOU MUST BE COVERED BY THE PLATFORM'S INSURANCE AND BY YOUR OWN POLICY WITH A RIDESHARE OR DELIVERY ENDORSEMENT, OR BY COMMERCIAL AUTO COVERAGE, AT NO LESS THAN THE LIMITS IN SECTION 6. IF ANY LOSS IS NOT COVERED, YOU ARE PERSONALLY RESPONSIBLE FOR IT UNDER SECTION 7.**
 
 (d) Everything else in this Agreement applies during gig work, including the daily mileage limit and extra-mile charges, the cleaning fee and the no-smoking policy. Spilled food or drink, odors and debris left by passengers or deliveries are not normal wear. You are responsible for all tolls, parking and traffic tickets incurred while doing gig work.
 
