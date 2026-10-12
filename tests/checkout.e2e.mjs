@@ -98,14 +98,17 @@ async function startCheckout(p, car, a, b, loc) {
   await p.waitForSelector("#page:not([hidden])");
 }
 const fill = async (p, name = "Jordan Lee") => {
-  await p.fill("#name", name); await p.fill("#email", "jordan@example.com"); await p.fill("#phone", "(214) 555-0100"); await p.fill("#ins-co", "State Farm");
+  const [f, ...l] = name.split(" ");
+  await p.fill("#first", f); await p.fill("#last", l.join(" ")); await p.fill("#email", "jordan@example.com"); await p.fill("#phone", "(214) 555-0100");
+  await p.selectOption("#age", "25+"); await p.fill("#ins-co", "State Farm");
 };
 
 /* 1. happy path, desktop */
 const p = await newPage();
 await startCheckout(p, "escalade", 10, 13, "dallas-delivery");
 ok(/\/checkout\.html\?car=escalade&ref=/.test(p.url()), "Book and pay securely opens the site's own checkout page");
-ok(await p.inputValue("#name") === "Jordan Lee" && /^renter\d+@example\.com$/.test(await p.inputValue("#email")) && await p.inputValue("#phone") === "(214) 555-0100", "checkout is prefilled from the renter's account");
+ok(await p.inputValue("#first") === "Jordan" && await p.inputValue("#last") === "Lee" && /^renter\d+@example\.com$/.test(await p.inputValue("#email")) && await p.inputValue("#phone") === "(214) 555-0100", "checkout is prefilled from the renter's account");
+ok((await p.textContent("#h-details")) === "Primary driver" && await p.locator("#cc option").count() >= 2 && (await p.textContent("#age option")) === "Select your age", "Primary driver form: first/last name, country code, mobile, email, age");
 ok(await p.locator(".fake-pe").count() === 1, "Stripe payment form is shown on the page");
 const shownTotal = (await p.textContent("#sum-total")).trim();
 const q = quote({ car: "escalade", location: "dallas-delivery", from: D(10), days: daysBetween(D(10), D(13)) });
@@ -122,9 +125,10 @@ await p.check("#agree");
 ok(!(await p.isDisabled("#pay-btn")), "checking the box enables Book trip");
 await p.uncheck("#agree"); ok(await p.isDisabled("#pay-btn"), "unchecking disables it again");
 await p.check("#agree");
-await p.fill("#name", "");
+await p.fill("#first", ""); await p.selectOption("#age", "under21");
 await p.click("#pay-btn");
-ok(await p.locator("#c-name.bad").count() === 1 && p.url().includes("checkout.html"), "empty details: asks for the name, nothing charged");
+ok(await p.locator("#c-first.bad").count() === 1 && p.url().includes("checkout.html"), "empty details: asks for the name, nothing charged");
+ok((await p.textContent("#age-err")).includes("at least 21") && await p.locator("#c-age.bad").count() === 1, "under 21: can't book");
 await fill(p);
 await Promise.all([p.waitForURL(/booking=success|\/$|\/#/), p.click("#pay-btn")]);
 await p.waitForSelector("#done[open]"); await p.waitForTimeout(500);
@@ -132,7 +136,7 @@ ok((await p.textContent("#done-title")).includes("You're booked"), "after paying
 ok((await p.textContent("#done-text")).includes("jordan@example.com"), "confirmation mentions the renter's email");
 ok(mailer.sent.length === 1 && mailer.sent[0].to === "jordan@example.com", "confirmation + agreement emailed once");
 const bk = (await makeRepo(store).all("escalade")).find(b => b.from === D(10));
-ok(bk && bk.status === "confirmed" && bk.customer.phone === "(214) 555-0100" && bk.termsAccepted, "booking saved with renter details and agreement");
+ok(bk && bk.status === "confirmed" && bk.customer.phone === "+1 (214) 555-0100" && bk.customer.age === "25+" && bk.termsAccepted, "booking saved with renter details (phone with country code, age) and agreement");
 ok(bk && bk.signature && /^[0-9a-f]{64}$/.test(bk.signature.sha256) && bk.signature.clientTime && bk.signature.depositAck && bk.signature.smokingAck, "signature recorded with time, fingerprint and policy acknowledgments");
 ok(bk && bk.deposit && bk.deposit.status === "scheduled", "deposit hold scheduled for 24h before pickup");
 ok(/Signature record/.test(mailer.sent[0].html), "email includes the signature record");
@@ -168,7 +172,8 @@ for (const pg of [p, m, x]) ok(pg.errs.length === 0, "no page errors " + pg.errs
 const gp = await newPage(1280, 900, FAKE_STRIPE_JS, true);
 await startCheckout(gp, "srx", 24, 26);
 ok(await gp.isVisible("#login-btn") && (await gp.getAttribute("#login-btn", "href")).startsWith("/?login=1&next=%2Fcheckout.html"), "guest: books without logging in; checkout shows a Log in button next to Your details");
-await gp.fill("#name", "Morgan Diaz"); await gp.fill("#email", "morgan@example.com"); await gp.fill("#phone", "(214) 555-0177"); await gp.fill("#ins-co", "GEICO");
+await gp.fill("#first", "Morgan"); await gp.fill("#last", "Diaz"); await gp.fill("#email", "morgan@example.com"); await gp.fill("#phone", "(214) 555-0177");
+await gp.selectOption("#age", "23"); await gp.fill("#ins-co", "GEICO");
 await gp.check("#agree");
 await Promise.all([gp.waitForURL(/booking=success/), gp.click("#pay-btn")]);
 await gp.waitForSelector("#done[open]"); await gp.waitForTimeout(600);

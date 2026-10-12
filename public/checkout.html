@@ -40,7 +40,14 @@ h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);lin
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ctl{margin:0 0 12px}
 .ctl label{display:block;font-weight:500;font-size:.92rem;margin-bottom:6px;color:var(--ink-2)}
-.ctl input{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:10px;padding:0 13px;background:var(--paper)}
+.ctl input,.ctl select{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:10px;padding:0 13px;background:var(--paper);font:inherit;color:inherit}
+.ctl select{appearance:none;-webkit-appearance:none;padding-right:38px;cursor:pointer;background:var(--paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23514A3D' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center}
+.ctl select:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(218,163,54,.25)}
+.ctl.bad select{border-color:var(--bad)}
+.ctl ::placeholder{color:#9C9384}
+.help.under{margin:-6px 0 14px;font-size:.84rem}
+.phone-row{display:grid;grid-template-columns:128px 1fr;gap:12px}
+@media (max-width:520px){.phone-row{grid-template-columns:112px 1fr}}
 .ctl input:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(218,163,54,.25)}
 .ctl.bad input{border-color:var(--bad)}
 .ctl .err{display:none;color:var(--bad);font-size:.86rem;margin:6px 0 0}
@@ -101,9 +108,9 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .ended .btn{max-width:280px;margin:0 auto;text-decoration:none}
 .skeleton{color:var(--ink-3);padding:40px 0;text-align:center}
 .details-head{display:flex;align-items:center;gap:12px;margin:0 0 14px}
-.details-head h2{margin:0}
-.login-btn{margin-left:auto;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1.5px solid var(--ink);border-radius:10px;font-weight:600;text-decoration:none;color:var(--ink);background:var(--paper)}
-.login-btn:hover{background:var(--ink);color:var(--ivory)}
+.details-head h2{margin:0;font-size:1.45rem}
+.login-btn{margin-left:auto;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid var(--line);border-radius:10px;font-weight:600;font-size:.92rem;text-decoration:none;color:var(--ink);background:var(--paper);box-shadow:0 1px 2px rgba(21,19,15,.06)}
+.login-btn:hover{border-color:var(--ink)}
 .signed-as{margin-left:auto;font-size:.9rem;color:var(--ok);font-weight:600}
 .ins{display:grid;gap:10px}
 .ins-opt{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--paper);cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:start}
@@ -156,13 +163,20 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
         <div class="notice err" id="top-err" role="alert" hidden></div>
 
         <section aria-labelledby="h-details">
-          <div class="details-head"><h2 id="h-details">Your details</h2><a class="login-btn" id="login-btn" href="/?login=1">Log in</a><span class="signed-as" id="signed-as" hidden></span></div>
-          <div class="ctl" id="c-name"><label for="name">Full name, as on your driver's license</label><input id="name" autocomplete="name" required><p class="err">Enter your full name.</p></div>
+          <div class="details-head"><h2 id="h-details">Primary driver</h2><a class="login-btn" id="login-btn" href="/?login=1">Log in</a><span class="signed-as" id="signed-as" hidden></span></div>
           <div class="row2">
-            <div class="ctl" id="c-email"><label for="email">Email</label><input id="email" type="email" autocomplete="email" required><p class="err">Enter a valid email address.</p></div>
-            <div class="ctl" id="c-phone"><label for="phone">Mobile phone</label><input id="phone" type="tel" autocomplete="tel" required><p class="err">Enter a phone number we can text.</p></div>
+            <div class="ctl" id="c-first"><label for="first">First name</label><input id="first" autocomplete="given-name" placeholder="First name on license"><p class="err">Enter your first name.</p></div>
+            <div class="ctl" id="c-last"><label for="last">Last name</label><input id="last" autocomplete="family-name" placeholder="Last name on license"><p class="err">Enter your last name.</p></div>
           </div>
-          <p class="help" id="details-help">We'll email your confirmation and rental agreement, and text you to arrange the handoff. Your Ace Fares account is created from these details, so you can see your trip and verify your license. Already have an account? Log in.</p>
+          <p class="help under">Use your name exactly as it appears on your driver's license.</p>
+          <div class="phone-row">
+            <div class="ctl"><label for="cc">Country</label><select id="cc" autocomplete="tel-country-code"><option value="+1">US +1</option><option value="+1 ">CA +1</option><option value="+52">MX +52</option><option value="+44">UK +44</option></select></div>
+            <div class="ctl" id="c-phone"><label for="phone">Mobile number</label><input id="phone" type="tel" autocomplete="tel-national" inputmode="tel" placeholder="(214) 555-0123"><p class="err">Enter a mobile number we can text.</p></div>
+          </div>
+          <p class="help under">By providing a phone number, you consent to receive automated text messages with trip or account updates from Ace Fares. Message and data rates may apply. Reply STOP to opt out.</p>
+          <div class="ctl" id="c-email"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="name@example.com"><p class="err">Enter a valid email address.</p></div>
+          <div class="ctl" id="c-age"><label for="age">Age</label><select id="age"><option value="">Select your age</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25+">25 or older</option><option value="under21">Under 21</option></select><p class="err" id="age-err">Select your age.</p></div>
+          <p class="help" id="details-help">We'll email your confirmation and rental agreement. Your Ace Fares account is created from these details, so you can see your trip and verify your license.</p>
         </section>
 
         <section aria-labelledby="h-ins">
@@ -379,11 +393,14 @@ document.querySelectorAll('input[name="ins"]').forEach(r => r.addEventListener("
 function check() {
   const v = id => $("#" + id).value.trim();
   const tests = [
-    ["name", v("name").length >= 2],
+    ["first", v("first").length >= 1],
+    ["last", v("last").length >= 1],
+    ["phone", v("phone").replace(/\D/g, "").length >= ($("#cc").value.trim() === "+1" ? 10 : 7)],
     ["email", /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v("email"))],
-    ["phone", v("phone").replace(/\D/g, "").length >= 10],
+    ["age", !!v("age") && v("age") !== "under21"],
     ["ins-co", insChoice() !== "own" || v("ins-co").length >= 2],
   ];
+  $("#age-err").textContent = v("age") === "under21" ? "Drivers must be at least 21 to book." : "Select your age.";
   let first = null;
   for (const [id, ok] of tests) { $("#c-" + id).classList.toggle("bad", !ok); if (!ok && !first) first = id; }
   const agreed = $("#agree").checked;
@@ -403,9 +420,10 @@ $("#form").addEventListener("submit", async e => {
   try {
     const sub = await elements.submit();                       // checks the card fields first
     if (sub.error) { showErr($("#pay-err"), sub.error.message || "Check your payment details."); return done(); }
-    const name = $("#name").value.trim(), email = $("#email").value.trim(), phone = $("#phone").value.trim();
+    const name = `${$("#first").value.trim()} ${$("#last").value.trim()}`, email = $("#email").value.trim();
+    const phone = `${$("#cc").value.trim()} ${$("#phone").value.trim()}`, age = $("#age").value;
     const d = await api("/checkout-details", { method: "POST", body: JSON.stringify({ car: CAR, ref: REF, name, email, phone,
-      agree: true, agreedAt: agreedAt || new Date().toISOString(), termsVersion: TERMS && TERMS.version,
+      age, agree: true, agreedAt: agreedAt || new Date().toISOString(), termsVersion: TERMS && TERMS.version,
       insurance: { choice: insChoice(), company: $("#ins-co").value.trim(), policy: $("#ins-pol").value.trim() } }) });
     if (!d.ok) {
       if (d.status === 401) { location.href = `/?login=1&next=${encodeURIComponent(location.pathname + location.search)}`; return; }
@@ -451,7 +469,14 @@ $("#back").addEventListener("click", async () => {
   $("#login-btn").href = `/?login=1&next=${back}`;
   $("#login-btn").hidden = !!r.data.signedIn; $("#signed-as").hidden = !r.data.signedIn;
   if (r.data.signedIn) { $("#signed-as").textContent = "✓ Logged in"; $("#details-help").textContent = "We'll email your confirmation and rental agreement, and text you to arrange the handoff. This trip is saved to your account."; }
-  if (r.data.prefill) for (const k of ["name", "email", "phone"]) if (r.data.prefill[k] && !$("#" + k).value) $("#" + k).value = r.data.prefill[k];
+  const pf = r.data.prefill;
+  if (pf) {
+    const parts = String(pf.name || "").trim().split(/\s+/);
+    if (!$("#first").value && parts[0]) $("#first").value = parts[0];
+    if (!$("#last").value && parts.length > 1) $("#last").value = parts.slice(1).join(" ");
+    if (!$("#email").value && pf.email) $("#email").value = pf.email;
+    if (!$("#phone").value && pf.phone) $("#phone").value = String(pf.phone).replace(/^\+1\s*/, "");
+  }
   if (r.data.terms) renderTerms(r.data.terms);
   if (r.data.insurance && r.data.insurance.roamlyUrl) { $("#opt-roamly").hidden = false; $("#roamly-link").href = r.data.insurance.roamlyUrl; }
   syncButton();
