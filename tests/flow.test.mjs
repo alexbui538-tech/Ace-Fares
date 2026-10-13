@@ -196,12 +196,13 @@ test("agreement box at checkout when switched on, and acceptance is recorded", a
   assert.equal(all.data.van.find(b => b.from === "2027-08-20").termsAccepted, true);
 });
 
-test("rental agreement page renders and flags unfinished terms", async () => {
+test("rental agreement page renders with the owner's terms filled in", async () => {
   const res = await agreementPageHandler()(get("/rental-agreement"));
   const html = await res.text();
   assert.equal(res.status, 200); assert.match(res.headers.get("content-type"), /text\/html/);
   assert.match(html, /Rental Agreement/); assert.match(html, /Who may drive/); assert.match(html, /at least 18/);
-  assert.match(html, /\[to be set\]/); assert.match(html, /Draft/);
+  assert.doesNotMatch(html, /\[to be set\]/);
+  for (const w of ["$3 per mile", "30-minute grace period, a $50 late fee", "$30 service fee", "cleaning fee of $30", "full refund within 24 hours after you book", "minus a $20 cancellation fee", "Do not take the vehicle outside Texas", "366.178"]) assert.ok(html.includes(w), w);
 });
 
 
