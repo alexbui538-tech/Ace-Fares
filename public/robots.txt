@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /checkout.html
+Disallow: /verify.html
+Disallow: /inspect.html
+Disallow: /api/
+
+Sitemap: https://acefaresrental.netlify.app/sitemap.xml

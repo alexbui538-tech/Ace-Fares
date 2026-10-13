@@ -148,7 +148,7 @@ function render(data){
       const canCancel = b.status === "confirmed" || b.status === "hold" || b.status === "conflict";
       html += `<tr><td>${nice(b.from)} ${t12(b.fromTime)}<small>to ${nice(b.to)} ${t12(b.toTime)}</small></td>
         <td>${esc(c.name) || `<small>${b.status === "hold" ? "Not paid yet" : "No details recorded"}</small>`}${c.phone ? `<small><a href="tel:${esc(c.phone)}">${esc(c.phone)}</a></small>` : ""}${c.email ? `<small><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></small>` : ""}${b.insurance ? `<small>Insurance: ${b.insurance.choice === "roamly" ? "getting Roamly" : esc(b.insurance.company || "") + (b.insurance.policy ? " #" + esc(b.insurance.policy) : "")}</small>` : ""}${(b.credits || []).length ? `<small>Credits: ${b.credits.map(x => esc(x.label) + " " + money(x.amount)).join(", ")}</small>` : ""}</td>
-        <td>${PLACES[b.location] || esc(b.location)}</td>
+        <td>${PLACES[b.location] || esc(b.location)}${b.handoff && b.handoff.address ? `<small>${esc(b.handoff.address)}</small>` : ""}${b.handoff && b.handoff.flight ? `<small>Flight ${esc(b.handoff.flight)}</small>` : ""}</td>
         <td>${money(b.amountPaid || (b.status === "confirmed" ? b.total : 0))}</td>
         <td><span class="pill ${esc(b.status)}">${LABEL[b.status] || esc(b.status)}</span>${b.signature ? `<small title="Fingerprint ${esc(b.signature.sha256)}">Signed ${esc(new Date(b.signature.signedAt).toLocaleString())}<br>IP ${esc(b.signature.ip)} · v${esc(b.signature.agreementVersion)}</small>` : ""}</td>
         <td>${idCell(b)}</td>

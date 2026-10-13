@@ -101,6 +101,7 @@ const fill = async (p, name = "Jordan Lee") => {
   const [f, ...l] = name.split(" ");
   await p.fill("#first", f); await p.fill("#last", l.join(" ")); await p.fill("#email", "jordan@example.com"); await p.fill("#phone", "(214) 555-0100");
   await p.selectOption("#age", "25+"); await p.fill("#ins-co", "State Farm");
+  if (await p.isVisible("#addr")) await p.fill("#addr", "123 Main St, Dallas, TX 75201");
 };
 
 /* 1. happy path, desktop */
@@ -138,6 +139,7 @@ ok((await p.textContent("#done-title")).includes("You're booked"), "after paying
 ok((await p.textContent("#done-text")).includes("jordan@example.com"), "confirmation mentions the renter's email");
 ok(mailer.sent.length === 1 && mailer.sent[0].to === "jordan@example.com", "confirmation + agreement emailed once");
 const bk = (await makeRepo(store).all("escalade")).find(b => b.from === D(10));
+ok(bk && bk.handoff && bk.handoff.address === "123 Main St, Dallas, TX 75201", "delivery: the address is asked for and saved with the booking");
 ok(bk && bk.status === "confirmed" && bk.customer.phone === "+1 (214) 555-0100" && bk.customer.age === "25+" && bk.termsAccepted, "booking saved with renter details (phone with country code, age) and agreement");
 ok(bk && bk.signature && /^[0-9a-f]{64}$/.test(bk.signature.sha256) && bk.signature.clientTime && bk.signature.depositAck && bk.signature.smokingAck, "signature recorded with time, fingerprint and policy acknowledgments");
 ok(bk && bk.deposit && bk.deposit.status === "scheduled", "deposit hold scheduled for 24h before pickup");

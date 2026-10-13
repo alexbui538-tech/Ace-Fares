@@ -264,3 +264,20 @@ test("paid on Stripe's hosted page without an account: the account is created fr
   const b = await s.repo.get("van", s.stripe.sessions.get(sid).metadata.booking_id);
   assert.ok(b.userId); assert.equal(b.accountEmail, "renter@example.com"); assert.equal(b.accountCreatedAtCheckout, true);
 });
+
+test("delivery bookings need the address; airport bookings can add a flight", async () => {
+  const s = setup();
+  const me = await s.a("signup", { method: "POST", body: person("jo@example.com", "Jo") });
+  const book = async loc => (await j(await s.checkout(req("/api/checkout", { method: "POST", cookie: me.cookie, body: { car: "srx", from: loc === "dfw" ? "2027-06-01" : "2027-05-01", to: loc === "dfw" ? "2027-06-03" : "2027-05-03", fromTime: "10:00", toTime: "10:00", location: loc } })))).data.ref;
+  const ref = await book("dallas-delivery");
+  const g = await j(await s.details(req(`/api/checkout-details?car=srx&ref=${ref}`, { cookie: me.cookie })));
+  assert.equal(g.data.summary.locationId, "dallas-delivery");
+  const post = extra => s.details(req("/api/checkout-details", { method: "POST", cookie: me.cookie, body: { car: "srx", ref, ...sign, insurance: { choice: "own", company: "GEICO" }, ...extra } })).then(j);
+  assert.equal((await post({})).data.error, "address_required");
+  assert.equal((await post({ deliveryAddress: "500 Elm St, Dallas, TX 75202" })).status, 200);
+  assert.equal((await s.repo.get("srx", ref)).handoff.address, "500 Elm St, Dallas, TX 75202");
+  const ref2 = await book("dfw");
+  await s.details(req("/api/checkout-details", { method: "POST", cookie: me.cookie, body: { car: "srx", ref: ref2, ...sign, insurance: { choice: "own", company: "GEICO" }, flight: "AA 1234" } }));
+  const b2 = await s.repo.get("srx", ref2);
+  assert.equal(b2.handoff.flight, "AA 1234"); assert.equal(s.stripe.intents.get(b2.paymentIntentId).metadata.flight, "AA 1234");
+});

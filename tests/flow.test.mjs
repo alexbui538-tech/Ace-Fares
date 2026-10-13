@@ -230,7 +230,7 @@ test("on-site checkout: hold + payment created, summary shown, details saved, pa
     const x = await j(await s.details(post("/api/checkout-details", { car: "bmw", ref, ...renter, ...bad })));
     assert.equal(x.status, 400); assert.equal(x.data.error, code);
   }
-  const d = await j(await s.details(post("/api/checkout-details", { car: "bmw", ref, ...renter })));
+  const d = await j(await s.details(post("/api/checkout-details", { car: "bmw", ref, ...renter, deliveryAddress: "123 Main St, Dallas, TX 75201" })));
   assert.equal(d.status, 200, JSON.stringify(d.data));
   assert.equal(s.stripe.calls.piUpdate.at(-1).params.receipt_email, "jordan@example.com");
 
