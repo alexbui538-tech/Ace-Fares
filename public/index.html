@@ -1324,8 +1324,8 @@ const DONE_ICON = {
 };
 function showDone(kind, title, text, d, verifyHref){
   $("#done-verify").hidden = !verifyHref; if (verifyHref) $("#done-verify").href = verifyHref;
-  $("#done-close").textContent = verifyHref ? "I'll do it later" : "Done";
-  $("#done-close").className = verifyHref ? "btn btn-line btn-block" : "btn btn-ink btn-block";
+  // the license check isn't optional: no "later" button, and Escape doesn't close it
+  $("#done-close").hidden = !!verifyHref; $("#done").dataset.locked = verifyHref ? "1" : "";
   $("#done-mark").className = "done-mark" + (kind === "ok" ? "" : " " + kind);
   $("#done-mark").innerHTML = DONE_ICON[kind];
   $("#done-title").textContent = title; $("#done-text").textContent = text;
@@ -1848,6 +1848,7 @@ $("#m-refer").addEventListener("click", openRefer);
 $("#refer-cta").addEventListener("click", openRefer);
 loadInvite();
 $("#done-close").addEventListener("click", () => $("#done").close());
+$("#done").addEventListener("cancel", e => { if ($("#done").dataset.locked) e.preventDefault(); });
 loadAvailability();
 handleReturn();
 </script>

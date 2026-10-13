@@ -129,7 +129,10 @@ ok(!page.url().includes("session_id"), "the address bar is cleaned up");
 ok(await page.isVisible("#done-verify") && (await page.getAttribute("#done-verify", "href")).startsWith("/verify.html?car=escalade&ref="), "after paying: 'Verify your license now' button");
 ok(await page.isVisible("#acct-in") && (await page.textContent("#acct-first")) === "Riley", "header shows Riley's account");
 await page.screenshot({ path: "e2e-confirmed.png" });
-await page.click("#done-close");
+ok(!(await page.isVisible("#done-close")), "You're booked: no 'do it later' option, only Verify your license");
+await page.keyboard.press("Escape"); await page.waitForTimeout(200);
+ok(await page.isVisible("#done[open]"), "You're booked: Escape doesn't skip the license check");
+await page.evaluate(() => document.querySelector("#done").close());
 
 // My trips: the paid trip, with the license check to do
 await page.click("#acct-btn"); await page.click("#m-trips"); await page.waitForSelector("#trips .trip");
