@@ -1,4 +1,4 @@
-# Ace Fares website: launch checklist (audit of October 12, 2026)
+# Ace Fares website: launch checklist (audits of October 12 and 13, 2026)
 
 ## Fixed during the audit (live)
 - Checkout now asks for the **delivery address** (required for Delivery) and an optional **flight number** (DFW). Both are saved to the booking, Stripe, the New booking email and the bookings page.
@@ -6,6 +6,14 @@
 - Security headers added. The bookings page is hidden from search engines.
 - Added robots.txt and sitemap.xml, plus a share image and preview text for links posted on social media and in texts.
 - The You're booked screen no longer has an "I'll do it later" option for the license check.
+
+## Second audit (October 13, late evening), live site
+- Every page loads on the live site, and on a phone none of them scroll sideways or show script errors.
+- Private routes refuse access without a login or the admin key: bookings, charges, trip changes, ID check, photos. The Stripe webhook refuses messages without Stripe's signature.
+- A test booking reached the payment form, with Stripe in test mode. The test holds were released afterwards.
+- Fixed: the ID check showed a blank white screen on phones. Phones now use Stripe's full-screen page.
+- Fixed: the rental agreement page now sends the same security headers as the other pages, and the review page is hidden from search engines.
+- 92 automated checks and 3 browser test suites pass.
 
 ## Done
 - ✅ **Stripe webhook (test mode)** set up with 12 events, and `STRIPE_WEBHOOK_SECRET` added in Netlify. Confirmed on October 12: the site rejects messages with a fake signature.
@@ -23,12 +31,30 @@
    - Switch Netlify to the live Stripe keys and add a live webhook with the same 12 events.
    - Make one real booking, then refund it.
 
+7. **Stripe settings:** under Settings → Business → Public details, set the statement descriptor (e.g. ACE FARES RENTAL) and the support phone and email that renters see on their card statements and receipts. Under Settings → Customer emails, turn on successful-payment and refund receipts.
+8. **Confirm the emails arrive:** after a test booking, check that you got the "New booking" email and the renter got the confirmation with the agreement. Check spam too.
+9. **Business listings:** create a Google Business Profile for Ace Fares with the website link. This drives most local "car rental near me" searches.
+
 ## Recommended features (Claude can build)
-- **Blocking dates on the bookings page** for maintenance or personal use. Needs: nothing.
-- **Date changes** (moving a trip, not just extending it) from My trips. Needs: nothing.
-- **Additional drivers**, each with their own license check. Needs: a fee, if any.
-- **Editing prices and deposits from the bookings page** instead of in code. Needs: nothing.
-- **Contact form** that arrives in your inbox. Needs: nothing.
+### Needs nothing from you
+- **Blocking dates on the bookings page** for maintenance, repairs or personal use.
+- **Pickup and return reminders:** an email the day before pickup (with the address and the photo checklist) and on return day (with the time, fuel and photo reminder).
+- **Refund button on the bookings page** when you cancel a trip, using the same cancellation rules, so you don't have to go to Stripe.
+- **Payment link for failed charges:** when a post-trip charge is declined, email the renter a secure Stripe link to pay.
+- **Monthly sales and tax report:** trips, revenue, fees and Texas rental tax collected, downloadable as a spreadsheet, for the Comptroller filing and your accountant.
+- **Vehicle records:** mileage from every trip's photos, oil-change and inspection reminders, registration and insurance expiry dates, with an email when something's due.
+- **Damage comparison:** pickup and return photos side by side on the bookings page, for damage claims.
+- **Date changes** (moving a trip, not just extending it) from My trips.
+- **Editing prices and deposits from the bookings page** instead of in code.
+- **Export all bookings** to a spreadsheet, as a backup.
+- **Contact form** that arrives in your inbox.
+- **Stronger owner sign-in:** your own email and password with a code, instead of the shared admin key.
+
+### Needs a decision or an account from you
+- **Additional drivers**, each with their own license check. Needs: a fee per driver, if any.
+- **Promo codes** (e.g. FIRSTRIDE10). Needs: the codes and amounts you want.
+- **Under-25 young driver fee.** Needs: the amount, if any. Many companies charge $15-$30 a day for drivers under 25.
+- **Delivery fee by distance** instead of a flat $100. Needs: a Google Maps API key and your pricing per mile.
 - **Google sign-in.** Needs: a Google Client ID.
 - **Booking texts to (972) 994-6413.** Needs: a Twilio account.
 - **The Roamly option at checkout.** Needs: your Roamly link.
