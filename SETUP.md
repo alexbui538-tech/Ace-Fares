@@ -38,6 +38,10 @@ The website keeps its own calendar and booking window. A small server, Netlify F
 | `GET /api/booking?session_id=` | Booking status for the "You're booked!" screen |
 | `POST /api/stripe-webhook` | Stripe confirms payment or expiry. The signature is verified on every call. |
 | `GET /api/admin/bookings` | All bookings, for you. Needs the `x-admin-key` header. |
+| `POST /api/trip` | My trips: cancel, or ask to extend (logged-in renter) |
+| `POST /api/admin/trip` | Bookings page: approve/decline extensions, post-trip charges, the extension switch, hide/show reviews |
+| `GET/POST /api/reviews` | Public reviews; the review page |
+| `POST /api/host-application` | Become a host form, emailed to your inbox |
 
 ## Environment variables
 
@@ -112,7 +116,9 @@ Stripe test cards: `4242 4242 4242 4242` succeeds. `4000 0000 0000 0002` is decl
 
 ## Refunds and cancellations
 
-Refund from the Stripe Dashboard, under Payments → the payment → Refund. Refunding doesn't free the dates automatically yet, so tell me if you want that added. If a booking is ever marked `conflict` (paid after the hold had expired while someone else booked the same dates, which should be very rare), refund it in Stripe.
+**Renters cancel themselves** in My trips, any time before the pickup time. The site refunds them automatically to the card they paid with: the full amount within 24 hours after booking, otherwise minus the $20 cancellation fee. Any extension they paid for is refunded too, the deposit hold is released, Ace Fares credit they used is given back, and you and the renter are both emailed. If Stripe can't make the refund, the trip is still cancelled and your email tells you to refund in Stripe. After the pickup time, renters have to text you.
+
+**When you cancel** on the bookings page, the dates are freed but nothing is refunded automatically: refund in the Stripe Dashboard, under Payments → the payment → Refund. If a booking is ever marked `conflict` (paid after the hold had expired while someone else booked the same dates, which should be very rare), refund it in Stripe.
 
 ## Taxes
 
@@ -315,3 +321,41 @@ The **Clear all bookings** button on your bookings page does the following:
 - **Doesn't make refunds.** Refund any real payments in your Stripe dashboard.
 
 You type RESET to confirm.
+
+
+## Trip extensions
+
+- **Renters ask in My trips:** Extend trip → pick a new return date → they see the price → Send request. The extra days are held for them until you answer, and you get an email.
+- **Price:** each extra day's normal rate (Mon–Thu or Fri–Sun) plus **$25 a day**, plus tax. The $25 is `EXTENSION_DAILY_FEE` in `lib/catalog.mjs`.
+- **You decide** on the bookings page, in the **Extensions & charges** column. **Approve** charges the card they booked with and moves the return date; **Decline** frees the days. The renter is emailed either way. If the card declines, the request stays open, the renter is asked to text you, and you can press **Try card again**.
+- **On/off switch:** "Allow trip extension requests" at the top of the bookings page. When it's off, My trips tells renters to text you.
+
+## Post-trip charges
+
+On the bookings page, **Add charge…** on any paid trip. Choose what it's for and the page works out the amount from the rental agreement:
+
+| Charge | Amount |
+|---|---|
+| Late return fee | $50 (after the 30-minute grace period) |
+| Extra days late | the daily rate for each day |
+| Extra miles | $3 per mile (the page suggests the number from the pickup and return odometer photos) |
+| Fuel | fuel cost you enter + $30 |
+| Cleaning | $30 |
+| Smoking | $150 |
+| Tolls | toll total you enter + $15 per toll |
+| Ticket or fine | ticket total you enter + $15 per ticket |
+| Other (damage, etc.) | amount you enter, with a note |
+
+It charges the card the renter booked with (or, if you choose, collects from the deposit hold; the rest of the hold is released). The renter is emailed an itemized statement, and Stripe sends a receipt in live mode. If the card is declined or the bank wants the renter to approve it, the charge is marked failed and you can collect from the deposit or send a payment link from Stripe.
+
+**Tolls:** with an NTTA TollTag on each car, check your TollTag account after each trip and enter that trip's tolls. For a toll bill that comes by mail, you can instead send the toll authority the signed rental agreement within 30 days so it bills the renter directly (Tex. Transp. Code §366.178 and §228.055).
+
+## Reviews
+
+- A couple of hours after each trip's scheduled return, the renter gets an email with a private review link. They can also review from My trips (Leave a review).
+- Only the renter who took the trip can review it, once, after it's over. It appears on the home page right away as first name + last initial, and each car's star rating includes it. You get an email for each new review.
+- To take one down, use **Hide** in the Reviews list at the bottom of the bookings page. Nothing is deleted, and **Show** puts it back.
+
+## Become a host form
+
+The form on the Become a host page is emailed to your business inbox (`OWNER_EMAIL`, or the Gmail the site sends from). Press Reply to answer the applicant directly. A copy is also kept in the site's storage. If email ever fails, the visitor's own email app opens with the details instead, so nothing is lost. A visitor can send at most 5 an hour.

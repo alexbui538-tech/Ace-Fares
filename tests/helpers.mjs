@@ -37,7 +37,7 @@ const real = new Stripe("sk_test_dummy");
 
 export function fakeStripe({ failCreate = false, declineHolds = false, clock = () => Date.now() } = {}) {
   const sessions = new Map(), intents = new Map(), customers = new Map(); let n = 0, k = 0, cu = 0;
-  const calls = { create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [], piCapture: [], cusCreate: [], cusUpdate: [], vsCreate: [], vsRetrieve: [], vsCancel: [], vsRedact: [] };
+  const calls = { refunds: [], create: [], expire: [], piCreate: [], piUpdate: [], piCancel: [], piCapture: [], cusCreate: [], cusUpdate: [], vsCreate: [], vsRetrieve: [], vsCancel: [], vsRedact: [] };
   const fake = { declineHolds };
   const noSuch = () => { const e = new Error("No such payment_intent"); e.type = "StripeInvalidRequestError"; return e; };
   return {
@@ -57,6 +57,9 @@ export function fakeStripe({ failCreate = false, declineHolds = false, clock = (
           if (fake.declineHolds) { const e = new Error("Your card was declined."); e.type = "StripeCardError"; e.code = "card_declined"; pi.status = "requires_payment_method"; throw e; }
           pi.status = "requires_capture"; pi.amount_capturable = pi.amount;
           pi.latest_charge = { id: "ch_" + id, payment_method_details: { card: { capture_before: Math.floor(clock() / 1000) + 7 * 86400, extended_authorization: { status: "disabled" } } } };
+        } else if (params.confirm && params.off_session) {   // charging a saved card (extensions, post-trip charges)
+          if (fake.declineCharges) { const e = new Error("Your card was declined."); e.type = "StripeCardError"; e.code = "card_declined"; pi.status = "requires_payment_method"; throw e; }
+          pi.status = "succeeded"; pi.amount_received = pi.amount;
         }
         return pi;
       },
@@ -90,6 +93,17 @@ export function fakeStripe({ failCreate = false, declineHolds = false, clock = (
         verified_outputs: { first_name: first, last_name: last, dob }, last_verification_report: { id: "vr_1", document: { expiration_date: expires, type: "driving_license" } } });
       else Object.assign(s, { status: "requires_input", last_error: { code: error, reason: "The document is expired." } });
       return { ...s };
+    },
+    refunds: {
+      async create(params, opts) {
+        calls.refunds.push({ params, opts });
+        const pi = intents.get(params.payment_intent); if (!pi) throw noSuch();
+        if (fake.failRefunds) { const e = new Error("Refund failed"); e.type = "StripeInvalidRequestError"; throw e; }
+        const prior = calls.refunds.filter(r => r.opts && opts && r.opts.idempotencyKey === opts.idempotencyKey).length > 1;
+        const amount = params.amount ?? (pi.amount_received - (pi.amount_refunded || 0));
+        if (!prior) pi.amount_refunded = (pi.amount_refunded || 0) + amount;
+        return { id: "re_" + (opts && opts.idempotencyKey || calls.refunds.length), amount, payment_intent: pi.id, status: "succeeded" };
+      },
     },
     customers: {
       async create(params) { calls.cusCreate.push(params); const id = `cus_test_${++cu}`; const c = { id, ...params }; customers.set(id, c); return c; },

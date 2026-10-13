@@ -12,6 +12,9 @@ import { verifyHandler } from "../lib/identity.mjs";
 import { makeReferrals } from "../lib/referrals.mjs";
 import { inspectionHandler } from "../lib/inspections.mjs";
 import { quote } from "../lib/pricing.mjs";
+import { tripHandler, adminTripHandler } from "../lib/trips.mjs";
+import { makeReviews } from "../lib/reviews.mjs";
+import { hostHandler } from "../lib/host.mjs";
 import { memoryStore, fakeStripe, signedEvent, WEBHOOK_SECRET } from "./helpers.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
@@ -26,6 +29,9 @@ const referrals = makeReferrals({ users, bookingsStore: store, siteUrl: "" });
 const photos = memoryStore();
 const auth = makeAuth({ store: users, bookingsStore: store, secret: "e2e-secret", mailer: { send: async m => { mails.push(m); } }, referrals, log: { error() {}, warn() {}, log() {} } });
 const inspection = inspectionHandler({ photos, store, userOf: auth.userOf, adminKey: "owner-key-123" });
+const ownerMailer = { ownerEmail: "owner@example.com", send: async m => { mails.push(m); } };
+const quietLog = { error() {}, warn() {}, log() {} };
+const reviews = makeReviews({ store, mailer: ownerMailer, log: quietLog });
 const checkoutFor = siteUrl => checkoutHandler({ store, stripe, siteUrl, userOf: auth.userOf, requireAccount: true, linkBooking: auth.linkBooking });
 const H = {
   "/api/availability": availabilityHandler({ store }),
@@ -36,6 +42,10 @@ const H = {
   "/api/stripe-webhook": webhookHandler({ store, stripe, webhookSecret: WEBHOOK_SECRET }),
   "/api/admin/bookings": adminHandler({ store, adminKey: "owner-key-123" }),
   "/api/admin/cancel": adminCancelHandler({ store, adminKey: "owner-key-123" }),
+  "/api/trip": tripHandler({ store, stripe, userOf: auth.userOf, mailer: ownerMailer, log: quietLog }),
+  "/api/admin/trip": adminTripHandler({ store, stripe, adminKey: "owner-key-123", mailer: ownerMailer, reviews, log: quietLog }),
+  "/api/reviews": reviews.handler({ userOf: auth.userOf }),
+  "/api/host-application": hostHandler({ store, mailer: ownerMailer, log: quietLog }),
 };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, base);
@@ -254,6 +264,39 @@ await p2.goto("file://" + join(ROOT, "index.html")); await p2.waitForTimeout(500
 await p2.click("[data-book=bmw]");
 ok((await p2.textContent("#b-go")).includes("Text us"), "no server: falls back to 'Text us to book'");
 
+// become a host: the form goes straight to the business inbox
+await page.goto(base + "/?e2e=host#host"); await page.waitForSelector("#host-form");
+await page.fill("#h-name", "Dana Fox"); await page.fill("#h-phone", "214-555-0142"); await page.fill("#h-email", "dana@example.com"); await page.fill("#h-car", "2019 Lexus RX 350");
+await page.click("#h-send"); await page.waitForSelector("#host-ok.show");
+ok(mails.some(m => m.to === "owner@example.com" && m.replyTo === "dana@example.com" && m.subject === "New host application: 2019 Lexus RX 350 (Dana Fox)"), "host form: emailed to the business inbox, reply goes to the applicant");
+ok((await page.textContent("#host-ok")).includes("We got your details"), "host form: thank-you message on the page");
+await page.goto(base + "/"); await page.waitForTimeout(400);
+
+// My trips: ask to extend, see the cancel terms
+await page.click("#acct-btn"); await page.click("#m-trips"); await page.waitForSelector("#trips .trip [data-act=extend]");
+await page.click("#trips [data-act=extend]"); await page.waitForSelector("#trips .trip-panel .rows .tot");
+ok((await page.textContent("#trips .trip-panel")).includes("Extension fee (1 x $25)"), "My trips: extension price shows the daily rate + $25");
+await page.screenshot({ path: "e2e-trips-extend.png" });
+await page.click("#trips [data-act=extend-send]"); await page.waitForSelector("#trips .pill.warn >> text=Extension to");
+const rb = (await makeRepo(store).all("escalade")).find(b => b.userId === riley);
+ok(rb.extension && rb.extension.status === "requested" && rb.extension.to === D(15), "My trips: extension request saved and the extra day held");
+ok(mails.some(m => m.to === "owner@example.com" && /Extension request/.test(m.subject)), "owner emailed about the extension request");
+await page.click("#trips [data-act=cancel]"); await page.waitForSelector("#trips [data-act=cancel-yes]");
+ok((await page.textContent("#trips .trip-panel:not([hidden])")).includes("full refund"), "My trips: Cancel trip explains the refund first");
+await page.click("#trips .trip-panel:not([hidden]) [data-act=close]"); await page.click("#trips-close");
+
+// a finished trip gets a review from the emailed link, and it shows on the home page
+const pastRef = "00000000-0000-4000-8000-000000000001";
+await repo.hold("srx", { from: "2026-01-02", to: "2026-01-04", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" }, pastRef);
+await repo.confirm("srx", pastRef, { customer: { name: "Morgan Diaz", email: "morgan@example.com" }, reviewToken: "tok-e2e-123" });
+await page.goto(`${base}/review.html?car=srx&ref=${pastRef}&t=tok-e2e-123`); await page.waitForSelector("#form:not([hidden])");
+await page.click('label[for="s5"]'); await page.fill("#text", "Clean car, easy pickup, would rent again.");
+await page.screenshot({ path: "e2e-review.png", fullPage: true });
+await page.click("#send"); await page.waitForSelector("#thanks:not([hidden])");
+await page.goto(base + "/"); await page.waitForSelector("#reviews:not([hidden])");
+ok((await page.textContent("#reviews")).includes("Clean car, easy pickup") && (await page.textContent("#reviews")).includes("Morgan D."), "reviews: posted review shows on the home page");
+await page.locator("#reviews").screenshot({ path: "e2e-reviews.png" });
+
 // owner bookings page
 const a = await browser.newPage(); const aErrs = []; a.on("pageerror", e => aErrs.push(e.message));
 a.on("dialog", d => d.accept());
@@ -264,6 +307,20 @@ await a.fill("#key", "owner-key-123"); await a.click("#login button"); await a.w
 const txt = await a.textContent("main");
 ok(txt.includes("Test Renter") && txt.includes("Paid") && txt.includes("DFW Airport"), "bookings page: shows the paid booking with renter and pickup");
 await a.screenshot({ path: "e2e-admin.png", fullPage: true });
+ok(await a.isChecked("#ext-on"), "bookings page: extension requests switch is on");
+await a.click('button[data-ext="extend-approve"]'); await a.waitForTimeout(900);
+ok((await makeRepo(store).get("escalade", rb.id)).to === D(15), "bookings page: approving the extension charges the card and moves the return date");
+await a.click(`button[data-charge][data-id="${rb.id}"]`); await a.waitForSelector("#charge-dlg[open]");
+await a.selectOption("#cf-type", "toll"); await a.fill("#cf-cost", "7.25"); await a.waitForFunction(() => /\$22\.25/.test(document.querySelector("#cf-go").textContent));
+await a.screenshot({ path: "e2e-charge.png" });
+await a.click("#cf-go"); await a.waitForTimeout(900);
+const ch = (await makeRepo(store).get("escalade", rb.id)).charges || [];
+ok(ch.length === 1 && ch[0].total === 2225 && ch[0].status === "paid", "bookings page: toll charged at cost + $15 handling");
+ok(mails.some(m => m.to === rb.customer.email && /Charges for your trip/.test(m.subject) && /Handling fee \(1 x \$15\.00\)/.test(m.text)), "renter emailed an itemized statement");
+await a.click('button[data-rev="review-hide"]'); await a.waitForTimeout(600);
+ok((await reviews.summary()).count === 0, "bookings page: owner can hide a review");
+await a.click("#ext-on"); await a.waitForTimeout(500);
+ok((await (await import("../lib/trips.mjs")).getSettings(store)).extensionsAllowed === false, "bookings page: owner can turn extension requests off");
 const btn = a.locator('button.danger[data-car="escalade"]').first();
 await btn.click(); await a.waitForTimeout(900);
 const esc = await makeRepo(store).all("escalade");

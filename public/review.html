@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Review your trip | Ace Fares Rentals</title>
+<link rel="icon" href="images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ivory:#FBF8F1; --paper:#FFFFFF; --cream:#F3ECDD; --line:#E4DCCB;
+  --ink:#15130F; --ink-2:#514A3D; --ink-3:#6F6757;
+  --gold:#AF8135; --gold-text:#84601F; --gold-bright:#DAA336;
+  --ok:#2F6B3A; --bad:#A3321F;
+  --serif:"DM Serif Display",Georgia,serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ivory);color:var(--ink);font:400 1rem/1.55 var(--sans)}
+button,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px}
+.top{background:rgba(251,248,241,.96);border-bottom:1px solid var(--line)}
+.top .in{max-width:760px;margin:0 auto;padding:0 20px;height:68px;display:flex;align-items:center}
+.top img{height:44px;width:auto;border-radius:4px}
+.top a.back{margin-left:auto;font-weight:600;color:var(--ink-2);text-decoration:none;min-height:44px;display:flex;align-items:center}
+main{max-width:620px;margin:0 auto;padding:32px 20px 72px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,5vw,2.5rem);line-height:1.1;margin:0 0 8px}
+.lede{color:var(--ink-2);margin:0 0 22px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:16px}
+.trip{display:flex;gap:14px;align-items:center}
+.trip img{width:96px;height:72px;object-fit:cover;border-radius:10px;background:var(--cream)}
+.trip b{display:block}
+.trip span{color:var(--ink-2);font-size:.93rem}
+fieldset{border:0;padding:0;margin:0}
+legend{font-weight:600;margin-bottom:8px}
+.stars{display:flex;gap:6px}
+.stars input{position:absolute;opacity:0;width:1px;height:1px}
+.stars label{cursor:pointer;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.stars svg{width:38px;height:38px;fill:var(--line);transition:fill .1s}
+.stars label.on svg{fill:var(--gold-bright)}
+.stars input:focus-visible + label{outline:3px solid var(--gold);outline-offset:2px}
+.hint{color:var(--ink-3);font-size:.9rem;margin:6px 0 0;min-height:1.4em}
+label.t{font-weight:600;display:block;margin-bottom:6px}
+textarea{width:100%;min-height:130px;border:1.5px solid var(--line);border-radius:12px;padding:12px;resize:vertical;background:var(--paper)}
+textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(218,163,54,.25)}
+.count{color:var(--ink-3);font-size:.85rem;text-align:right;margin:4px 0 0}
+.btn{min-height:50px;border-radius:12px;border:0;padding:0 22px;font-weight:700;cursor:pointer;background:var(--gold-bright);color:var(--ink);width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.notice{border-radius:12px;padding:12px 14px;margin:0}
+.notice.err{background:#FBE3D9;color:#7A2A13}
+.notice.ok{background:#E3F0E2;color:#1F4A27}
+.fine{color:var(--ink-3);font-size:.88rem;margin:0}
+a.btn{display:flex;align-items:center;justify-content:center;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="top"><div class="in"><a href="/"><img src="images/logo@2x.png" alt="Ace Fares" width="102" height="44"></a><a class="back" href="/">Back to rentals</a></div></header>
+<main>
+  <h1>How was your trip?</h1>
+  <p class="lede" id="lede">Loading your trip...</p>
+  <p class="notice err" id="err" role="alert" hidden></p>
+  <form class="card" id="form" hidden novalidate>
+    <div class="trip"><img id="photo" alt=""><div><b id="car"></b><span id="dates"></span></div></div>
+    <fieldset>
+      <legend>Your rating</legend>
+      <div class="stars" id="stars"></div>
+      <p class="hint" id="hint" aria-live="polite"></p>
+    </fieldset>
+    <div>
+      <label class="t" for="text">Tell other renters about it (optional)</label>
+      <textarea id="text" maxlength="1000" placeholder="How was the car, the handoff and the overall experience?"></textarea>
+      <p class="count" id="count">0 / 1000</p>
+    </div>
+    <p class="fine" id="as"></p>
+    <button class="btn" type="submit" id="send" disabled>Post my review</button>
+  </form>
+  <div class="card" id="thanks" hidden>
+    <p class="notice ok" id="thanks-msg">Thank you! Your review is posted.</p>
+    <a class="btn" href="/#reviews">See reviews on our site</a>
+  </div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const q = new URLSearchParams(location.search), CAR = q.get("car") || "", REF = q.get("ref") || "", T = q.get("t") || "";
+const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
+const WORDS = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
+const nice = s => new Date(s + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+let stars = 0;
+
+function showErr(msg){ $("#err").textContent = msg; $("#err").hidden = false; }
+function paint(n){ document.querySelectorAll(".stars label").forEach((l, i) => l.classList.toggle("on", i < n)); $("#hint").textContent = n ? `${n} star${n > 1 ? "s" : ""}: ${WORDS[n]}` : ""; }
+
+$("#stars").innerHTML = [1,2,3,4,5].map(n => `<input type="radio" name="stars" id="s${n}" value="${n}"><label for="s${n}" title="${n} star${n > 1 ? "s" : ""}" aria-label="${n} star${n > 1 ? "s" : ""}">${STAR}</label>`).join("");
+document.querySelectorAll(".stars input").forEach(i => i.addEventListener("change", () => { stars = +i.value; paint(stars); $("#send").disabled = false; }));
+document.querySelectorAll(".stars label").forEach((l, i) => { l.addEventListener("mouseenter", () => paint(i + 1)); l.addEventListener("mouseleave", () => paint(stars)); });
+$("#text").addEventListener("input", () => { $("#count").textContent = `${$("#text").value.length} / 1000`; });
+
+async function load(){
+  const url = `/api/reviews?car=${encodeURIComponent(CAR)}&ref=${encodeURIComponent(REF)}${T ? "&t=" + encodeURIComponent(T) : ""}`;
+  let r, d = {};
+  try { r = await fetch(url, { credentials: "same-origin" }); d = await r.json().catch(() => ({})); } catch { $("#lede").textContent = ""; return showErr("We couldn't load your trip. Check your connection and refresh."); }
+  if (!r.ok) { $("#lede").innerHTML = 'Open <a href="/?trips=1">My trips</a> to review a trip you\'ve taken.'; return showErr(d.message || "This review link isn't valid."); }
+  $("#car").textContent = d.carName; $("#dates").textContent = `${nice(d.from)} to ${nice(d.to)}`;
+  $("#photo").src = `images/${d.photo}-sm.webp`;
+  if (d.review) { $("#lede").textContent = ""; $("#thanks-msg").textContent = `You've already reviewed this trip (${d.review.stars} star${d.review.stars > 1 ? "s" : ""}). Thank you!`; $("#thanks").hidden = false; return; }
+  if (!d.ended) { $("#lede").textContent = ""; return showErr("You can leave a review once your trip is over."); }
+  $("#lede").textContent = `Thanks for renting with Ace Fares, ${d.name.split(" ")[0]}. Your review helps other renters choose.`;
+  $("#as").textContent = `Your review will appear on our website as "${d.name}".`;
+  $("#form").hidden = false;
+}
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!stars) return showErr("Choose a star rating.");
+  $("#err").hidden = true; $("#send").disabled = true; $("#send").textContent = "Posting...";
+  let r, d = {};
+  try { r = await fetch("/api/reviews", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ car: CAR, ref: REF, t: T || undefined, stars, text: $("#text").value.trim() }) }); d = await r.json().catch(() => ({})); }
+  catch { r = null; }
+  $("#send").textContent = "Post my review";
+  if (r && r.ok) { $("#form").hidden = true; $("#lede").textContent = ""; $("#thanks").hidden = false; return; }
+  $("#send").disabled = false;
+  showErr((d && d.message) || "We couldn't post your review. Please try again.");
+});
+load();
+</script>
+</body>
+</html>

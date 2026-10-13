@@ -30,7 +30,7 @@ button:disabled{opacity:.5;cursor:default}
 .bar .grow{flex:1}
 h2.car{font-size:1.15rem;margin:26px 0 10px}
 .wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:12px}
-table{border-collapse:collapse;width:100%;min-width:1040px}
+table{border-collapse:collapse;width:100%;min-width:1240px}
 th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
 th{border-top:0;font-size:.8rem;color:var(--ink-3);font-weight:600;background:var(--ivory)}
 td small{display:block;color:var(--ink-3)}
@@ -43,6 +43,30 @@ td small{display:block;color:var(--ink-3)}
 .dep button{min-height:32px;padding:0 10px;font-size:.82rem;background:transparent;color:var(--ink);border:1.5px solid var(--line)}
 .dep .warn,td small.warn{color:var(--bad)}
 .empty{color:var(--ink-3);padding:14px 12px;margin:0}
+.tc{font-size:.86rem;min-width:200px}
+.tc .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tc button{min-height:32px;padding:0 10px;font-size:.82rem;background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.tc button.go{background:var(--ink);color:var(--ivory);border-color:var(--ink)}
+.tc .ext{background:#FDF3DC;border-radius:8px;padding:8px;margin-bottom:6px}
+.tc ul{margin:4px 0 0;padding-left:16px}
+.switch{display:flex;gap:8px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:600}
+.switch input{width:auto;min-height:0}
+dialog{border:0;border-radius:14px;padding:0;width:min(460px,calc(100vw - 24px));box-shadow:0 30px 60px -20px rgba(0,0,0,.45)}
+dialog::backdrop{background:rgba(15,26,52,.45)}
+dialog form{padding:20px;display:grid;gap:12px}
+dialog h3{margin:0}
+dialog select,dialog textarea{min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;width:100%}
+dialog .hint{color:var(--ink-3);font-size:.88rem;margin:-6px 0 0}
+dialog .lines{background:var(--ivory);border-radius:10px;padding:10px 12px;font-size:.92rem}
+dialog .lines div{display:flex;justify-content:space-between;gap:10px}
+dialog .lines div.tot{font-weight:700;border-top:1px solid var(--line);margin-top:4px;padding-top:4px}
+dialog .row{display:flex;gap:10px;justify-content:flex-end}
+dialog label.radio{display:flex;gap:8px;align-items:center}
+dialog label.radio input{width:auto;min-height:0}
+.revs{display:grid;gap:10px}
+.rev{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
+.rev.hidden{opacity:.55}
+.rev p{margin:2px 0}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--ivory);padding:10px 16px;border-radius:10px}
 </style>
 </head>
@@ -66,7 +90,13 @@ const nice = d => d ? new Date(d + "T12:00").toLocaleDateString("en-US", { weekd
 const t12 = t => { if (!t) return ""; const [h, m] = t.split(":").map(Number); return `${(h % 12) || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
 const money = c => c ? "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2 }) : "";
 let KEY = ""; try { KEY = sessionStorage.getItem("af-admin") || ""; } catch {}
-let showAll = false;
+let showAll = false, DATA = null;
+const CAR_MILES = { escalade: 100, srx: 200, bmw: 100, van: 200 };
+const days = (a, b) => Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 864e5);
+async function adminTrip(body){
+  const r = await fetch("/api/admin/trip", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify(body) });
+  return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
+}
 
 function toast(m){ const t = document.createElement("div"); t.className = "toast"; t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }
 
@@ -132,17 +162,34 @@ async function depositAction(btn){
   if (r.ok) { toast({ capture: "Collected. The rest of the hold is released.", release: "Hold released.", keep: "Hold kept: it won't auto-release.", unkeep: "Hold will auto-release after return.", place: data.deposit && data.deposit.status === "held" ? "Hold placed." : "Hold failed again." }[action]); load(); }
   else { btn.disabled = false; toast(data.message || "Couldn't do that. Try again."); }
 }
+function changesCell(car, b){
+  let h = "";
+  const x = b.extension;
+  if (x && (x.status === "requested" || x.status === "payment_failed")) {
+    h += `<div class="ext"><b>${x.status === "requested" ? "Wants to extend" : "Extension: card declined"}</b><small>to ${nice(x.to)} ${t12(x.toTime || b.toTime)} · ${x.quote.days} day${x.quote.days > 1 ? "s" : ""} · ${money(x.quote.total)}</small>${x.error ? `<small class="warn">${esc(x.error)}</small>` : ""}
+      <div class="acts"><button class="go" data-ext="extend-approve" data-car="${car}" data-id="${esc(b.id)}" data-amt="${x.quote.total}">${x.status === "requested" ? "Approve" : "Try card again"}</button><button data-ext="extend-decline" data-car="${car}" data-id="${esc(b.id)}">Decline</button></div></div>`;
+  }
+  for (const e of b.extensions || []) h += `<small>Extended ${nice(e.from)} → ${nice(e.to)} · ${money(e.amount)}</small>`;
+  if (b.cancellation) h += `<small>${b.cancellation.by === "renter" ? "Renter cancelled" : "Cancelled"}${b.cancellation.fee ? ` · fee ${money(b.cancellation.fee)}` : ""} · refund ${money((b.cancellation.refund || 0) + (b.cancellation.extensionRefund || 0)) || "$0"}${b.cancellation.status === "refund_failed" ? `</small><small class="warn">Refund failed: refund in Stripe` : ""}</small>`;
+  const cs = b.charges || [];
+  if (cs.length) h += `<ul>${cs.map(c => `<li>${esc(c.label)} ${money(c.total)}${c.status === "failed" ? ` <span class="warn">failed</span>` : c.source === "deposit" ? " (deposit)" : ""}</li>`).join("")}</ul>`;
+  if (b.status === "confirmed" || b.status === "cancelled") h += `<div class="acts"><button data-charge="1" data-car="${car}" data-id="${esc(b.id)}">Add charge…</button></div>`;
+  if (b.reviewStars) h += `<small>Reviewed: ${"★".repeat(b.reviewStars)}</small>`;
+  return h;
+}
 function render(data){
+  DATA = data;
   const today = new Date().toISOString().slice(0, 10);
   let html = `<div class="bar"><span class="grow">Upcoming paid bookings and anything in checkout. Refunds are done in your Stripe dashboard. Deposit holds release on their own 72 hours after return unless you keep or collect them.</span>
     <label><input type="checkbox" id="all" ${showAll ? "checked" : ""}> Show past and cancelled</label>
+    <label class="switch" title="When off, renters can't request extensions in My trips"><input type="checkbox" id="ext-on" ${data._settings && data._settings.extensionsAllowed ? "checked" : ""}> Allow trip extension requests</label>
     <button class="line" id="refresh">Refresh</button><button class="danger" id="reset">Clear all bookings</button><button class="line" id="out">Sign out</button></div>`;
   for (const [car, name] of Object.entries(CARS)) {
     const list = (data[car] || []).filter(b => showAll || ((b.status === "confirmed" || b.status === "conflict" || (b.status === "hold" && Date.parse(b.expiresAt) > Date.now())) && b.to >= today))
       .sort((a, b) => a.from < b.from ? -1 : 1);
     html += `<h2 class="car">${name}</h2><div class="wrap">`;
     if (!list.length) { html += `<p class="empty">No bookings to show.</p></div>`; continue; }
-    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>License check</th><th>Photos</th><th>Deposit hold</th><th></th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>License check</th><th>Photos</th><th>Deposit hold</th><th>Extensions &amp; charges</th><th></th></tr></thead><tbody>`;
     for (const b of list) {
       const c = b.customer || {};
       const canCancel = b.status === "confirmed" || b.status === "hold" || b.status === "conflict";
@@ -154,11 +201,33 @@ function render(data){
         <td>${idCell(b)}</td>
         <td>${photoCell(car, b)}</td>
         <td class="dep">${depositCell(car, b)}</td>
+        <td class="tc">${changesCell(car, b)}</td>
         <td>${canCancel ? `<button class="danger" data-car="${car}" data-id="${esc(b.id)}">Cancel</button>` : ""}</td></tr>`;
     }
     html += `</tbody></table></div>`;
   }
+  const revs = (data._reviews || []).slice().sort((a, b) => (a.at < b.at ? 1 : -1));
+  html += `<h2 class="car">Reviews</h2>${revs.length ? `<div class="revs">${revs.map(r => `<div class="rev ${r.hidden ? "hidden" : ""}"><div><b>${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</b> ${esc(r.name)} · ${esc(r.carName)} · ${new Date(r.at).toLocaleDateString()}${r.text ? `<p>${esc(r.text)}</p>` : ""}${r.hidden ? "<small>Hidden from the website</small>" : ""}</div>
+    <button class="line" style="min-height:34px;padding:0 12px" data-rev="${r.hidden ? "review-show" : "review-hide"}" data-id="${esc(r.id)}">${r.hidden ? "Show" : "Hide"}</button></div>`).join("")}</div>` : `<p class="empty">No reviews yet. Renters are emailed a review link a couple of hours after each trip.</p>`}`;
   const app = document.getElementById("app"); app.innerHTML = html;
+  document.getElementById("ext-on").onchange = async e => {
+    const r = await adminTrip({ action: "settings", extensionsAllowed: e.target.checked });
+    if (r.ok) toast(r.data.settings.extensionsAllowed ? "Renters can request extensions in My trips. You approve each one." : "Extension requests are off. Renters are asked to text you.");
+    else { e.target.checked = !e.target.checked; toast("Couldn't save that. Try again."); }
+  };
+  app.querySelectorAll("button[data-rev]").forEach(btn => btn.onclick = async () => {
+    btn.disabled = true; const r = await adminTrip({ action: btn.dataset.rev, id: btn.dataset.id });
+    if (r.ok) { toast(btn.dataset.rev === "review-hide" ? "Review hidden from the website." : "Review is showing on the website."); load(); } else { btn.disabled = false; toast("Couldn't do that. Try again."); }
+  });
+  app.querySelectorAll("button[data-ext]").forEach(btn => btn.onclick = async () => {
+    const approve = btn.dataset.ext === "extend-approve";
+    if (approve && !confirm(`Approve this extension and charge the renter's card ${money(+btn.dataset.amt)}?`)) return;
+    if (!approve && !confirm("Decline this extension? The renter is emailed and the extra days open up again.")) return;
+    btn.disabled = true; const r = await adminTrip({ action: btn.dataset.ext, car: btn.dataset.car, id: btn.dataset.id });
+    if (r.ok) { toast(approve ? "Approved and charged. The renter has been emailed." : "Declined. The renter has been emailed."); load(); }
+    else { toast(r.data.message || "Couldn't do that. Try again."); load(); }
+  });
+  app.querySelectorAll("button[data-charge]").forEach(btn => btn.onclick = () => openCharge(btn.dataset.car, btn.dataset.id));
   document.getElementById("all").onchange = e => { showAll = e.target.checked; render(data); };
   document.getElementById("refresh").onclick = load;
   document.getElementById("reset").onclick = async () => {
@@ -171,13 +240,78 @@ function render(data){
   };
   document.getElementById("out").onclick = () => { try { sessionStorage.removeItem("af-admin"); } catch {} location.reload(); };
   app.querySelectorAll("button[data-dep]").forEach(btn => btn.onclick = () => depositAction(btn));
-  app.querySelectorAll("button.danger").forEach(btn => btn.onclick = async () => {
+  app.querySelectorAll("button.danger[data-id]").forEach(btn => btn.onclick = async () => {
     if (!confirm("Cancel this booking? The dates open up again. If they paid, refund them in Stripe.")) return;
     btn.disabled = true;
     const r = await fetch("/api/admin/cancel", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify({ car: btn.dataset.car, id: btn.dataset.id }) });
     if (r.ok) { toast("Booking cancelled. The dates are open again."); load(); } else { btn.disabled = false; toast("Couldn't cancel. Try again."); }
   });
 }
+
+/* post-trip charges */
+const dlg = document.createElement("dialog"); dlg.id = "charge-dlg";
+dlg.innerHTML = `<form method="dialog" id="cf"><h3>Add a charge</h3><p class="hint" id="cf-who"></p>
+  <label for="cf-type">What for</label><select id="cf-type"></select><p class="hint" id="cf-hint"></p>
+  <div id="cf-qty-w"><label for="cf-qty" id="cf-qty-l">Quantity</label><input id="cf-qty" inputmode="numeric"><p class="hint" id="cf-miles"></p></div>
+  <div id="cf-cost-w"><label for="cf-cost" id="cf-cost-l">Amount ($)</label><input id="cf-cost" inputmode="decimal" placeholder="0.00"></div>
+  <label for="cf-note">Note for the renter's statement</label><textarea id="cf-note" rows="2" placeholder="e.g. NTTA tolls Mar 2-4, statement attached by email"></textarea>
+  <div id="cf-src"></div><div class="lines" id="cf-lines">Fill in the details to see the total.</div><p class="err" id="cf-err" role="alert"></p>
+  <div class="row"><button type="button" class="line" id="cf-cancel">Cancel</button><button type="button" id="cf-go" disabled>Charge</button></div></form>`;
+document.body.appendChild(dlg);
+let CF = null, cfTimer = 0;
+function openCharge(car, id){
+  const b = (DATA[car] || []).find(x => x.id === id); if (!b) return;
+  const types = DATA._chargeTypes || {};
+  CF = { car, id, b };
+  document.getElementById("cf-who").textContent = `${(b.customer && b.customer.name) || "Renter"} · ${CARS[car]} · ${nice(b.from)} to ${nice(b.to)}`;
+  document.getElementById("cf-type").innerHTML = Object.entries(types).map(([k, t]) => `<option value="${k}">${esc(t.label)}</option>`).join("");
+  const held = b.deposit && b.deposit.status === "held";
+  document.getElementById("cf-src").innerHTML = `<label class="radio"><input type="radio" name="src" value="card" checked> Charge the card they booked with</label>${held ? `<label class="radio"><input type="radio" name="src" value="deposit"> Collect from the ${money(b.deposit.amount)} deposit hold (the rest is released)</label>` : ""}`;
+  ["cf-qty", "cf-cost", "cf-note"].forEach(i => document.getElementById(i).value = "");
+  document.getElementById("cf-err").textContent = "";
+  cfType(); dlg.showModal();
+}
+function cfType(){
+  const t = (DATA._chargeTypes || {})[document.getElementById("cf-type").value] || {}, b = CF.b;
+  document.getElementById("cf-hint").textContent = t.hint || "";
+  document.getElementById("cf-qty-w").hidden = !t.qty; document.getElementById("cf-qty-l").textContent = t.qty || "";
+  document.getElementById("cf-cost-w").hidden = !t.cost; document.getElementById("cf-cost-l").textContent = (t.cost || "") + " ($)";
+  const mi = document.getElementById("cf-miles"); mi.textContent = "";
+  if (document.getElementById("cf-type").value === "miles") {
+    const i = b.inspection || {}, p = i.pickup && (i.pickup.host || i.pickup.renter), r = i.return && (i.return.host || i.return.renter);
+    const included = (CAR_MILES[CF.car] || 0) * days(b.from, b.to);
+    if (p && r) { const over = Math.max(0, r.odometer - p.odometer - included); mi.textContent = `Driven ${(r.odometer - p.odometer).toLocaleString()} mi, ${included.toLocaleString()} included: ${over.toLocaleString()} over.`; document.getElementById("cf-qty").value = over || ""; }
+    else mi.textContent = `${included.toLocaleString()} miles included. Odometer photos aren't complete yet.`;
+  } else if (t.qty && !document.getElementById("cf-qty").value) document.getElementById("cf-qty").value = "1";
+  cfQuote();
+}
+async function cfQuote(){
+  clearTimeout(cfTimer);
+  cfTimer = setTimeout(async () => {
+    const body = cfBody(), go = document.getElementById("cf-go"), lines = document.getElementById("cf-lines");
+    go.disabled = true;
+    const r = await adminTrip({ ...body, action: "charge-quote" });
+    if (!r.ok) { lines.textContent = r.data.message || "Fill in the details to see the total."; return; }
+    const q = r.data.quote;
+    lines.innerHTML = q.lines.map(l => `<div><span>${esc(l.label)}</span><span>${money(l.amount)}</span></div>`).join("") + `<div class="tot"><span>Total</span><span>${money(q.total)}</span></div>`;
+    go.disabled = false; go.textContent = `Charge ${money(q.total)}`;
+  }, 250);
+}
+function cfBody(){
+  const src = document.querySelector('#cf-src input[name="src"]:checked');
+  return { car: CF.car, id: CF.id, type: document.getElementById("cf-type").value, qty: document.getElementById("cf-qty").value.replace(/[,\s]/g, ""),
+    cost: document.getElementById("cf-cost").value, note: document.getElementById("cf-note").value.trim(), source: src ? src.value : "card" };
+}
+document.getElementById("cf-type").onchange = () => { document.getElementById("cf-qty").value = ""; cfType(); };
+["cf-qty", "cf-cost", "cf-note"].forEach(i => document.getElementById(i).addEventListener("input", cfQuote));
+document.getElementById("cf-src").addEventListener("change", cfQuote);
+document.getElementById("cf-cancel").onclick = () => dlg.close();
+document.getElementById("cf-go").onclick = async () => {
+  const go = document.getElementById("cf-go"); go.disabled = true;
+  const r = await adminTrip({ ...cfBody(), action: "charge" });
+  if (r.ok) { dlg.close(); toast(`Charged ${money(r.data.charge.total)}. The renter was emailed an itemized statement.`); load(); }
+  else { go.disabled = false; document.getElementById("cf-err").textContent = r.data.message || "That didn't go through. Try again."; if (r.status === 402) load(); }
+};
 
 document.getElementById("login").addEventListener("submit", e => {
   e.preventDefault(); KEY = document.getElementById("key").value.trim();

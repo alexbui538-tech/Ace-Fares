@@ -501,6 +501,19 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 .pill.warn{background:#FFF1D6;color:#7A5200}
 .pill.bad{background:#FBE3D9;color:#8A2D14}
 .btn-sm{min-height:40px;padding:0 14px;font-size:.92rem}
+.trip-panel{background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;margin-top:12px}
+.trip-panel h5{margin:0;font-size:1rem;font-family:var(--sans)}
+.trip-panel p{margin:0}
+.trip-panel label{font-weight:600;font-size:.92rem}
+.trip-panel input[type=date]{min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 10px;font:inherit;background:var(--paper);max-width:220px}
+.trip-panel .rows{display:grid;gap:4px}
+.trip-panel .rows div{display:flex;justify-content:space-between;gap:12px;font-size:.92rem;color:var(--ink-2)}
+.trip-panel .rows div.tot{font-weight:700;color:var(--ink);border-top:1px solid var(--line);padding-top:6px;margin-top:2px}
+.trip-panel .acts{margin-top:0}
+.trip .refund{font-size:.88rem;color:var(--ink-2);margin-top:6px}
+.reviews .stars svg{width:18px;height:18px}
+.quote .stars{margin:0}
+.quote .when{color:var(--ink-3);font-size:.85rem}
 @media (max-width:520px){.trip{grid-template-columns:72px 1fr}.trip img{width:72px;height:56px}}
 
 @media (prefers-reduced-motion:reduce){
@@ -645,6 +658,16 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     </div>
   </section>
 
+  <section class="reviews" id="reviews" aria-labelledby="reviews-title" hidden>
+    <div class="wrap">
+      <div class="rev-head">
+        <div><h2 id="reviews-title">What renters say</h2><p class="lede">Reviews from Ace Fares renters, written after their trips.</p></div>
+        <div class="score"><span class="big" id="rev-avg"></span><div><div class="stars" id="rev-stars"></div><p id="rev-count"></p></div></div>
+      </div>
+      <div class="quotes" id="rev-list"></div>
+    </div>
+  </section>
+
   <section class="trust" id="faq" aria-labelledby="faq-title">
     <div class="wrap faq-wrap">
       <h2 id="faq-title">Questions, answered</h2>
@@ -679,8 +702,10 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
           <div class="ctl"><label for="h-miles">Mileage</label><input id="h-miles" inputmode="numeric" placeholder="e.g. 45,000"></div>
         </div>
         <div class="ctl"><label for="h-note">Anything else? (optional)</label><textarea id="h-note" placeholder="Availability, features, questions"></textarea></div>
-        <button class="btn btn-gold btn-block" type="submit">Send my car details</button>
-        <p class="host-ok" id="host-ok" role="status">Thanks! Your email app should open with your details filled in. Press send and we'll be in touch.</p>
+        <input id="h-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <button class="btn btn-gold btn-block" type="submit" id="h-send">Send my car details</button>
+        <p class="notice err" id="host-err" role="alert" hidden></p>
+        <p class="host-ok" id="host-ok" role="status">Thanks! We got your details and will reach out within a few days.</p>
       </form>
     </div>
   </section>
@@ -988,10 +1013,11 @@ const FAQ = [ // TODO review every answer and change anything that doesn't match
   ["How does Refer a friend work?","Log in and choose Refer a friend in your account menu to get your link. A friend who signs up with it gets $50 off their first trip. When they finish a trip of 3 days or more, you get $100 in Ace Fares credit, applied automatically to your next booking."],
   ["How old do I need to be?",`Drivers must be at least ${SITE.minAge} years old with a valid driver's license.`],
   ["Can you meet me at the airport?","Yes. We can hand the car over at DFW International Airport. Share your flight details when we confirm and we'll be there when you land."],
-  ["How do tolls work?","Many Dallas highways are toll roads. Tolls from your trip are charged at cost to your card after you return the car, with an itemized list. If a toll is billed by mail, the toll authority may send the bill to you directly."],
+  ["How do tolls work?","Many Dallas highways are toll roads. Tolls from your trip are charged at cost to your card after you return the car, with an itemized list. There's a $15 handling fee for each toll or ticket we process. If a toll is billed by mail, the toll authority may send the bill to you directly."],
   ["Do you offer discounts for longer rentals?","Yes. Rentals of 3 days or more get 10% off the rental price, and rentals of 30 days or more get 25% off. The discount is applied automatically when you choose your dates."],
   ["Can I rent out my own car through Ace Fares?","Yes. Fill out the form in the Become a host section and we'll get back to you about listing your car."],
-  ["What if I need to cancel?","Cancel within 24 hours after you book for a full refund. After that, we refund your trip minus a $20 cancellation fee. Text us at (972) 994-6413 to cancel."],
+  ["What if I need to cancel?","Cancel within 24 hours after you book for a full refund. After that, we refund your trip minus a $20 cancellation fee. Cancel any time before pickup in My trips (in your account menu), or text us at (972) 994-6413."],
+  ["Can I extend my trip?","Yes, if the car is free. Open My trips, choose Extend trip and pick your new return date. We'll approve or decline it, usually quickly. Each extra day is that day's normal rate plus $25, plus tax, charged to your card once we approve."],
   ["Can I take the car out of Texas?","No. Our cars stay in Texas."],
   ["What happens if I return the car late?","There's a 30-minute grace period. After that, a $50 late fee applies, and if you're more than a day late, each extra day is charged at the daily rate. Fuel below the pickup level is charged at cost plus $30, and excessive dirt or pet hair is a $30 cleaning fee."]
 ];
@@ -1596,17 +1622,50 @@ function route(){
 addEventListener("hashchange", route);
 route();
 
-/* host sign-up: opens an email to the business with the details filled in */
-$("#host-form").addEventListener("submit", e => {
+/* host sign-up: sent straight to the business inbox (falls back to opening an email if the server can't be reached) */
+$("#host-form").addEventListener("submit", async e => {
   e.preventDefault();
   const v = id => $("#"+id).value.trim();
   let first = null;
   [["h-name","h-c-name"],["h-phone","h-c-phone"],["h-car","h-c-car"]].forEach(([i,c]) => { const bad = !v(i); $("#"+c).classList.toggle("bad", bad); if (bad && !first) first = i; });
   if (first) { $("#"+first).focus(); return; }
-  const body = `Name: ${v("h-name")}\nPhone: ${v("h-phone")}\nEmail: ${v("h-email")}\nCar: ${v("h-car")}\nMileage: ${v("h-miles")}\n\n${v("h-note")}`;
-  location.href = `mailto:${SITE.email}?subject=${encodeURIComponent("Host sign-up: " + v("h-car"))}&body=${encodeURIComponent(body)}`;
-  $("#host-ok").classList.add("show");
+  const err = $("#host-err"), btn = $("#h-send"), ok = $("#host-ok");
+  err.hidden = true; ok.classList.remove("show"); btn.disabled = true; btn.classList.add("loading");
+  const fields = { name: v("h-name"), phone: v("h-phone"), email: v("h-email"), car: v("h-car"), miles: v("h-miles"), note: v("h-note"), website: $("#h-website").value };
+  const byEmail = () => {
+    const body = `Name: ${fields.name}\nPhone: ${fields.phone}\nEmail: ${fields.email}\nCar: ${fields.car}\nMileage: ${fields.miles}\n\n${fields.note}`;
+    location.href = `mailto:${SITE.email}?subject=${encodeURIComponent("Host sign-up: " + fields.car)}&body=${encodeURIComponent(body)}`;
+    ok.textContent = "Your email app should open with your details filled in. Press send and we'll be in touch."; ok.classList.add("show");
+  };
+  try {
+    const r = await api("/host-application", { method: "POST", body: JSON.stringify(fields) }, 15000);
+    if (r.ok && r.data.emailed) { ok.textContent = "Thanks! We got your details and will reach out within a few days."; ok.classList.add("show"); $("#host-form").querySelectorAll("input,textarea").forEach(i => { i.value = ""; }); }
+    else if (r.ok) byEmail();
+    else if (r.status === 400 && r.data.field) { const c = { name: "h-c-name", phone: "h-c-phone", car: "h-c-car" }[r.data.field]; if (c) $("#"+c).classList.add("bad"); err.textContent = r.data.message; err.hidden = false; }
+    else if (r.status === 429) { err.textContent = r.data.message; err.hidden = false; }
+    else byEmail();
+  } catch { byEmail(); }
+  btn.disabled = false; btn.classList.remove("loading");
 });
+
+/* reviews from renters (lib/reviews.mjs) */
+async function loadReviews(){
+  let r; try { r = await api("/reviews", {}, 8000); } catch { return; }
+  if (!r.ok || !r.data.count) return;
+  const d = r.data, stars = n => Array.from({ length: 5 }, (_, i) => i < Math.round(n) ? STAR : STAR.replace('class="star"', 'class="star" style="fill:var(--line)"')).join("");
+  $("#rev-avg").textContent = d.average.toFixed(1);
+  $("#rev-stars").innerHTML = stars(d.average); $("#rev-stars").setAttribute("aria-label", `${d.average} out of 5 stars`);
+  $("#rev-count").textContent = `${d.count} review${d.count > 1 ? "s" : ""}`;
+  $("#rev-list").innerHTML = d.reviews.map(x => `<figure class="quote"><div class="stars" role="img" aria-label="${x.stars} out of 5 stars">${stars(x.stars)}</div>
+    ${x.text ? `<blockquote>${esc(x.text)}</blockquote>` : ""}<footer><cite>${esc(x.name)}</cite><span class="car-name">${esc(x.carName)} · ${new Date(x.at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span></footer></figure>`).join("");
+  $("#reviews").hidden = false;
+  // fold the site's reviews into each car's rating
+  let changed = false;
+  for (const c of CARS) { const s = d.byCar[c.id]; if (!s) continue;
+    const n0 = c.reviews || 0; c.rating = Math.round(((c.rating || 0) * n0 + s.average * s.count) / (n0 + s.count) * 10) / 10; c.reviews = n0 + s.count; changed = true; }
+  if (changed) renderFleet();
+}
+loadReviews();
 
 
 
@@ -1772,19 +1831,81 @@ async function openTrips(){
   if (r.status === 401) { $("#trips").close(); ACCOUNT.user = null; renderAccount(); openAuth({ then: openTrips }); return; }
   const trips = (r.data && r.data.trips) || [];
   if (!trips.length) { list.innerHTML = '<p style="padding:16px 0;margin:0">No trips yet. <a href="#fleet" id="trips-find">Find a car</a> to book your first one.</p>'; $("#trips-find").addEventListener("click", () => $("#trips").close()); return; }
-  list.innerHTML = trips.map(t => {
+  TRIPS = trips;
+  list.innerHTML = trips.map((t, i) => {
     const st = TRIP_STATUS[t.status] || ["", t.status], id = ID_STATUS[t.verification] || ID_STATUS.not_started;
     const q = `car=${encodeURIComponent(t.car)}&ref=${encodeURIComponent(t.ref)}`;
     const act = t.status === "confirmed" && !["verified", "review", "processing"].includes(t.verification) ? `<a class="btn btn-gold btn-sm" href="/verify.html?${q}">Verify your license</a>`
       : t.status === "hold" ? `<a class="btn btn-ink btn-sm" href="/checkout.html?${q}">Finish booking</a>` : "";
     const ph = t.photos || {};
+    const ended = t.review && t.review.canReview;
     const photoBtn = t.status !== "confirmed" ? "" : !ph.pickup ? `<a class="btn btn-line btn-sm" href="/inspect.html?${q}&stage=pickup">Pickup photos</a>`
       : !ph.return ? `<a class="btn btn-line btn-sm" href="/inspect.html?${q}&stage=return">Return photos</a>` : `<span class="pill ok">Photos done</span>`;
+    const x = t.extension, extPill = !x ? "" : x.status === "requested" ? `<span class="pill warn">Extension to ${nice(x.to)} requested</span><button class="linkish" type="button" data-act="withdraw" data-i="${i}">Withdraw</button>`
+      : x.status === "payment_failed" ? `<span class="pill bad">Extension: card declined, text us</span>`
+      : x.status === "declined" ? `<span class="pill bad">Extension declined</span>` : x.status === "approved" ? `<span class="pill ok">Extended</span>` : "";
+    const extBtn = t.canExtend ? `<button class="btn btn-line btn-sm" type="button" data-act="extend" data-i="${i}">Extend trip</button>` : "";
+    const revBtn = t.review && t.review.done ? `<span class="pill ok">You rated it ${"★".repeat(t.review.stars)}</span>` : ended ? `<a class="btn btn-gold btn-sm" href="/review.html?${q}">Leave a review</a>` : "";
+    const cancelBtn = t.cancel && t.cancel.allowed ? `<button class="linkish" type="button" data-act="cancel" data-i="${i}">Cancel trip</button>` : "";
+    const refund = t.cancellation ? `<p class="refund">${t.cancellation.refund ? `Refund: ${money(t.cancellation.refund / 100)}${t.cancellation.fee ? ` (after the ${money(t.cancellation.fee / 100)} cancellation fee)` : ""}${t.cancellation.status === "refund_failed" ? ". We're processing it." : ", on its way to your card."}` : "No refund was due."}</p>` : "";
+    const idBits = t.status === "confirmed" && !ended ? (t.idOverdue ? `<span class="pill bad">ID overdue</span>` : !["verified", "review", "processing"].includes(t.verification) && t.idDueAt ? `<span class="pill warn">Verify ID by ${new Date(t.idDueAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>` : `<span class="pill ${id[0]}">${id[1]}</span>`) : "";
     return `<div class="trip"><img src="images/${esc(t.photo)}-sm.webp" alt="" width="104" height="78"><div>
       <h4>${esc(t.carName)}</h4><p>${nice(t.from)}, ${tLabel(t.fromTime)} to ${nice(t.to)}, ${tLabel(t.toTime)}</p><p>${esc(t.location)}${t.total ? " · " + money(t.total / 100) : ""}</p>
-      <div class="acts"><span class="pill ${st[0]}">${st[1]}</span>${t.status === "confirmed" ? (t.idOverdue ? `<span class="pill bad">ID overdue</span>` : !["verified", "review", "processing"].includes(t.verification) && t.idDueAt ? `<span class="pill warn">Verify ID by ${new Date(t.idDueAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>` : `<span class="pill ${id[0]}">${id[1]}</span>`) : ""}${act}${photoBtn}</div></div></div>`;
+      <div class="acts"><span class="pill ${ended ? "" : st[0]}">${ended ? "Completed" : st[1]}</span>${idBits}${ended ? "" : act}${revBtn}${ended ? "" : photoBtn}${extPill}${extBtn}${cancelBtn}</div>${refund}<div class="trip-panel" id="tp-${i}" hidden></div></div></div>`;
   }).join("");
 }
+let TRIPS = [];
+const isoPlus = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+async function tripCall(body){ return api("/trip", { method: "POST", body: JSON.stringify(body) }, 20000); }
+function panelErr(p, msg){ let e = p.querySelector(".notice"); if (!e) { e = document.createElement("p"); e.className = "notice err"; e.setAttribute("role", "alert"); p.appendChild(e); } e.textContent = msg; }
+$("#trips-list").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const t = TRIPS[+b.dataset.i], p = $("#tp-" + b.dataset.i), base = { car: t.car, ref: t.ref };
+  if (b.dataset.act === "close") { p.hidden = true; return; }
+  if (b.dataset.act === "cancel") {
+    const c = t.cancel, extra = c.extensionRefund ? ` plus ${money(c.extensionRefund / 100)} for your extension` : "";
+    p.innerHTML = `<h5>Cancel this trip?</h5><p>${c.free ? `You'll get a full refund of ${money(c.refund / 100)}${extra}.` : `You'll get ${money(c.refund / 100)} back${extra}. A ${money(c.fee / 100)} cancellation fee applies because it's been more than 24 hours since you booked.`} Refunds go back to your card in 5 to 10 business days.</p>
+      <div class="acts"><button class="btn btn-ink btn-sm" type="button" data-act="cancel-yes" data-i="${b.dataset.i}">Yes, cancel trip</button><button class="linkish" type="button" data-act="close" data-i="${b.dataset.i}">Keep my trip</button></div>`;
+    p.hidden = false; return;
+  }
+  if (b.dataset.act === "cancel-yes") {
+    b.disabled = true;
+    const r = await tripCall({ ...base, action: "cancel", confirm: true }).catch(() => null);
+    if (r && r.ok) { $("#trips").close(); toast(r.data.totalRefund ? `Trip cancelled. ${money(r.data.totalRefund / 100)} is being refunded to your card.` : "Trip cancelled."); openTrips(); }
+    else { b.disabled = false; panelErr(p, (r && r.data.message) || "We couldn't cancel right now. Please try again or text us."); }
+    return;
+  }
+  if (b.dataset.act === "withdraw") {
+    const r = await tripCall({ ...base, action: "extend-withdraw" }).catch(() => null);
+    if (r && r.ok) { toast("Extension request withdrawn."); openTrips(); } else toast((r && r.data.message) || "That didn't work. Please try again.");
+    return;
+  }
+  if (b.dataset.act === "extend") {
+    p.innerHTML = `<h5>Extend your trip</h5><p>Pick your new return date. Same return time (${tLabel(t.toTime)}). Each extra day is that day's rate plus $25, plus tax. We'll approve or decline, then email you. You're only charged if we approve.</p>
+      <label for="ext-to-${b.dataset.i}">New return date</label><input type="date" id="ext-to-${b.dataset.i}" min="${isoPlus(t.to, 1)}" value="${isoPlus(t.to, 1)}">
+      <div class="rows" id="ext-q-${b.dataset.i}"></div>
+      <div class="acts"><button class="btn btn-gold btn-sm" type="button" data-act="extend-send" data-i="${b.dataset.i}" disabled>Send request</button><button class="linkish" type="button" data-act="close" data-i="${b.dataset.i}">Never mind</button></div>`;
+    p.hidden = false;
+    const inp = $("#ext-to-" + b.dataset.i), send = p.querySelector('[data-act="extend-send"]');
+    const price = async () => {
+      send.disabled = true; const box = $("#ext-q-" + b.dataset.i); box.innerHTML = '<div>Checking the price...</div>'; const old = p.querySelector(".notice"); if (old) old.remove();
+      const r = await tripCall({ ...base, action: "extend-quote", to: inp.value }).catch(() => null);
+      if (!r || !r.ok) { box.innerHTML = ""; panelErr(p, (r && r.data.message) || "We couldn't check that date. Please try again."); return; }
+      const q = r.data.quote, row = (k, v, c = "") => `<div class="${c}"><span>${k}</span><span>${v}</span></div>`;
+      box.innerHTML = (q.weekdays ? row(`${q.weekdays} Mon-Thu day${q.weekdays > 1 ? "s" : ""} at ${money(q.weekdayRate)}`, money(q.weekdays * q.weekdayRate)) : "")
+        + (q.weekends ? row(`${q.weekends} Fri-Sun day${q.weekends > 1 ? "s" : ""} at ${money(q.weekendRate)}`, money(q.weekends * q.weekendRate)) : "")
+        + row(`Extension fee (${q.days} x $25)`, money(q.fee / 100)) + row(`Tax (${q.taxPct}%)`, money(q.tax / 100)) + row("Total if approved", money(q.total / 100), "tot");
+      send.disabled = false;
+    };
+    inp.addEventListener("change", price); price(); return;
+  }
+  if (b.dataset.act === "extend-send") {
+    b.disabled = true;
+    const r = await tripCall({ ...base, action: "extend", to: $("#ext-to-" + b.dataset.i).value }).catch(() => null);
+    if (r && r.ok) { toast("Request sent. We'll email you when we answer."); openTrips(); }
+    else { b.disabled = false; panelErr(p, (r && r.data.message) || "We couldn't send that. Please try again."); }
+  }
+});
 $("#m-trips").addEventListener("click", openTrips);
 $("#trips-close").addEventListener("click", () => $("#trips").close());
 // links from emails and other pages: ?reset=..., ?login=1&next=/checkout.html?..., ?trips=1
