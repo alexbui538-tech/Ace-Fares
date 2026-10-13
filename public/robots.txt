@@ -4,6 +4,8 @@ Disallow: /checkout.html
 Disallow: /verify.html
 Disallow: /inspect.html
 Disallow: /review.html
+Disallow: /compare.html
+Disallow: /pay.html
 Disallow: /api/
 
 Sitemap: https://acefaresrental.netlify.app/sitemap.xml

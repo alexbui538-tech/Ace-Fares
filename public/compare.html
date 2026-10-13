@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Compare photos | Ace Fares</title>
+<link rel="icon" href="images/logo.png">
+<style>
+:root{--ivory:#FBF8F1;--paper:#fff;--cream:#F3ECDD;--line:#E4DCCB;--ink:#15130F;--ink-2:#514A3D;--ink-3:#6F6757;--gold:#AF8135;--gold-bright:#DAA336;--navy:#0F1A34;--bad:#8A2D14;--ok:#2F6B3A}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ivory);color:var(--ink);font:400 15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--navy);color:#F4EFE4;padding:14px 20px;display:flex;align-items:center;gap:14px}
+header img{height:40px;background:var(--ivory);border-radius:6px;padding:3px}
+header h1{font:600 1.1rem system-ui;margin:0}
+header a{margin-left:auto;color:var(--gold-bright);text-decoration:none;font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+.key{max-width:380px;margin:40px auto;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:10px}
+input{min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;width:100%}
+button{min-height:44px;border-radius:10px;border:0;padding:0 16px;font:600 15px system-ui;cursor:pointer;background:var(--ink);color:var(--ivory)}
+.err{color:var(--bad)}
+.trip{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.trip h2{margin:0 0 4px;font-size:1.2rem}
+.readings{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.reading{background:var(--ivory);border-radius:10px;padding:10px 12px}
+.reading b{display:block}
+.reading small{color:var(--ink-3)}
+.diff{margin-top:10px;font-weight:600}
+.row{display:grid;grid-template-columns:160px 1fr 1fr;gap:12px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
+.row h3{margin:0;font-size:1rem}
+.cols-head{display:grid;grid-template-columns:160px 1fr 1fr;gap:12px;font-weight:700;color:var(--ink-2);position:sticky;top:0;background:var(--ivory);padding:8px 0;z-index:2}
+.shot{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.shot img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--cream);cursor:zoom-in}
+.shot .cap{padding:6px 10px;font-size:.82rem;color:var(--ink-3)}
+.none{border:1.5px dashed var(--line);border-radius:12px;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:.9rem;text-align:center;padding:10px}
+.extra{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+dialog{border:0;padding:0;background:transparent;max-width:96vw;max-height:94vh}
+dialog::backdrop{background:rgba(0,0,0,.85)}
+dialog img{max-width:96vw;max-height:90vh;display:block;border-radius:8px}
+dialog p{color:#fff;margin:6px 0 0;text-align:center}
+@media (max-width:640px){.row,.cols-head{grid-template-columns:1fr 1fr}.row h3,.cols-head .lbl{grid-column:1/-1}.readings{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><img src="images/logo@2x.png" alt="Ace Fares"><h1>Pickup vs. return photos</h1><a href="/admin.html">Bookings</a></header>
+<main>
+  <form class="key" id="keyform" hidden><b>Owner sign-in</b><label for="key">Admin key</label><input id="key" type="password" autocomplete="current-password"><p class="err" id="key-err"></p><button>Show photos</button></form>
+  <p id="loading">Loading photos...</p>
+  <p class="err" id="err" hidden></p>
+  <div id="page" hidden>
+    <div class="trip" id="trip"></div>
+    <div class="cols-head"><span class="lbl"></span><span>Pickup</span><span>Return</span></div>
+    <div id="rows"></div>
+  </div>
+</main>
+<dialog id="zoom"><img id="zoom-img" alt=""><p id="zoom-cap"></p></dialog>
+<script>
+const $ = s => document.querySelector(s);
+const Q = new URLSearchParams(location.search), CAR = Q.get("car") || "", REF = Q.get("ref") || "";
+let KEY = ""; try { KEY = sessionStorage.getItem("af-admin") || ""; } catch {}
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const when = iso => iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+const q = `car=${encodeURIComponent(CAR)}&ref=${encodeURIComponent(REF)}`;
+
+function askKey(msg){ $("#loading").hidden = true; $("#keyform").hidden = false; $("#key-err").textContent = msg || ""; }
+$("#keyform").addEventListener("submit", e => { e.preventDefault(); KEY = $("#key").value.trim(); try { sessionStorage.setItem("af-admin", KEY); } catch {} $("#keyform").hidden = true; $("#loading").hidden = false; load(); });
+
+async function img(key){
+  const r = await fetch(`/api/inspection/img?${q}&key=${encodeURIComponent(key)}`, { headers: { "x-admin-key": KEY } });
+  return r.ok ? URL.createObjectURL(await r.blob()) : "";
+}
+// the host's photos if they took them, otherwise the renter's
+const side = (st, shot) => { for (const role of ["host", "renter"]) { const v = st[role] && st[role].shots && st[role].shots[shot]; if (v && (!Array.isArray(v) || v.length)) return { role, photos: Array.isArray(v) ? v : [v] }; } return null; };
+const done = st => (st.host && st.host.done) || (st.renter && st.renter.done) || null;
+
+async function load(){
+  if (!KEY) return askKey();
+  let r, d;
+  try { r = await fetch(`/api/inspection?${q}`, { headers: { "x-admin-key": KEY } }); d = await r.json(); } catch { $("#loading").hidden = true; $("#err").hidden = false; $("#err").textContent = "Couldn't load the photos. Check your connection."; return; }
+  if (r.status === 401 || d.role !== "host") { KEY = ""; try { sessionStorage.removeItem("af-admin"); } catch {} return askKey("That admin key isn't right."); }
+  if (!r.ok) { $("#loading").hidden = true; $("#err").hidden = false; $("#err").textContent = d.message || "Couldn't load the photos."; return; }
+  const P = d.stages.pickup, R = d.stages.return, p = done(P), rr = done(R);
+  const rd = (label, x) => `<div class="reading"><small>${label}</small><b>${x ? `${Number(x.odometer).toLocaleString()} miles · fuel ${esc(x.fuel)}` : "Not done yet"}</b>${x ? `<small>${esc(x.by || "")} · ${when(x.completedAt)}${x.notes ? ` · "${esc(x.notes)}"` : ""}</small>` : ""}</div>`;
+  $("#trip").innerHTML = `<h2>${esc(d.trip.carName)}</h2><div>${esc(d.trip.renter)} · ${esc(d.trip.from)} to ${esc(d.trip.to)} · ${esc(d.trip.location || "")}</div>
+    <div class="readings">${rd("At pickup", p)}${rd("At return", rr)}</div>
+    ${p && rr ? `<p class="diff">${(rr.odometer - p.odometer).toLocaleString()} miles driven · fuel ${esc(p.fuel)} → ${esc(rr.fuel)}</p>` : ""}`;
+  const rows = [];
+  for (const s of d.shots) {
+    const a = side(P, s.id), b = side(R, s.id);
+    if (s.multiple) {
+      const cell = x => x ? `<div class="extra">${x.photos.map(ph => `<div class="shot"><img data-key="${esc(ph.key)}" alt="${esc(s.label)}"><div class="cap">${x.role === "host" ? "You" : "Renter"} · ${when(ph.takenAt)}</div></div>`).join("")}</div>` : `<div class="none">No close-ups</div>`;
+      rows.push(`<div class="row"><h3>${esc(s.label)}</h3>${cell(a)}${cell(b)}</div>`);
+    } else {
+      const cell = x => x ? `<div class="shot"><img data-key="${esc(x.photos[0].key)}" alt="${esc(s.label)}"><div class="cap">${x.role === "host" ? "You" : "Renter"} · ${when(x.photos[0].takenAt)}</div></div>` : `<div class="none">No photo</div>`;
+      rows.push(`<div class="row"><h3>${esc(s.label)}</h3>${cell(a)}${cell(b)}</div>`);
+    }
+  }
+  $("#rows").innerHTML = rows.join("");
+  $("#loading").hidden = true; $("#page").hidden = false;
+  for (const el of document.querySelectorAll("img[data-key]")) img(el.dataset.key).then(u => { if (u) el.src = u; });
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("img[data-key]"); if (!t || !t.src) return;
+  $("#zoom-img").src = t.src; $("#zoom-cap").textContent = `${t.alt} · ${t.nextElementSibling ? t.nextElementSibling.textContent : ""}`; $("#zoom").showModal();
+});
+$("#zoom").addEventListener("click", () => $("#zoom").close());
+if (!CAR || !REF) { $("#loading").hidden = true; $("#err").hidden = false; $("#err").textContent = "Open this page from the Compare button on your bookings page."; }
+else load();
+</script>
+</body>
+</html>

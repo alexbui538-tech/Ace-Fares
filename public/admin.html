@@ -67,6 +67,35 @@ dialog label.radio input{width:auto;min-height:0}
 .rev{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:12px;justify-content:space-between;align-items:flex-start}
 .rev.hidden{opacity:.55}
 .rev p{margin:2px 0}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:0 0 18px}
+.tab{background:transparent;color:var(--ink-2);border-radius:10px 10px 0 0;min-height:44px;padding:0 14px;border-bottom:3px solid transparent}
+.tab.on{color:var(--ink);border-bottom-color:var(--gold)}
+.badge{display:inline-block;background:var(--bad);color:#fff;border-radius:999px;font-size:.75rem;padding:0 7px;margin-left:4px}
+.lead{color:var(--ink-2);max-width:80ch;margin:0 0 16px}
+.hint{color:var(--ink-3);font-size:.88rem}
+button.sm,.line.sm{min-height:34px;padding:0 12px;font-size:.85rem}
+tr.blocked td{background:#F6F2EA;color:var(--ink-2)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.vcard{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;align-content:start}
+.vcard h3{margin:0;font-size:1.1rem}.vcard h3 small{color:var(--ink-3);font-weight:500}
+.vcard .miles{margin:0}.vcard .miles small{display:block;color:var(--ink-3)}
+.vcard .items{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.vcard .items li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.vcard .items small{color:var(--ink-3)}
+.vcard .items li>span:first-child{white-space:nowrap}.vcard .items li>span:nth-child(2){text-align:right}
+.vcard summary{cursor:pointer;font-weight:600;min-height:36px;display:flex;align-items:center}
+.vform{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 0 4px}
+.vform label{display:grid;gap:4px;font-size:.85rem;color:var(--ink-2)}
+.vform .wide{grid-column:1/-1}
+.vform select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 10px;font:inherit}
+.vform button{grid-column:1/-1}
+.vlog{margin:4px 0 0;padding-left:18px;font-size:.88rem;color:var(--ink-2)}
+.ptable td{white-space:nowrap}.ptable input{width:90px;min-height:40px;display:inline-block}.ptable small{display:block}.ptable .cur{margin-right:4px;color:var(--ink-3)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:8px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.tile span{display:block;color:var(--ink-3);font-size:.82rem}.tile b{font-size:1.3rem}
+.err{color:var(--bad)}
+@media (max-width:560px){.vform{grid-template-columns:1fr}.bar{gap:8px}}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--ivory);padding:10px 16px;border-radius:10px}
 </style>
 </head>
@@ -98,7 +127,7 @@ async function adminTrip(body){
   return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
 }
 
-function toast(m){ const t = document.createElement("div"); t.className = "toast"; t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }
+function toast(m){ document.querySelectorAll(".toast").forEach(x => x.remove()); const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 4500); }
 
 async function load(){
   const r = await fetch("/api/admin/bookings", { headers: { "x-admin-key": KEY } });
@@ -110,7 +139,7 @@ function renderLogin(err){
   try { if (err) sessionStorage.setItem("af-admin-err", err); } catch {}
   location.reload();
 }
-const dollars = c => "$" + (c / 100).toFixed(2);
+const dollars = c => (c < 0 ? "-$" : "$") + (Math.abs(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function photoCell(car, b){
   if (b.status !== "confirmed") return "";
   const i = b.inspection || {}, line = (st, label) => {
@@ -119,7 +148,7 @@ function photoCell(car, b){
     return `<small>${label}: ${who ? `${who}${r ? ` · ${Number(r.odometer).toLocaleString()} mi, fuel ${esc(r.fuel)}` : ""}` : "not yet"}</small>`;
   };
   const miles = i.pickup && i.return ? ((i.return.host || i.return.renter).odometer - (i.pickup.host || i.pickup.renter).odometer) : null;
-  return `<a class="pill" href="/inspect.html?car=${car}&ref=${encodeURIComponent(b.id)}&as=host&stage=${i.pickup && (i.pickup.host) ? "return" : "pickup"}">Photos</a>${line("pickup", "Pickup")}${line("return", "Return")}${miles != null ? `<small><b>${miles.toLocaleString()} miles driven</b></small>` : ""}`;
+  return `<a class="pill" href="/inspect.html?car=${car}&ref=${encodeURIComponent(b.id)}&as=host&stage=${i.pickup && (i.pickup.host) ? "return" : "pickup"}">Photos</a>${i.pickup && i.return ? ` <a class="pill" href="/compare.html?car=${car}&ref=${encodeURIComponent(b.id)}">Compare</a>` : ""}${line("pickup", "Pickup")}${line("return", "Return")}${miles != null ? `<small><b>${miles.toLocaleString()} miles driven</b></small>` : ""}`;
 }
 function idCell(b){
   if (b.status !== "confirmed") return "";
@@ -162,35 +191,68 @@ async function depositAction(btn){
   if (r.ok) { toast({ capture: "Collected. The rest of the hold is released.", release: "Hold released.", keep: "Hold kept: it won't auto-release.", unkeep: "Hold will auto-release after return.", place: data.deposit && data.deposit.status === "held" ? "Hold placed." : "Hold failed again." }[action]); load(); }
   else { btn.disabled = false; toast(data.message || "Couldn't do that. Try again."); }
 }
+const pendingX = x => x && (x.status === "requested" || x.status === "payment_failed");
 function changesCell(car, b){
   let h = "";
   const x = b.extension;
-  if (x && (x.status === "requested" || x.status === "payment_failed")) {
+  if (pendingX(x)) {
     h += `<div class="ext"><b>${x.status === "requested" ? "Wants to extend" : "Extension: card declined"}</b><small>to ${nice(x.to)} ${t12(x.toTime || b.toTime)} · ${x.quote.days} day${x.quote.days > 1 ? "s" : ""} · ${money(x.quote.total)}</small>${x.error ? `<small class="warn">${esc(x.error)}</small>` : ""}
       <div class="acts"><button class="go" data-ext="extend-approve" data-car="${car}" data-id="${esc(b.id)}" data-amt="${x.quote.total}">${x.status === "requested" ? "Approve" : "Try card again"}</button><button data-ext="extend-decline" data-car="${car}" data-id="${esc(b.id)}">Decline</button></div></div>`;
   }
+  const c = b.change;
+  if (pendingX(c)) {
+    const q = c.quote, d = q.diff;
+    h += `<div class="ext"><b>${c.status === "requested" ? "Wants new dates" : "Date change: card declined"}</b><small>${nice(c.from)} ${t12(c.fromTime)} to ${nice(c.to)} ${t12(c.toTime)}</small><small>${d > 0 ? `Charge ${money(d)} more` : d < 0 ? `Refund ${money(-d)}` : "Same price"} (new price ${money(q.newTotal)})</small>${c.error ? `<small class="warn">${esc(c.error)}</small>` : ""}
+      <div class="acts"><button class="go" data-chg="change-approve" data-car="${car}" data-id="${esc(b.id)}" data-diff="${d}">${c.status === "requested" ? "Approve" : "Try card again"}</button><button data-chg="change-decline" data-car="${car}" data-id="${esc(b.id)}">Decline</button></div></div>`;
+  }
   for (const e of b.extensions || []) h += `<small>Extended ${nice(e.from)} → ${nice(e.to)} · ${money(e.amount)}</small>`;
+  for (const a of b.adjustments || []) h += `<small>Dates changed${a.was ? ` from ${nice(a.was.from)}` : ""} · ${a.amount >= 0 ? "charged " + money(a.amount) : "refunded " + money(-a.amount)}</small>`;
   if (b.cancellation) h += `<small>${b.cancellation.by === "renter" ? "Renter cancelled" : "Cancelled"}${b.cancellation.fee ? ` · fee ${money(b.cancellation.fee)}` : ""} · refund ${money((b.cancellation.refund || 0) + (b.cancellation.extensionRefund || 0)) || "$0"}${b.cancellation.status === "refund_failed" ? `</small><small class="warn">Refund failed: refund in Stripe` : ""}</small>`;
   const cs = b.charges || [];
-  if (cs.length) h += `<ul>${cs.map(c => `<li>${esc(c.label)} ${money(c.total)}${c.status === "failed" ? ` <span class="warn">failed</span>` : c.source === "deposit" ? " (deposit)" : ""}</li>`).join("")}</ul>`;
+  if (cs.length) h += `<ul>${cs.map(x => `<li>${esc(x.label)} ${money(x.total)}${x.status === "failed" ? ` <span class="warn">unpaid</span>${x.linkSentAt ? " · link sent" : ""} <button data-paylink="${esc(x.id)}" data-car="${car}" data-id="${esc(b.id)}">${x.linkSentAt ? "Resend" : "Send"} payment link</button>` : x.paidVia === "link" ? " (paid by link)" : x.source === "deposit" ? " (deposit)" : ""}</li>`).join("")}</ul>`;
   if (b.status === "confirmed" || b.status === "cancelled") h += `<div class="acts"><button data-charge="1" data-car="${car}" data-id="${esc(b.id)}">Add charge…</button></div>`;
   if (b.reviewStars) h += `<small>Reviewed: ${"★".repeat(b.reviewStars)}</small>`;
   return h;
 }
+let TAB = "bookings"; try { TAB = sessionStorage.getItem("af-tab") || "bookings"; } catch {}
+const TABS = [["bookings", "Bookings"], ["vehicles", "Vehicles"], ["prices", "Prices"], ["reports", "Reports & export"], ["reviews", "Reviews"]];
 function render(data){
   DATA = data;
+  const app = document.getElementById("app");
+  const pendingCount = Object.keys(CARS).reduce((n, c) => n + (data[c] || []).filter(b => b.status === "confirmed" && (pendingX(b.extension) || pendingX(b.change))).length, 0);
+  app.innerHTML = `<nav class="tabs" role="tablist">${TABS.map(([k, l]) => `<button role="tab" class="tab ${TAB === k ? "on" : ""}" data-tab="${k}" aria-selected="${TAB === k}">${l}${k === "bookings" && pendingCount ? ` <span class="badge">${pendingCount}</span>` : ""}</button>`).join("")}</nav><div id="pane"></div>`;
+  app.querySelectorAll("[data-tab]").forEach(t => t.onclick = () => { TAB = t.dataset.tab; try { sessionStorage.setItem("af-tab", TAB); } catch {} render(DATA); });
+  ({ bookings: renderBookings, vehicles: renderVehicles, prices: renderPrices, reports: renderReports, reviews: renderReviews }[TAB] || renderBookings)(data);
+}
+function renderReviews(data){
+  const pane = document.getElementById("pane");
+  const revs = (data._reviews || []).slice().sort((a, b) => (a.at < b.at ? 1 : -1));
+  pane.innerHTML = `<h2 class="car">Reviews</h2>${revs.length ? `<div class="revs">${revs.map(r => `<div class="rev ${r.hidden ? "hidden" : ""}"><div><b>${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</b> ${esc(r.name)} · ${esc(r.carName)} · ${new Date(r.at).toLocaleDateString()}${r.text ? `<p>${esc(r.text)}</p>` : ""}${r.hidden ? "<small>Hidden from the website</small>" : ""}</div>
+    <button class="line" style="min-height:34px;padding:0 12px" data-rev="${r.hidden ? "review-show" : "review-hide"}" data-id="${esc(r.id)}">${r.hidden ? "Show" : "Hide"}</button></div>`).join("")}</div>` : `<p class="empty">No reviews yet. Renters are emailed a review link a couple of hours after each trip.</p>`}`;
+  pane.querySelectorAll("button[data-rev]").forEach(btn => btn.onclick = async () => {
+    btn.disabled = true; const r = await adminTrip({ action: btn.dataset.rev, id: btn.dataset.id });
+    if (r.ok) { toast(btn.dataset.rev === "review-hide" ? "Review hidden from the website." : "Review is showing on the website."); load(); } else { btn.disabled = false; toast("Couldn't do that. Try again."); }
+  });
+}
+function renderBookings(data){
+  const pane = document.getElementById("pane");
   const today = new Date().toISOString().slice(0, 10);
-  let html = `<div class="bar"><span class="grow">Upcoming paid bookings and anything in checkout. Refunds are done in your Stripe dashboard. Deposit holds release on their own 72 hours after return unless you keep or collect them.</span>
+  let html = `<div class="bar"><span class="grow">Upcoming paid bookings, blocked dates and anything in checkout. Deposit holds release on their own 72 hours after return unless you keep or collect them.</span>
     <label><input type="checkbox" id="all" ${showAll ? "checked" : ""}> Show past and cancelled</label>
-    <label class="switch" title="When off, renters can't request extensions in My trips"><input type="checkbox" id="ext-on" ${data._settings && data._settings.extensionsAllowed ? "checked" : ""}> Allow trip extension requests</label>
-    <button class="line" id="refresh">Refresh</button><button class="danger" id="reset">Clear all bookings</button><button class="line" id="out">Sign out</button></div>`;
+    <label class="switch" title="When off, renters can't request extensions or date changes in My trips"><input type="checkbox" id="ext-on" ${data._settings && data._settings.extensionsAllowed ? "checked" : ""}> Allow extension &amp; date-change requests</label>
+    <button class="line" id="block-open">Block dates…</button><button class="line" id="refresh">Refresh</button><button class="danger" id="reset">Clear all bookings</button><button class="line" id="out">Sign out</button></div>`;
   for (const [car, name] of Object.entries(CARS)) {
-    const list = (data[car] || []).filter(b => showAll || ((b.status === "confirmed" || b.status === "conflict" || (b.status === "hold" && Date.parse(b.expiresAt) > Date.now())) && b.to >= today))
+    const list = (data[car] || []).filter(b => b.status !== "unblocked" && (showAll || ((b.status === "confirmed" || b.status === "conflict" || b.status === "blocked" || (b.status === "hold" && Date.parse(b.expiresAt) > Date.now())) && b.to >= today)))
       .sort((a, b) => a.from < b.from ? -1 : 1);
     html += `<h2 class="car">${name}</h2><div class="wrap">`;
     if (!list.length) { html += `<p class="empty">No bookings to show.</p></div>`; continue; }
-    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>License check</th><th>Photos</th><th>Deposit hold</th><th>Extensions &amp; charges</th><th></th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Dates</th><th>Renter</th><th>Where</th><th>Paid</th><th>Status</th><th>License check</th><th>Photos</th><th>Deposit hold</th><th>Changes &amp; charges</th><th></th></tr></thead><tbody>`;
     for (const b of list) {
+      if (b.status === "blocked") {
+        html += `<tr class="blocked"><td>${nice(b.from)}<small>through ${nice(b.to)}</small></td><td colspan="8"><span class="pill">Blocked</span> ${esc(b.note || "Not available for booking")}</td>
+          <td><button class="line sm" data-unblock="${esc(b.id)}" data-car="${car}">Remove block</button></td></tr>`;
+        continue;
+      }
       const c = b.customer || {};
       const canCancel = b.status === "confirmed" || b.status === "hold" || b.status === "conflict";
       html += `<tr><td>${nice(b.from)} ${t12(b.fromTime)}<small>to ${nice(b.to)} ${t12(b.toTime)}</small></td>
@@ -206,20 +268,13 @@ function render(data){
     }
     html += `</tbody></table></div>`;
   }
-  const revs = (data._reviews || []).slice().sort((a, b) => (a.at < b.at ? 1 : -1));
-  html += `<h2 class="car">Reviews</h2>${revs.length ? `<div class="revs">${revs.map(r => `<div class="rev ${r.hidden ? "hidden" : ""}"><div><b>${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</b> ${esc(r.name)} · ${esc(r.carName)} · ${new Date(r.at).toLocaleDateString()}${r.text ? `<p>${esc(r.text)}</p>` : ""}${r.hidden ? "<small>Hidden from the website</small>" : ""}</div>
-    <button class="line" style="min-height:34px;padding:0 12px" data-rev="${r.hidden ? "review-show" : "review-hide"}" data-id="${esc(r.id)}">${r.hidden ? "Show" : "Hide"}</button></div>`).join("")}</div>` : `<p class="empty">No reviews yet. Renters are emailed a review link a couple of hours after each trip.</p>`}`;
-  const app = document.getElementById("app"); app.innerHTML = html;
+  pane.innerHTML = html;
   document.getElementById("ext-on").onchange = async e => {
     const r = await adminTrip({ action: "settings", extensionsAllowed: e.target.checked });
-    if (r.ok) toast(r.data.settings.extensionsAllowed ? "Renters can request extensions in My trips. You approve each one." : "Extension requests are off. Renters are asked to text you.");
+    if (r.ok) toast(r.data.settings.extensionsAllowed ? "Renters can request extensions and date changes in My trips. You approve each one." : "Extension and date-change requests are off. Renters are asked to text you.");
     else { e.target.checked = !e.target.checked; toast("Couldn't save that. Try again."); }
   };
-  app.querySelectorAll("button[data-rev]").forEach(btn => btn.onclick = async () => {
-    btn.disabled = true; const r = await adminTrip({ action: btn.dataset.rev, id: btn.dataset.id });
-    if (r.ok) { toast(btn.dataset.rev === "review-hide" ? "Review hidden from the website." : "Review is showing on the website."); load(); } else { btn.disabled = false; toast("Couldn't do that. Try again."); }
-  });
-  app.querySelectorAll("button[data-ext]").forEach(btn => btn.onclick = async () => {
+  pane.querySelectorAll("button[data-ext]").forEach(btn => btn.onclick = async () => {
     const approve = btn.dataset.ext === "extend-approve";
     if (approve && !confirm(`Approve this extension and charge the renter's card ${money(+btn.dataset.amt)}?`)) return;
     if (!approve && !confirm("Decline this extension? The renter is emailed and the extra days open up again.")) return;
@@ -227,11 +282,29 @@ function render(data){
     if (r.ok) { toast(approve ? "Approved and charged. The renter has been emailed." : "Declined. The renter has been emailed."); load(); }
     else { toast(r.data.message || "Couldn't do that. Try again."); load(); }
   });
-  app.querySelectorAll("button[data-charge]").forEach(btn => btn.onclick = () => openCharge(btn.dataset.car, btn.dataset.id));
+  pane.querySelectorAll("button[data-chg]").forEach(btn => btn.onclick = async () => {
+    const approve = btn.dataset.chg === "change-approve", d = +btn.dataset.diff;
+    if (approve && !confirm(`Approve the new dates?${d > 0 ? ` The renter's card is charged ${money(d)}.` : d < 0 ? ` The renter is refunded ${money(-d)}.` : ""}`)) return;
+    if (!approve && !confirm("Decline the date change? The renter keeps their original dates and is emailed.")) return;
+    btn.disabled = true; const r = await adminTrip({ action: btn.dataset.chg, car: btn.dataset.car, id: btn.dataset.id });
+    if (r.ok) { toast(approve ? "New dates approved. The renter has been emailed." : "Declined. The renter has been emailed."); load(); }
+    else { toast(r.data.message || "Couldn't do that. Try again."); load(); }
+  });
+  pane.querySelectorAll("button[data-paylink]").forEach(btn => btn.onclick = async () => {
+    btn.disabled = true; const r = await adminTrip({ action: "pay-link", car: btn.dataset.car, id: btn.dataset.id, chargeId: btn.dataset.paylink });
+    toast(r.ok ? "Payment link emailed to the renter." : (r.data.message || "Couldn't send it. Try again.")); load();
+  });
+  pane.querySelectorAll("button[data-unblock]").forEach(btn => btn.onclick = async () => {
+    if (!confirm("Remove this block? Those dates become bookable again.")) return;
+    btn.disabled = true; const r = await tools({ action: "unblock", car: btn.dataset.car, id: btn.dataset.unblock });
+    if (r.ok) { toast("Block removed. The dates are open again."); load(); } else { btn.disabled = false; toast(r.data.message || "Couldn't do that. Try again."); }
+  });
+  pane.querySelectorAll("button[data-charge]").forEach(btn => btn.onclick = () => openCharge(btn.dataset.car, btn.dataset.id));
+  document.getElementById("block-open").onclick = openBlock;
   document.getElementById("all").onchange = e => { showAll = e.target.checked; render(data); };
   document.getElementById("refresh").onclick = load;
   document.getElementById("reset").onclick = async () => {
-    const typed = prompt("This empties every car's calendar so all dates are open again, and releases any deposit holds still on cards.\nNothing is deleted: the bookings are saved in an archive.\nRefunds aren't made automatically.\n\nType RESET to confirm:");
+    const typed = prompt("This empties every car's calendar so all dates are open again (including blocked dates), and releases any deposit holds still on cards.\nNothing is deleted: the bookings are saved in an archive.\nRefunds aren't made automatically.\n\nType RESET to confirm:");
     if (typed !== "RESET") return;
     const r = await fetch("/api/admin/reset", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify({ confirm: "RESET" }) });
     const d = await r.json().catch(() => ({}));
@@ -239,13 +312,182 @@ function render(data){
     else toast(d.message || "That didn't work. Please try again.");
   };
   document.getElementById("out").onclick = () => { try { sessionStorage.removeItem("af-admin"); } catch {} location.reload(); };
-  app.querySelectorAll("button[data-dep]").forEach(btn => btn.onclick = () => depositAction(btn));
-  app.querySelectorAll("button.danger[data-id]").forEach(btn => btn.onclick = async () => {
-    if (!confirm("Cancel this booking? The dates open up again. If they paid, refund them in Stripe.")) return;
-    btn.disabled = true;
-    const r = await fetch("/api/admin/cancel", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify({ car: btn.dataset.car, id: btn.dataset.id }) });
-    if (r.ok) { toast("Booking cancelled. The dates are open again."); load(); } else { btn.disabled = false; toast("Couldn't cancel. Try again."); }
+  pane.querySelectorAll("button[data-dep]").forEach(btn => btn.onclick = () => depositAction(btn));
+  pane.querySelectorAll("button.danger[data-id]").forEach(btn => btn.onclick = () => openCancel(btn.dataset.car, btn.dataset.id));
+}
+
+/* cancel with a refund choice */
+const cxl = document.createElement("dialog"); cxl.id = "cancel-dlg";
+document.body.appendChild(cxl);
+function openCancel(car, id){
+  const b = (DATA[car] || []).find(x => x.id === id); if (!b) return;
+  if (b.status === "hold") {
+    if (!confirm("Cancel this unpaid checkout? The dates open up again.")) return;
+    fetch("/api/admin/cancel", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify({ car, id }) })
+      .then(r => { toast(r.ok ? "Checkout cancelled. The dates are open again." : "Couldn't cancel. Try again."); load(); });
+    return;
+  }
+  const paid = b.amountPaid || b.total || 0;
+  const extra = [...(b.extensions || []), ...(b.adjustments || [])].filter(e => e.paymentIntentId && e.amount > 0).reduce((a, e) => a + e.amount, 0);
+  const late = Date.now() > Date.parse(b.confirmedAt || b.createdAt) + 24 * 3600e3;
+  const policy = paid - (late ? Math.min(paid, 2000) : 0) + extra;
+  cxl.innerHTML = `<form method="dialog"><h3>Cancel this trip?</h3><p class="hint">${esc((b.customer && b.customer.name) || "Renter")} · ${CARS[car]} · ${nice(b.from)} to ${nice(b.to)} · paid ${money(paid + extra)}</p>
+    <p style="margin:0">The dates open up again, any deposit hold is released, and the renter is emailed. Choose the refund:</p>
+    <label class="radio"><input type="radio" name="rf" value="policy" checked> Cancellation policy: refund ${money(policy) || "$0.00"}${late ? " (keeps the $20 fee)" : " (full refund, booked under 24 hours ago)"}</label>
+    <label class="radio"><input type="radio" name="rf" value="full"> Full refund: ${money(paid + extra) || "$0.00"}</label>
+    <label class="radio"><input type="radio" name="rf" value="none"> No refund</label>
+    <p class="err" id="cx-err" role="alert"></p>
+    <div class="row"><button type="button" class="line" id="cx-no">Keep the trip</button><button type="button" id="cx-go" style="background:var(--bad)">Cancel trip</button></div></form>`;
+  cxl.showModal();
+  cxl.querySelector("#cx-no").onclick = () => cxl.close();
+  cxl.querySelector("#cx-go").onclick = async e => {
+    e.target.disabled = true;
+    const refund = cxl.querySelector('input[name="rf"]:checked').value;
+    const r = await adminTrip({ action: "cancel", car, id, refund });
+    if (r.ok) { cxl.close(); toast(r.data.refundFailed ? "Cancelled, but the refund didn't go through. Refund it in Stripe." : r.data.totalRefund ? `Cancelled and ${money(r.data.totalRefund)} refunded. The renter has been emailed.` : "Cancelled with no refund. The renter has been emailed."); load(); }
+    else { e.target.disabled = false; cxl.querySelector("#cx-err").textContent = r.data.message || "Couldn't cancel. Try again."; }
+  };
+}
+
+/* block dates */
+const blk = document.createElement("dialog"); blk.id = "block-dlg";
+document.body.appendChild(blk);
+function openBlock(){
+  const t = new Date().toISOString().slice(0, 10);
+  blk.innerHTML = `<form method="dialog"><h3>Block dates</h3><p class="hint">Renters can't book the car on these days. Use it for repairs, maintenance or personal use.</p>
+    <label for="bk-car">Car</label><select id="bk-car">${Object.entries(CARS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+    <div style="display:flex;gap:10px"><div style="flex:1"><label for="bk-from">From</label><input type="date" id="bk-from" min="${t}" value="${t}"></div><div style="flex:1"><label for="bk-to">Through</label><input type="date" id="bk-to" min="${t}" value="${t}"></div></div>
+    <label for="bk-note">Note (only you see it)</label><input id="bk-note" maxlength="200" placeholder="e.g. Oil change and tire rotation">
+    <p class="err" id="bk-err" role="alert"></p>
+    <div class="row"><button type="button" class="line" id="bk-no">Cancel</button><button type="button" id="bk-go">Block these dates</button></div></form>`;
+  blk.showModal();
+  blk.querySelector("#bk-from").onchange = e => { const to = blk.querySelector("#bk-to"); to.min = e.target.value; if (to.value < e.target.value) to.value = e.target.value; };
+  blk.querySelector("#bk-no").onclick = () => blk.close();
+  blk.querySelector("#bk-go").onclick = async e => {
+    e.target.disabled = true;
+    const r = await tools({ action: "block", car: blk.querySelector("#bk-car").value, from: blk.querySelector("#bk-from").value, to: blk.querySelector("#bk-to").value, note: blk.querySelector("#bk-note").value });
+    if (r.ok) { blk.close(); toast("Dates blocked. Renters can't book them."); load(); }
+    else { e.target.disabled = false; blk.querySelector("#bk-err").textContent = r.data.message || "Couldn't block those dates."; }
+  };
+}
+
+/* owner tools API */
+async function tools(body){
+  const r = await fetch("/api/admin/tools", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": KEY }, body: JSON.stringify(body) });
+  return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
+}
+async function toolsGet(q){
+  const r = await fetch("/api/admin/tools?" + q, { headers: { "x-admin-key": KEY } });
+  return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
+}
+async function download(q, fallback){
+  const r = await fetch("/api/admin/tools?" + q, { headers: { "x-admin-key": KEY } });
+  if (!r.ok) { const d = await r.json().catch(() => ({})); return toast(d.message || "Couldn't download that. Try again."); }
+  const name = ((r.headers.get("content-disposition") || "").match(/filename="([^"]+)"/) || [])[1] || fallback;
+  const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* vehicles */
+const LEVEL = { overdue: ["conflict", "Overdue"], soon: ["hold", "Due soon"], ok: ["confirmed", "OK"], unknown: ["", "Not set"] };
+async function renderVehicles(){
+  const pane = document.getElementById("pane");
+  pane.innerHTML = `<p class="empty">Loading vehicles...</p>`;
+  const r = await toolsGet("action=vehicles");
+  if (!r.ok) { pane.innerHTML = `<p class="err">Couldn't load vehicle records. Try again.</p>`; return; }
+  pane.innerHTML = `<p class="lead">Mileage comes from the odometer readings in each trip's pickup and return photos. Set the dates below and you'll get an email when an oil change, inspection, registration or insurance renewal is coming due (30 days ahead, or 500 miles for oil).</p>
+    <div class="vgrid">${r.data.vehicles.map(v => {
+      const rec = v.record;
+      return `<section class="vcard" data-car="${v.car}"><h3>${esc(v.name)}${rec.plate ? ` <small>${esc(rec.plate)}</small>` : ""}</h3>
+      <p class="miles"><b>${v.miles ? v.miles.miles.toLocaleString() + " miles" : "Mileage not recorded yet"}</b>${v.miles ? `<small>${esc(v.miles.source)}</small>` : ""}${v.tripsWithPhotos ? `<small>${v.milesDriven.toLocaleString()} miles over ${v.tripsWithPhotos} trip${v.tripsWithPhotos > 1 ? "s" : ""} with photos</small>` : ""}</p>
+      <ul class="items">${v.items.map(i => `<li><span>${esc(i.label)}</span><span>${i.due ? `${esc(i.due)}${i.left ? ` · ${esc(i.left)}${i.key === "oil" && i.level !== "overdue" ? " left" : ""}` : ""}` : "<small>Set below</small>"}</span><span class="pill ${LEVEL[i.level][0]}">${LEVEL[i.level][1]}</span></li>`).join("")}</ul>
+      <details><summary>Log a service</summary><div class="vform">
+        <label>Type<select name="type"><option value="oil">Oil change</option><option value="tires">Tires</option><option value="brakes">Brakes</option><option value="repair">Repair</option><option value="other">Other</option></select></label>
+        <label>Mileage<input name="miles" inputmode="numeric" value="${v.miles ? v.miles.miles : ""}"></label>
+        <label>Date<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}"></label>
+        <label class="wide">Note<input name="note" maxlength="200" placeholder="e.g. Synthetic 0W-20, Jiffy Lube"></label>
+        <button type="button" data-service="${v.car}">Save service</button></div></details>
+      <details><summary>Edit details and due dates</summary><div class="vform">
+        <label>License plate<input name="plate" value="${esc(rec.plate)}"></label>
+        <label>VIN<input name="vin" value="${esc(rec.vin)}"></label>
+        <label>Last oil change (miles)<input name="lastOilMiles" inputmode="numeric" value="${rec.lastOilMiles ?? ""}"></label>
+        <label>Oil change every (miles)<input name="oilIntervalMiles" inputmode="numeric" value="${rec.oilIntervalMiles}"></label>
+        <label>State inspection due<input name="inspectionDue" type="date" value="${esc(rec.inspectionDue)}"></label>
+        <label>Registration due<input name="registrationDue" type="date" value="${esc(rec.registrationDue)}"></label>
+        <label>Insurance renews<input name="insuranceDue" type="date" value="${esc(rec.insuranceDue)}"></label>
+        <label class="wide">Notes<input name="notes" maxlength="1000" value="${esc(rec.notes)}"></label>
+        <button type="button" data-vsave="${v.car}">Save details</button></div></details>
+      ${v.log.length ? `<details><summary>Service history (${v.log.length})</summary><ul class="vlog">${v.log.map(l => `<li>${esc(l.date)} · ${Number(l.miles).toLocaleString()} mi · ${esc(l.text)}</li>`).join("")}</ul></details>` : ""}
+      </section>`; }).join("")}</div>`;
+  const val = (card, n) => card.querySelector(`[name="${n}"]`).value;
+  pane.querySelectorAll("[data-vsave]").forEach(btn => btn.onclick = async () => {
+    const card = btn.closest(".vcard"), fields = {};
+    for (const n of ["plate", "vin", "lastOilMiles", "oilIntervalMiles", "inspectionDue", "registrationDue", "insuranceDue", "notes"]) fields[n] = val(card, n);
+    btn.disabled = true; const r = await tools({ action: "vehicle", car: btn.dataset.vsave, fields });
+    if (r.ok) { toast("Saved."); renderVehicles(); } else { btn.disabled = false; toast(r.data.message || "Couldn't save. Try again."); }
   });
+  pane.querySelectorAll("[data-service]").forEach(btn => btn.onclick = async () => {
+    const card = btn.closest(".vcard");
+    btn.disabled = true; const r = await tools({ action: "service", car: btn.dataset.service, type: val(card, "type"), miles: val(card, "miles"), date: val(card, "date"), note: val(card, "note") });
+    if (r.ok) { toast("Service saved."); renderVehicles(); } else { btn.disabled = false; toast(r.data.message || "Couldn't save. Try again."); }
+  });
+}
+
+/* prices */
+async function renderPrices(){
+  const pane = document.getElementById("pane");
+  pane.innerHTML = `<p class="empty">Loading prices...</p>`;
+  const r = await toolsGet("action=prices");
+  if (!r.ok) { pane.innerHTML = `<p class="err">Couldn't load prices. Try again.</p>`; return; }
+  const p = r.data;
+  pane.innerHTML = `<p class="lead">New prices show on the website and apply to new bookings within about a minute. Trips already booked keep the price they paid. Monday to Thursday days use the weekday price; Friday to Sunday use the weekend price.</p>
+    <div class="wrap"><table class="ptable" style="min-width:0"><thead><tr><th>Car</th><th>Mon–Thu per day</th><th>Fri–Sun per day</th><th>Security deposit hold</th></tr></thead><tbody>
+    ${Object.entries(CARS).map(([k, name]) => `<tr data-car="${k}"><td>${name}</td>
+      <td><span class="cur">$</span><input name="weekday" inputmode="numeric" value="${p.cars[k].weekday}"><small>Default $${p.defaults.cars[k].weekday}</small></td>
+      <td><span class="cur">$</span><input name="weekend" inputmode="numeric" value="${p.cars[k].weekend}"><small>Default $${p.defaults.cars[k].weekend}</small></td>
+      <td><span class="cur">$</span><input name="deposit" inputmode="numeric" value="${p.deposits[k]}"><small>Default $${p.defaults.deposits[k]}</small></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="bar" style="margin-top:14px"><button id="p-save">Save prices</button><button class="line" id="p-reset">Back to defaults</button><span class="grow"></span></div>`;
+  document.getElementById("p-save").onclick = async e => {
+    const cars = {}, deposits = {};
+    pane.querySelectorAll("tr[data-car]").forEach(tr => { const k = tr.dataset.car, v = n => tr.querySelector(`[name="${n}"]`).value; cars[k] = { weekday: v("weekday"), weekend: v("weekend") }; deposits[k] = v("deposit"); });
+    e.target.disabled = true; const r = await tools({ action: "prices", cars, deposits }); e.target.disabled = false;
+    toast(r.ok ? "Prices saved. The website shows them within a minute." : (r.data.message || "Couldn't save. Try again."));
+    if (r.ok) renderPrices();
+  };
+  document.getElementById("p-reset").onclick = async () => {
+    if (!confirm("Put every price and deposit back to the defaults?")) return;
+    const r = await tools({ action: "prices-reset" }); toast(r.ok ? "Prices are back to the defaults." : "Couldn't do that. Try again."); renderPrices();
+  };
+}
+
+/* reports and export */
+let REPORT_MONTH = new Date().toISOString().slice(0, 7);
+async function renderReports(){
+  const pane = document.getElementById("pane");
+  pane.innerHTML = `<h2 class="car">Monthly sales and tax report</h2>
+    <div class="bar"><label>Month <input type="month" id="rp-month" value="${REPORT_MONTH}" style="width:auto"></label><button class="line" id="rp-dl">Download spreadsheet</button><span class="grow"></span></div>
+    <div id="rp-body"><p class="empty">Loading...</p></div>
+    <h2 class="car">Export and backup</h2>
+    <p class="lead">Every booking, past and present, with renter details, payments, deposits, charges and cancellations. Keep a copy every month.</p>
+    <div class="bar"><button class="line" id="ex-csv">Download all bookings (spreadsheet)</button><button class="line" id="ex-json">Full backup (JSON file)</button></div>`;
+  const show = async () => {
+    REPORT_MONTH = document.getElementById("rp-month").value || REPORT_MONTH;
+    const body = document.getElementById("rp-body"); body.innerHTML = `<p class="empty">Loading...</p>`;
+    const r = await toolsGet("action=report&month=" + REPORT_MONTH);
+    if (!r.ok) { body.innerHTML = `<p class="err">${esc(r.data.message || "Couldn't load the report.")}</p>`; return; }
+    const s = r.data.summary, tile = (k, v) => `<div class="tile"><span>${k}</span><b>${v}</b></div>`;
+    body.innerHTML = `<div class="tiles">${tile("Trips paid", s.trips)}${tile("Total received (net)", dollars(s.gross))}${tile("Rental receipts before tax", dollars(s.taxable))}${tile("Texas rental tax collected", dollars(s.tax))}${tile("Fees and charges", dollars(s.charges))}${tile("Refunds", dollars(s.refunds))}</div>
+      <p class="hint">Tax is figured on rental payments, extensions and date changes (10%, or 6.25% for trips over 30 days). Fees after the trip aren't taxed here. Confirm with your accountant before filing.</p>
+      ${r.data.entries.length ? `<div class="wrap"><table style="min-width:760px"><thead><tr><th>Date</th><th>Type</th><th>Car</th><th>Renter</th><th>Before tax</th><th>Tax</th><th>Total</th></tr></thead><tbody>
+      ${r.data.entries.map(e => `<tr><td>${esc(e.date)}</td><td>${esc(e.type)}${e.note ? `<small>${esc(e.note)}</small>` : ""}</td><td>${esc(e.car)}</td><td>${esc(e.renter)}</td><td>${dollars(e.taxable + e.charges)}</td><td>${dollars(e.tax)}</td><td>${dollars(e.total)}</td></tr>`).join("")}
+      </tbody></table></div>` : `<p class="empty">Nothing was paid or refunded in this month.</p>`}`;
+  };
+  document.getElementById("rp-month").onchange = show;
+  document.getElementById("rp-dl").onclick = () => download(`action=report&month=${REPORT_MONTH}&format=csv`, `ace-fares-sales-${REPORT_MONTH}.csv`);
+  document.getElementById("ex-csv").onclick = () => download("action=export&format=csv", "ace-fares-bookings.csv");
+  document.getElementById("ex-json").onclick = () => download("action=export&format=json", "ace-fares-backup.json");
+  show();
 }
 
 /* post-trip charges */

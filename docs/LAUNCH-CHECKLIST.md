@@ -16,8 +16,9 @@
 - 92 automated checks and 3 browser test suites pass.
 
 ## Done
+- ✅ **Built October 13 (late):** blocked dates, pickup and return-day reminder emails, a refund choice when you cancel, payment links for declined charges, the monthly sales and tax report, vehicle records with service reminders, pickup vs. return photo comparison, date changes from My trips, price and deposit editing, booking export and backup, and the contact form. Rental agreement draft9 (date changes, section 15).
 - ✅ **Stripe webhook (test mode)** set up with 12 events, and `STRIPE_WEBHOOK_SECRET` added in Netlify. Confirmed on October 12: the site rejects messages with a fake signature.
-- ✅ **Rental terms filled in** (agreement draft8): $3/extra mile, $50 late fee after a 30-minute grace period, $30 fuel fee plus fuel, $30 cleaning, a $20 cancellation fee after 24 hours, no out-of-state travel, tolls and tickets at cost plus a $15 handling fee each, extensions at the daily rate plus $25/day.
+- ✅ **Rental terms filled in** (agreement draft9): $3/extra mile, $50 late fee after a 30-minute grace period, $30 fuel fee plus fuel, $30 cleaning, a $20 cancellation fee after 24 hours, no out-of-state travel, tolls and tickets at cost plus a $15 handling fee each, extensions at the daily rate plus $25/day.
 - ✅ **Built October 13:** renter cancellation with automatic refunds, trip extensions (owner approves; on/off switch), post-trip charges with itemized statements, reviews (emailed after each trip, shown on the site), and the Become a host form now emails your inbox.
 - ✅ **Gmail connected** (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, `OWNER_EMAIL`). The site sees the settings. Confirm with a test booking that the emails actually arrive.
 
@@ -26,7 +27,7 @@
 2. **Toll tags:** put an NTTA TollTag on each car, under your account, so tolls are billed to you at the lower tag rate. After each trip, charge the tolls from the bookings page (Add charge → Tolls); the $15 handling fee per toll is added automatically. For mailed toll bills, send the toll authority the signed rental agreement within 30 days of the bill.
 3. **Insurance:** written confirmation that your commercial or fleet policy covers paid rentals, drivers aged 18–20, and rideshare/delivery use.
 4. **Texas motor vehicle rental tax:** the site charges 10% (6.25% for 31+ days). Make sure you have the Comptroller permit and are filing it. Confirm with an accountant.
-5. **Attorney review:** rental agreement draft8, privacy policy, referral terms, biometric consent, minimum age 18.
+5. **Attorney review:** rental agreement draft9, privacy policy, referral terms, biometric consent, minimum age 18.
 6. **Go live:**
    - Switch Netlify to the live Stripe keys and add a live webhook with the same 12 events.
    - Make one real booking, then refund it.
@@ -37,17 +38,6 @@
 
 ## Recommended features (Claude can build)
 ### Needs nothing from you
-- **Blocking dates on the bookings page** for maintenance, repairs or personal use.
-- **Pickup and return reminders:** an email the day before pickup (with the address and the photo checklist) and on return day (with the time, fuel and photo reminder).
-- **Refund button on the bookings page** when you cancel a trip, using the same cancellation rules, so you don't have to go to Stripe.
-- **Payment link for failed charges:** when a post-trip charge is declined, email the renter a secure Stripe link to pay.
-- **Monthly sales and tax report:** trips, revenue, fees and Texas rental tax collected, downloadable as a spreadsheet, for the Comptroller filing and your accountant.
-- **Vehicle records:** mileage from every trip's photos, oil-change and inspection reminders, registration and insurance expiry dates, with an email when something's due.
-- **Damage comparison:** pickup and return photos side by side on the bookings page, for damage claims.
-- **Date changes** (moving a trip, not just extending it) from My trips.
-- **Editing prices and deposits from the bookings page** instead of in code.
-- **Export all bookings** to a spreadsheet, as a backup.
-- **Contact form** that arrives in your inbox.
 - **Stronger owner sign-in:** your own email and password with a code, instead of the shared admin key.
 
 ### Needs a decision or an account from you

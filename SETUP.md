@@ -42,6 +42,9 @@ The website keeps its own calendar and booking window. A small server, Netlify F
 | `POST /api/admin/trip` | Bookings page: approve/decline extensions, post-trip charges, the extension switch, hide/show reviews |
 | `GET/POST /api/reviews` | Public reviews; the review page |
 | `POST /api/host-application` | Become a host form, emailed to your inbox |
+| `POST /api/contact` | Contact form, emailed to your inbox |
+| `GET/POST /api/admin/tools` | Bookings page: blocked dates, prices, reports, export, vehicle records |
+| `GET/POST /api/pay` | Payment link page for a declined post-trip charge |
 
 ## Environment variables
 
@@ -118,7 +121,7 @@ Stripe test cards: `4242 4242 4242 4242` succeeds. `4000 0000 0000 0002` is decl
 
 **Renters cancel themselves** in My trips, any time before the pickup time. The site refunds them automatically to the card they paid with: the full amount within 24 hours after booking, otherwise minus the $20 cancellation fee. Any extension they paid for is refunded too, the deposit hold is released, Ace Fares credit they used is given back, and you and the renter are both emailed. If Stripe can't make the refund, the trip is still cancelled and your email tells you to refund in Stripe. After the pickup time, renters have to text you.
 
-**When you cancel** on the bookings page, the dates are freed but nothing is refunded automatically: refund in the Stripe Dashboard, under Payments → the payment → Refund. If a booking is ever marked `conflict` (paid after the hold had expired while someone else booked the same dates, which should be very rare), refund it in Stripe.
+**When you cancel** on the bookings page, you choose the refund: the cancellation policy amount, a full refund, or no refund. The site makes the refund in Stripe, releases any deposit hold and emails the renter. You can cancel any time, even after pickup. If a booking is ever marked `conflict` (paid after the hold had expired while someone else booked the same dates, which should be very rare), refund it in Stripe.
 
 ## Taxes
 
@@ -359,3 +362,41 @@ It charges the card the renter booked with (or, if you choose, collects from the
 ## Become a host form
 
 The form on the Become a host page is emailed to your business inbox (`OWNER_EMAIL`, or the Gmail the site sends from). Press Reply to answer the applicant directly. A copy is also kept in the site's storage. If email ever fails, the visitor's own email app opens with the details instead, so nothing is lost. A visitor can send at most 5 an hour.
+
+
+## Bookings page tabs
+
+**Bookings**
+- **Block dates…** marks days a car can't be booked (repairs, personal use). They show in the list with a note only you see; **Remove block** opens them again. A block can't cover an existing trip.
+- **Date change requests:** renters can ask to move a trip in My trips up to 2 hours before pickup. The new dates are held while you decide. **Approve** charges the price difference to their card, or refunds it if the new trip is cheaper. **Decline** keeps the original dates. Both are covered by the same on/off switch as extensions.
+- **Cancel** asks which refund to give: policy, full, or none.
+- **Declined charges:** when a post-trip charge is declined, the renter is automatically emailed a secure payment link (pay.html, paid on Stripe's page). The charge shows as unpaid with a **Resend payment link** button, and is marked paid when they pay.
+- **Compare** (in the Photos column, once there are pickup and return photos) shows every pickup photo next to its return photo, with mileage and fuel, for damage claims.
+
+**Vehicles**
+- Each car's current mileage, taken from the odometer in trip photos.
+- Edit the plate, VIN, last oil change and interval, and the inspection, registration and insurance dates.
+- **Log a service** keeps a history. Logging an oil change resets the oil reminder.
+- You get one email when an item is due soon (30 days, or 500 miles for oil), and another if it becomes overdue.
+
+**Prices**
+- Change the Mon–Thu and Fri–Sun price and the deposit for each car.
+- The website and new checkouts use the new prices within about a minute; trips already booked keep what they paid.
+- **Back to defaults** restores the prices in `lib/catalog.mjs`.
+
+**Reports & export**
+- Pick a month to see trips paid, total received, rental receipts before tax, Texas rental tax collected, fees and refunds.
+- **Download spreadsheet** gives the month line by line, for your filing and your accountant. Tax is worked out from the rental payments (the price includes the 10% tax, or 6.25% over 30 days); post-trip fees are listed untaxed. Confirm with your accountant.
+- **Download all bookings** (spreadsheet) and **Full backup** (JSON) save everything; keep one each month. Bookings removed with Clear all bookings are in the site's archive, not in these files.
+
+**Reviews:** hide or show reviews.
+
+## Reminder emails
+
+The 15-minute job emails renters:
+- **The day before pickup** (about 24 hours ahead): the time and place, what to bring, a link to finish the license check if it isn't done, and the pickup photo link. Trips booked less than a day ahead skip this email; the confirmation covers it.
+- **On return day** (8 AM, or 3 hours before an earlier return): the return time, fuel and late-fee reminders, the return photo link, and how to request an extension.
+
+## Contact form
+
+"Send us a message" (above the footer, and linked from it) emails your inbox with Reply-To set to the visitor. A copy is kept in the site's storage. If email fails, the visitor's email app opens instead. A visitor can send at most 5 messages an hour.

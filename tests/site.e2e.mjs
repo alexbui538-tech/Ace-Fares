@@ -14,7 +14,10 @@ import { inspectionHandler } from "../lib/inspections.mjs";
 import { quote } from "../lib/pricing.mjs";
 import { tripHandler, adminTripHandler } from "../lib/trips.mjs";
 import { makeReviews } from "../lib/reviews.mjs";
-import { hostHandler } from "../lib/host.mjs";
+import { hostHandler, contactHandler } from "../lib/host.mjs";
+import { adminToolsHandler } from "../lib/admin-tools.mjs";
+import { payHandler } from "../lib/pay.mjs";
+import { saveSettings } from "../lib/trips.mjs";
 import { memoryStore, fakeStripe, signedEvent, WEBHOOK_SECRET } from "./helpers.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "public");
@@ -46,6 +49,9 @@ const H = {
   "/api/admin/trip": adminTripHandler({ store, stripe, adminKey: "owner-key-123", mailer: ownerMailer, reviews, log: quietLog }),
   "/api/reviews": reviews.handler({ userOf: auth.userOf }),
   "/api/host-application": hostHandler({ store, mailer: ownerMailer, log: quietLog }),
+  "/api/contact": contactHandler({ store, mailer: ownerMailer, log: quietLog }),
+  "/api/admin/tools": adminToolsHandler({ store, adminKey: "owner-key-123", log: quietLog }),
+  "/api/pay": payHandler({ store, stripe, siteUrl: "", log: quietLog }),
 };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, base);
@@ -317,15 +323,86 @@ await a.click("#cf-go"); await a.waitForTimeout(900);
 const ch = (await makeRepo(store).get("escalade", rb.id)).charges || [];
 ok(ch.length === 1 && ch[0].total === 2225 && ch[0].status === "paid", "bookings page: toll charged at cost + $15 handling");
 ok(mails.some(m => m.to === rb.customer.email && /Charges for your trip/.test(m.subject) && /Handling fee \(1 x \$15\.00\)/.test(m.text)), "renter emailed an itemized statement");
+// a declined charge emails a payment link, and the pay page opens Stripe
+stripe.fake.declineCharges = true;
+await a.click(`button[data-charge][data-id="${rb.id}"]`); await a.waitForSelector("#charge-dlg[open]");
+await a.selectOption("#cf-type", "cleaning"); await a.waitForFunction(() => /\$30\.00/.test(document.querySelector("#cf-go").textContent));
+await a.click("#cf-go"); await a.waitForSelector("#cf-err:text('secure link')");
+stripe.fake.declineCharges = false;
+const payMail = mails.find(m => /Payment needed/.test(m.subject));
+ok(!!payMail, "declined charge: renter emailed a payment link");
+await a.keyboard.press("Escape"); await a.waitForTimeout(500);
+ok(await a.locator(`button[data-paylink]`).count() === 1, "bookings page: unpaid charge shows Resend payment link");
+const payUrl = payMail.text.match(/\/pay\.html\?\S+/)[0];
+const pp = await browser.newPage(); pp.on("pageerror", e => aErrs.push(e.message));
+await pp.route(/checkout\.stripe\.com/, r => r.fulfill({ contentType: "text/html", body: "<p>Stripe checkout</p>" }));
+await pp.goto(base + payUrl); await pp.waitForSelector("#card:not([hidden])");
+ok((await pp.textContent("#rows")).includes("$30.00") && (await pp.textContent("#pay")).includes("Pay $30.00"), "pay page: shows the itemized charge");
+await pp.screenshot({ path: "e2e-pay.png" });
+await Promise.all([pp.waitForURL(/checkout\.stripe\.com/), pp.click("#pay")]);
+ok(true, "pay page: Pay opens Stripe's secure checkout");
+await pp.close();
+
+// block dates
+await a.click("#block-open"); await a.waitForSelector("#block-dlg[open]");
+await a.selectOption("#bk-car", "van"); await a.fill("#bk-from", D(20)); await a.fill("#bk-to", D(22)); await a.fill("#bk-note", "Tires");
+await a.click("#bk-go"); await a.waitForTimeout(700);
+ok((await makeRepo(store).all("van")).some(b => b.status === "blocked" && b.from === D(20) && b.to === D(22)), "bookings page: owner blocks dates");
+ok((await a.textContent("main")).includes("Tires"), "bookings page: the blocked dates show in the list");
+
+// prices tab
+await a.click("[data-tab=prices]"); await a.waitForSelector('tr[data-car="srx"] input[name="weekday"]');
+await a.fill('tr[data-car="srx"] input[name="weekday"]', "55"); await a.click("#p-save"); await a.waitForTimeout(700);
+ok((await (await fetch(base + "/api/availability")).json()).prices.srx.weekday === 55, "prices tab: new price is what the website shows");
+await a.screenshot({ path: "e2e-prices.png", fullPage: true });
+await a.click("#p-reset"); await a.waitForTimeout(700);
+ok((await (await fetch(base + "/api/availability")).json()).prices.srx.weekday === 49, "prices tab: back to defaults");
+
+// vehicles tab
+await a.click("[data-tab=vehicles]"); await a.waitForSelector('.vcard[data-car="escalade"]');
+await a.click('.vcard[data-car="escalade"] details:nth-of-type(2) summary');
+await a.fill('.vcard[data-car="escalade"] [name="plate"]', "ACE 777"); await a.fill('.vcard[data-car="escalade"] [name="lastOilMiles"]', "38000");
+await a.click('.vcard[data-car="escalade"] [data-vsave]'); await a.waitForSelector('.vcard[data-car="escalade"] h3 small');
+ok((await a.textContent('.vcard[data-car="escalade"]')).includes("41,200 miles") && (await a.textContent('.vcard[data-car="escalade"]')).includes("ACE 777"), "vehicles tab: mileage from the pickup photos, details saved");
+await a.screenshot({ path: "e2e-vehicles.png", fullPage: true });
+
+// reports tab
+await a.click("[data-tab=reports]"); await a.waitForSelector(".tiles");
+ok((await a.textContent(".tiles")).includes("Texas rental tax collected"), "reports tab: monthly totals with the rental tax");
+await a.screenshot({ path: "e2e-reports.png", fullPage: true });
+const [dl] = await Promise.all([a.waitForEvent("download"), a.click("#rp-dl")]);
+ok(/^ace-fares-sales-\d{4}-\d{2}\.csv$/.test(dl.suggestedFilename()), "reports tab: downloads the sales report spreadsheet");
+const [dl2] = await Promise.all([a.waitForEvent("download"), a.click("#ex-csv")]);
+ok(/^ace-fares-bookings-.*\.csv$/.test(dl2.suggestedFilename()), "reports tab: downloads every booking as a spreadsheet");
+
+// reviews tab
+await a.click("[data-tab=reviews]"); await a.waitForSelector('button[data-rev="review-hide"]');
 await a.click('button[data-rev="review-hide"]'); await a.waitForTimeout(600);
-ok((await reviews.summary()).count === 0, "bookings page: owner can hide a review");
+ok((await reviews.summary()).count === 0, "reviews tab: owner can hide a review");
+
+// compare pickup and return photos
+await a.goto(`${base}/compare.html?car=escalade&ref=${rb.id}`); await a.waitForSelector("#page:not([hidden])");
+await a.waitForFunction(() => [...document.querySelectorAll("img[data-key]")].some(i => i.complete && i.naturalWidth > 0));
+ok(await a.locator("#rows .row").count() === 9 && (await a.textContent("#trip")).includes("41,200 miles"), "compare page: pickup and return side by side for each photo");
+await a.screenshot({ path: "e2e-compare.png", fullPage: true });
+await a.goto(base + "/admin.html"); await a.waitForSelector("[data-tab=bookings]");
+await a.click("[data-tab=bookings]"); await a.waitForSelector("#ext-on");
+
 await a.click("#ext-on"); await a.waitForTimeout(500);
 ok((await (await import("../lib/trips.mjs")).getSettings(store)).extensionsAllowed === false, "bookings page: owner can turn extension requests off");
+await saveSettings(store, { extensionsAllowed: true });
 const btn = a.locator('button.danger[data-car="escalade"]').first();
-await btn.click(); await a.waitForTimeout(900);
+await btn.click(); await a.waitForSelector("#cancel-dlg[open]");
+await a.click("#cx-go"); await a.waitForTimeout(900);
 const esc = await makeRepo(store).all("escalade");
 ok(esc.some(b => b.status === "cancelled"), "bookings page: owner can cancel a booking, freeing the dates");
 ok(aErrs.length === 0, "bookings page: no errors " + aErrs.join(" | "));
+
+// contact form
+await page.goto(base + "/?e2e=contact#message"); await page.waitForSelector("#contact-form");
+await page.fill("#c-name", "Pat Kim"); await page.fill("#c-email", "pat@example.com"); await page.fill("#c-msg", "Do you rent by the month?");
+await page.click("#c-send"); await page.waitForSelector("#c-ok.show");
+ok(mails.some(m => m.to === "owner@example.com" && m.replyTo === "pat@example.com" && /Website message/.test(m.subject)), "contact form: message emailed to the business inbox");
 
 // phone: header, sign-in window and My trips fit the screen
 const m = await browser.newPage({ viewport: { width: 390, height: 844 } }); m.on("pageerror", e => errs.push(e.message));
@@ -343,6 +420,18 @@ await m.click("#acct-btn"); await m.screenshot({ path: "e2e-phone-menu.png" });
 await m.click("#m-trips"); await m.waitForSelector("#trips .trip");
 ok(await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "phone: My trips has no sideways scrolling");
 await m.screenshot({ path: "e2e-phone-trips.png" });
+// change dates from My trips
+await m.click("#trips [data-act=change]"); await m.waitForSelector("#trips .trip-panel:not([hidden]) input[type=date]");
+const panel = "#trips .trip-panel:not([hidden])";
+await m.fill(`${panel} input[id^=chg-from]`, D(24)); await m.fill(`${panel} input[id^=chg-to]`, D(26));
+await m.locator(`${panel} input[id^=chg-to]`).dispatchEvent("change");
+await m.waitForSelector(`${panel} .rows .tot`);
+ok((await m.textContent(panel)).includes("Paid so far"), "My trips: Change dates shows the new price and the difference");
+await m.screenshot({ path: "e2e-phone-change.png" });
+await m.click(`${panel} [data-act=change-send]`); await m.waitForSelector("#trips .pill.warn >> text=New dates requested");
+const rc = (await makeRepo(store).all("escalade")).find(b => b.userId === riley && b.status === "confirmed");
+ok(rc && rc.change && rc.change.status === "requested" && rc.change.from === D(24), "My trips: date change request saved and the new dates held");
+ok(await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "phone: change dates fits the screen");
 
 ok(errs.length === 0, "no page errors " + errs.join(" | "));
 await browser.close(); server.close();

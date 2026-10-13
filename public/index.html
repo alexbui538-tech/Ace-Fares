@@ -501,6 +501,17 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
 .pill.warn{background:#FFF1D6;color:#7A5200}
 .pill.bad{background:#FBE3D9;color:#8A2D14}
 .btn-sm{min-height:40px;padding:0 14px;font-size:.92rem}
+.contact-sec{padding:72px 0 80px;background:var(--paper);border-top:1px solid var(--line)}
+.contact-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:start}
+.contact-form{border:1px solid var(--line);background:var(--ivory)}
+.contact-form select{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:var(--radius-ctl);padding:0 12px;font:inherit;background:var(--paper)}
+@media (max-width:860px){.contact-grid{grid-template-columns:1fr;gap:24px}}
+.trip-panel select{min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 8px;font:inherit;background:var(--paper)}
+.trip>div{min-width:0}
+.trip-panel input,.trip-panel select{width:100%;min-width:0;max-width:100%}
+.trip-panel .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media (max-width:520px){.trip-panel{margin-left:-86px}}
+.trip-panel .two label{display:grid;gap:4px}
 .trip-panel{background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;margin-top:12px}
 .trip-panel h5{margin:0;font-size:1rem;font-family:var(--sans)}
 .trip-panel p{margin:0}
@@ -722,6 +733,28 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
   </section>
 </main>
 
+<section class="contact-sec" id="message" aria-labelledby="msg-title">
+  <div class="wrap contact-grid">
+    <div>
+      <h2 id="msg-title">Send us a message</h2>
+      <p class="lede">Questions about a car, a long-term rental or a special request? Write to us and we'll reply by email, usually the same day. For anything urgent, call or text <a href="tel:+19729946413">(972) 994-6413</a>.</p>
+    </div>
+    <form class="host-form contact-form" id="contact-form" novalidate>
+      <div class="row2">
+        <div class="ctl" id="c-c-name"><label for="c-name">Your name</label><input id="c-name" autocomplete="name" required><p class="err">Enter your name.</p></div>
+        <div class="ctl"><label for="c-phone">Phone (optional)</label><input id="c-phone" type="tel" autocomplete="tel"></div>
+      </div>
+      <div class="ctl" id="c-c-email"><label for="c-email">Email</label><input id="c-email" type="email" autocomplete="email" required><p class="err">Enter your email so we can reply.</p></div>
+      <div class="ctl"><label for="c-topic">About</label><select id="c-topic"><option value="">General question</option><option>A booking I have</option><option>Renting a car</option><option>Long-term rental</option><option>Becoming a host</option><option>Something else</option></select></div>
+      <div class="ctl" id="c-c-msg"><label for="c-msg">Message</label><textarea id="c-msg" maxlength="3000" required></textarea><p class="err">Write your message.</p></div>
+      <input id="c-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <button class="btn btn-gold btn-block" type="submit" id="c-send">Send message</button>
+      <p class="notice err" id="c-err" role="alert" hidden></p>
+      <p class="host-ok" id="c-ok" role="status">Thanks! Your message is on its way. We'll reply to your email soon.</p>
+    </form>
+  </div>
+</section>
+
 <footer class="foot" id="contact">
   <div class="wrap">
     <div class="foot-grid">
@@ -743,6 +776,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
           <li><a href="#delivery">Delivery &amp; airport</a></li>
           <li><a href="#host">Become a host</a></li>
           <li><a href="#faq">FAQ</a></li>
+          <li><a href="#message">Send us a message</a></li>
         </ul>
       </div>
     </div>
@@ -1017,6 +1051,7 @@ const FAQ = [ // TODO review every answer and change anything that doesn't match
   ["Do you offer discounts for longer rentals?","Yes. Rentals of 3 days or more get 10% off the rental price, and rentals of 30 days or more get 25% off. The discount is applied automatically when you choose your dates."],
   ["Can I rent out my own car through Ace Fares?","Yes. Fill out the form in the Become a host section and we'll get back to you about listing your car."],
   ["What if I need to cancel?","Cancel within 24 hours after you book for a full refund. After that, we refund your trip minus a $20 cancellation fee. Cancel any time before pickup in My trips (in your account menu), or text us at (972) 994-6413."],
+  ["Can I change my dates?","Yes, up to 2 hours before pickup, if the car is free. Open My trips and choose Change dates. You'll see the new price before you send the request. If the new trip costs more, the difference is charged when we approve; if it costs less, we refund the difference."],
   ["Can I extend my trip?","Yes, if the car is free. Open My trips, choose Extend trip and pick your new return date. We'll approve or decline it, usually quickly. Each extra day is that day's normal rate plus $25, plus tax, charged to your card once we approve."],
   ["Can I take the car out of Texas?","No. Our cars stay in Texas."],
   ["What happens if I return the car late?","There's a 30-minute grace period. After that, a $50 late fee applies, and if you're more than a day late, each extra day is charged at the daily rate. Fuel below the pickup level is charged at cost plus $30, and excessive dirt or pet hair is a $30 cleaning fee."]
@@ -1312,6 +1347,7 @@ async function loadAvailability(){
     const r = await api("/availability", {}, 8000);
     if (!r.ok || !r.data.cars) throw new Error("availability " + r.status);
     ONLINE.booked = r.data.cars; ONLINE.ready = true; ONLINE.state = "ready";
+    if (r.data.prices) for (const c of CARS) { const p = r.data.prices[c.id]; if (p) { c.weekday = p.weekday; c.weekend = p.weekend; } }   // prices set on the bookings page
   } catch (e) {
     ONLINE.state = "off"; ONLINE.ready = false;
     console.info("[Ace Fares] online booking unavailable, using text booking:", e.message);
@@ -1340,6 +1376,7 @@ function showBookErr(msg){
   n.innerHTML = `${msg}${SITE.phone ? ` <a href="sms:${SITE.phone.replace(/[^\d+]/g, "")}">Text ${SITE.phone}</a>` : ""}`;
 }
 function toast(msg){
+  document.querySelectorAll(".toast").forEach(x => x.remove());
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 6000);
 }
@@ -1668,6 +1705,28 @@ async function loadReviews(){
 }
 loadReviews();
 
+/* contact form -> business inbox */
+$("#contact-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const v = id => $("#" + id).value.trim();
+  let first = null;
+  [["c-name", "c-c-name", x => x.length >= 2], ["c-email", "c-c-email", x => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x)], ["c-msg", "c-c-msg", x => x.length >= 5]].forEach(([i, c, ok]) => { const bad = !ok(v(i)); $("#" + c).classList.toggle("bad", bad); if (bad && !first) first = i; });
+  if (first) { $("#" + first).focus(); return; }
+  const btn = $("#c-send"), err = $("#c-err"), okEl = $("#c-ok");
+  err.hidden = true; okEl.classList.remove("show"); btn.disabled = true; btn.classList.add("loading");
+  const fields = { name: v("c-name"), email: v("c-email"), phone: v("c-phone"), topic: $("#c-topic").value, message: v("c-msg"), website: $("#c-website").value };
+  const byEmail = () => { location.href = `mailto:${SITE.email}?subject=${encodeURIComponent("Website message from " + fields.name)}&body=${encodeURIComponent(fields.message + "\n\n" + fields.name + "\n" + fields.email + "\n" + fields.phone)}`;
+    okEl.textContent = "Your email app should open with your message. Press send and we'll reply soon."; okEl.classList.add("show"); };
+  try {
+    const r = await api("/contact", { method: "POST", body: JSON.stringify(fields) }, 15000);
+    if (r.ok && r.data.emailed) { okEl.textContent = "Thanks! Your message is on its way. We'll reply to your email soon."; okEl.classList.add("show"); ["c-name", "c-email", "c-phone", "c-msg"].forEach(i => { $("#" + i).value = ""; }); }
+    else if (r.ok) byEmail();
+    else if (r.status === 400 || r.status === 429) { err.textContent = r.data.message; err.hidden = false; }
+    else byEmail();
+  } catch { byEmail(); }
+  btn.disabled = false; btn.classList.remove("loading");
+});
+
 
 
 paintDateBtns();
@@ -1845,14 +1904,17 @@ async function openTrips(){
     const x = t.extension, extPill = !x ? "" : x.status === "requested" ? `<span class="pill warn">Extension to ${nice(x.to)} requested</span><button class="linkish" type="button" data-act="withdraw" data-i="${i}">Withdraw</button>`
       : x.status === "payment_failed" ? `<span class="pill bad">Extension: card declined, text us</span>`
       : x.status === "declined" ? `<span class="pill bad">Extension declined</span>` : x.status === "approved" ? `<span class="pill ok">Extended</span>` : "";
-    const extBtn = t.canExtend ? `<button class="btn btn-line btn-sm" type="button" data-act="extend" data-i="${i}">Extend trip</button>` : "";
+    const extBtn = (t.canExtend ? `<button class="btn btn-line btn-sm" type="button" data-act="extend" data-i="${i}">Extend trip</button>` : "")
+      + (t.canChange ? `<button class="btn btn-line btn-sm" type="button" data-act="change" data-i="${i}">Change dates</button>` : "");
+    const ch = t.change, chPill = !ch ? "" : ch.status === "requested" ? `<span class="pill warn">New dates requested: ${nice(ch.from)} to ${nice(ch.to)}</span><button class="linkish" type="button" data-act="change-withdraw" data-i="${i}">Withdraw</button>`
+      : ch.status === "payment_failed" ? `<span class="pill bad">Date change: card declined, text us</span>` : ch.status === "declined" ? `<span class="pill bad">Date change declined</span>` : ch.status === "approved" ? `<span class="pill ok">Dates changed</span>` : "";
     const revBtn = t.review && t.review.done ? `<span class="pill ok">You rated it ${"★".repeat(t.review.stars)}</span>` : ended ? `<a class="btn btn-gold btn-sm" href="/review.html?${q}">Leave a review</a>` : "";
     const cancelBtn = t.cancel && t.cancel.allowed ? `<button class="linkish" type="button" data-act="cancel" data-i="${i}">Cancel trip</button>` : "";
     const refund = t.cancellation ? `<p class="refund">${t.cancellation.refund ? `Refund: ${money(t.cancellation.refund / 100)}${t.cancellation.fee ? ` (after the ${money(t.cancellation.fee / 100)} cancellation fee)` : ""}${t.cancellation.status === "refund_failed" ? ". We're processing it." : ", on its way to your card."}` : "No refund was due."}</p>` : "";
     const idBits = t.status === "confirmed" && !ended ? (t.idOverdue ? `<span class="pill bad">ID overdue</span>` : !["verified", "review", "processing"].includes(t.verification) && t.idDueAt ? `<span class="pill warn">Verify ID by ${new Date(t.idDueAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>` : `<span class="pill ${id[0]}">${id[1]}</span>`) : "";
     return `<div class="trip"><img src="images/${esc(t.photo)}-sm.webp" alt="" width="104" height="78"><div>
       <h4>${esc(t.carName)}</h4><p>${nice(t.from)}, ${tLabel(t.fromTime)} to ${nice(t.to)}, ${tLabel(t.toTime)}</p><p>${esc(t.location)}${t.total ? " · " + money(t.total / 100) : ""}</p>
-      <div class="acts"><span class="pill ${ended ? "" : st[0]}">${ended ? "Completed" : st[1]}</span>${idBits}${ended ? "" : act}${revBtn}${ended ? "" : photoBtn}${extPill}${extBtn}${cancelBtn}</div>${refund}<div class="trip-panel" id="tp-${i}" hidden></div></div></div>`;
+      <div class="acts"><span class="pill ${ended ? "" : st[0]}">${ended ? "Completed" : st[1]}</span>${idBits}${ended ? "" : act}${revBtn}${ended ? "" : photoBtn}${extPill}${chPill}${extBtn}${cancelBtn}</div>${refund}<div class="trip-panel" id="tp-${i}" hidden></div></div></div>`;
   }).join("");
 }
 let TRIPS = [];
@@ -1899,6 +1961,41 @@ $("#trips-list").addEventListener("click", async e => {
       send.disabled = false;
     };
     inp.addEventListener("change", price); price(); return;
+  }
+  if (b.dataset.act === "change-withdraw") {
+    const r = await tripCall({ ...base, action: "change-withdraw" }).catch(() => null);
+    if (r && r.ok) { toast("Date change request withdrawn."); openTrips(); } else toast((r && r.data.message) || "That didn't work. Please try again.");
+    return;
+  }
+  if (b.dataset.act === "change") {
+    const i = b.dataset.i, opts = v => TIMES.map(([val, lab]) => `<option value="${val}" ${val === v ? "selected" : ""}>${lab}</option>`).join("");
+    p.innerHTML = `<h5>Change your dates</h5><p>Pick new pickup and return dates and times. We'll check the price, then you send the request. We'll approve or decline and email you. If the new trip costs more, the difference goes on your card when we approve; if it costs less, we refund the difference.</p>
+      <div class="two"><label>Pickup date<input type="date" id="chg-from-${i}" min="${isoPlus(new Date().toISOString().slice(0, 10), 0)}" value="${t.from}"></label><label>Pickup time<select id="chg-ft-${i}">${opts(t.fromTime)}</select></label>
+      <label>Return date<input type="date" id="chg-to-${i}" value="${t.to}"></label><label>Return time<select id="chg-tt-${i}">${opts(t.toTime)}</select></label></div>
+      <div class="rows" id="chg-q-${i}"></div>
+      <div class="acts"><button class="btn btn-gold btn-sm" type="button" data-act="change-send" data-i="${i}" disabled>Send request</button><button class="linkish" type="button" data-act="close" data-i="${i}">Never mind</button></div>`;
+    p.hidden = false;
+    const send = p.querySelector('[data-act="change-send"]'), get = () => ({ from: $("#chg-from-" + i).value, to: $("#chg-to-" + i).value, fromTime: $("#chg-ft-" + i).value, toTime: $("#chg-tt-" + i).value });
+    const price = async () => {
+      send.disabled = true; const box = $("#chg-q-" + i); const old = p.querySelector(".notice"); if (old) old.remove();
+      const g = get(); if (!g.from || !g.to) { box.innerHTML = ""; return; }
+      box.innerHTML = '<div>Checking the price...</div>';
+      const r = await tripCall({ ...base, action: "change-quote", ...g }).catch(() => null);
+      if (!r || !r.ok) { box.innerHTML = ""; panelErr(p, (r && r.data.message) || "We couldn't check those dates. Please try again."); return; }
+      const q = r.data.quote, row = (k, v, c = "") => `<div class="${c}"><span>${k}</span><span>${v}</span></div>`;
+      box.innerHTML = row(`New trip (${q.days} day${q.days > 1 ? "s" : ""}${q.discountLabel ? ", " + q.discountLabel : ""})`, money(q.newTotal / 100)) + row("Paid so far", money(q.paid / 100))
+        + row(q.diff > 0 ? "You'd pay the difference" : q.diff < 0 ? "We'd refund you" : "Price difference", money(Math.abs(q.diff) / 100), "tot");
+      send.disabled = false;
+    };
+    ["chg-from-", "chg-to-", "chg-ft-", "chg-tt-"].forEach(k => $("#" + k + i).addEventListener("change", price));
+    return;
+  }
+  if (b.dataset.act === "change-send") {
+    b.disabled = true; const i = b.dataset.i;
+    const r = await tripCall({ ...base, action: "change", from: $("#chg-from-" + i).value, to: $("#chg-to-" + i).value, fromTime: $("#chg-ft-" + i).value, toTime: $("#chg-tt-" + i).value }).catch(() => null);
+    if (r && r.ok) { toast("Request sent. We'll email you when we answer."); openTrips(); }
+    else { b.disabled = false; panelErr(p, (r && r.data.message) || "We couldn't send that. Please try again."); }
+    return;
   }
   if (b.dataset.act === "extend-send") {
     b.disabled = true;
