@@ -196,6 +196,10 @@ h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);lin
 const $ = s => document.querySelector(s);
 const Q = new URLSearchParams(location.search), CAR = Q.get("car") || "", REF = Q.get("ref") || "";
 const PHONE = "(972) 994-6413";
+// touch screens, phone/tablet browsers and in-app browsers (Instagram, Facebook, Gmail, TikTok...)
+const ON_PHONE = /Android|iPhone|iPad|iPod|Mobile|Silk|FBAN|FBAV|Instagram|Line\/|GSA\/|TikTok|musical_ly/i.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))   // iPad in desktop mode
+  || matchMedia("(pointer: coarse)").matches;
 const SELF = location.pathname + "?car=" + encodeURIComponent(CAR) + "&ref=" + encodeURIComponent(REF);
 const ICON = {
   ok: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
@@ -284,11 +288,14 @@ $("#go").addEventListener("click", async () => {
     if (r.status === 401) return toLogin();
     if (!r.ok) { showErr(r.data.message || "Something went wrong. Please try again."); return; }
     if (!r.data.clientSecret) { await load(); return; }                     // already verified or in review
-    if (!r.data.publishableKey || !window.Stripe) { location.href = r.data.url; return; }   // Stripe's own page, then back here
+    // Phones and tablets go to Stripe's own full-screen ID page (then come back here): Stripe's pop-up can show a blank
+    // white screen in phone browsers and in the browsers built into apps like Gmail, Instagram and Facebook.
+    if (ON_PHONE || !r.data.publishableKey || !window.Stripe) { if (r.data.url) { location.href = r.data.url; return; } }
     const stripe = Stripe(r.data.publishableKey);
     const res = await stripe.verifyIdentity(r.data.clientSecret);           // Stripe's license + selfie screens
     if (res.error) {
       if (res.error.code === "session_cancelled") { showErr("You closed the ID check before finishing. Press Continue verification to pick up where you left off."); $("#go").textContent = "Continue verification"; }
+      else if (r.data.url) { location.href = r.data.url; return; }        // the pop-up didn't work: use Stripe's page instead
       else showErr(res.error.message || "The ID check didn't open. Please try again.");
       return;
     }
