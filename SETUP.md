@@ -400,3 +400,11 @@ The 15-minute job emails renters:
 ## Contact form
 
 "Send us a message" (above the footer, and linked from it) emails your inbox with Reply-To set to the visitor. A copy is kept in the site's storage. If email fails, the visitor's email app opens instead. A visitor can send at most 5 messages an hour.
+
+## Optional damage protection (Wheelbase)
+
+Checkout has an optional box: **Add damage protection through Wheelbase**. Renters aren't charged for it at checkout. When someone ticks it:
+- their booking shows "Wants Wheelbase damage protection" on your bookings page, and your New booking email says **Damage protection: REQUESTED**;
+- their confirmation email says you'll send the price, deductible and coverage details to accept before pickup.
+
+Until the Wheelbase integration is set up, send them the Wheelbase protection offer yourself. Section 6 of the rental agreement (draft11) explains that the protection applies only once they accept and pay for it, under its own terms.

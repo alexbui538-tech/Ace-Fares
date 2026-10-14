@@ -327,3 +327,24 @@ test("contact form emails the business inbox with reply-to the visitor", async (
   for (let i = 0; i < 5; i++) await send({ name: "Pat", email: "p@x.com", message: "Hello there" }, "203.0.113.77");
   assert.equal((await send({ name: "Pat", email: "p@x.com", message: "Hello there" }, "203.0.113.77")).status, 429);
 });
+
+/* ---------- optional Wheelbase damage protection ---------- */
+test("renter can ask for Wheelbase damage protection at checkout; owner and renter emails say so; agreement explains it", async () => {
+  const s = setup();
+  const me = await signup(s);
+  const r = await j(await s.checkout(req("/api/checkout", { method: "POST", body: TRIP, cookie: me.cookie })));
+  const d = await j(await s.details(req("/api/checkout-details", { method: "POST", cookie: me.cookie, body: { car: "srx", ref: r.data.ref, ...sign, insurance: { choice: "own", company: "GEICO", protection: true } } })));
+  assert.equal(d.status, 200, JSON.stringify(d.data));
+  const b = await s.repo.get("srx", r.data.ref);
+  assert.equal(b.insurance.protection, "requested");
+  assert.equal(s.stripe.intents.get(b.paymentIntentId).metadata.damage_protection, "wheelbase_requested");
+  await s.hook(signedEvent("payment_intent.succeeded", s.stripe.payIntent(b.paymentIntentId)));
+  assert.match(s.sent.find(m => m.to === "acefaresrental@gmail.com").text, /Damage protection: REQUESTED \(Wheelbase\)/);
+  assert.match(s.sent.find(m => m.to === "jordan@example.com" && /Booking confirmed/.test(m.subject)).text, /damage protection through Wheelbase/);
+  const { agreementText } = await import("../lib/agreement.mjs");
+  assert.match(agreementText({}), /Optional damage protection\. You may ask to add optional physical damage protection for the vehicle offered through Wheelbase/);
+  // without the box ticked nothing is recorded
+  const r2 = await j(await s.checkout(req("/api/checkout", { method: "POST", body: { ...TRIP, from: "2027-04-05", to: "2027-04-07" }, cookie: me.cookie })));
+  await s.details(req("/api/checkout-details", { method: "POST", cookie: me.cookie, body: { car: "srx", ref: r2.data.ref, ...sign } }));
+  assert.equal((await s.repo.get("srx", r2.data.ref)).insurance.protection, undefined);
+});

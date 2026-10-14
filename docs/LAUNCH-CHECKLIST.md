@@ -27,7 +27,7 @@
 2. **Toll tags:** put an NTTA TollTag on each car, under your account, so tolls are billed to you at the lower tag rate. After each trip, charge the tolls from the bookings page (Add charge → Tolls); the $15 handling fee per toll is added automatically. For mailed toll bills, send the toll authority the signed rental agreement within 30 days of the bill.
 3. **Insurance:** written confirmation that your commercial or fleet policy covers paid rentals, drivers aged 18–20, and rideshare/delivery use.
 4. **Texas motor vehicle rental tax:** the site charges 10% (6.25% for 31+ days). Make sure you have the Comptroller permit and are filing it. Confirm with an accountant.
-5. **Attorney review:** rental agreement draft10, privacy policy, referral terms, biometric consent, minimum age 18.
+5. **Attorney review:** rental agreement draft11 (and the Wheelbase version), privacy policy, referral terms, biometric consent, minimum age 18.
 6. **Go live:**
    - Switch Netlify to the live Stripe keys and add a live webhook with the same 12 events.
    - Make one real booking, then refund it.
