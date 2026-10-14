@@ -8,7 +8,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ace Fares Rentals">
 <meta property="og:title" content="Ace Fares Rentals: Dallas car rentals direct from the owner">
-<meta property="og:description" content="Cadillac Escalade, Cadillac SRX, BMW 650i convertible and Honda Odyssey. Pickup in Dallas, delivery or DFW Airport.">
+<meta property="og:description" content="Cadillac Escalade, Cadillac SRX, BMW 650i convertible and Honda Odyssey. Pickup in Dallas or delivery across DFW.">
 <meta property="og:url" content="https://acefaresrental.netlify.app/">
 <meta property="og:image" content="https://acefaresrental.netlify.app/images/share.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -547,7 +547,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     <nav class="nav" id="nav" aria-label="Main">
       <a href="#fleet">Our fleet</a>
       <a href="#how">How it works</a>
-      <a href="#delivery">Delivery &amp; airport</a>
+      <a href="#delivery">Delivery</a>
       <a href="#faq">FAQ</a>
       <a href="#host" class="host-link">Become a host</a>
     </nav>
@@ -660,8 +660,8 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
   <section class="delivery" id="delivery" aria-labelledby="deliv-title">
     <div class="wrap deliv-grid">
       <div>
-        <h2 id="deliv-title">Delivery &amp; airport</h2>
-        <p class="lede">Flying into Dallas? We can meet you at DFW International with the car ready, so you skip the shuttle and the rental lot.</p>
+        <h2 id="deliv-title">Pickup &amp; delivery</h2>
+        <p class="lede">Pick the car up in Dallas for free, or have us bring it to your home, hotel or office, ready to go.</p>
         <p class="areas" id="areas"></p>
         <a class="btn btn-line" href="#fleet" style="margin-top:12px">Choose a car</a>
       </div>
@@ -773,7 +773,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
         <ul>
           <li><a href="#fleet">Our fleet</a></li>
           <li><a href="#how">How it works</a></li>
-          <li><a href="#delivery">Delivery &amp; airport</a></li>
+          <li><a href="#delivery">Delivery</a></li>
           <li><a href="#host">Become a host</a></li>
           <li><a href="#faq">FAQ</a></li>
           <li><a href="#message">Send us a message</a></li>
@@ -997,7 +997,6 @@ const SITE = {
   locations: [
     { id:"dallas-pickup",   name:"Dallas pickup",             note:"Meet at the car in Dallas",             fee:0,    cars:["srx","escalade","bmw","van"] },
     { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:100,  cars:["srx","escalade","bmw","van"] },
-    { id:"dfw",             name:"DFW International Airport", note:"Meet at arrivals, any terminal",        fee:125,  cars:["srx","escalade","bmw","van"] },
   ],
   // Discounts on the rental price (not delivery fees). The biggest one that applies is used.
   discounts: [ { minDays:30, pct:25, label:"Monthly discount" }, { minDays:3, pct:10, label:"3+ day discount" } ],
@@ -1014,7 +1013,7 @@ const SITE = {
 const CARS = [
   { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", weekday:259, weekend:349, miles:100,
     location:"Dallas, TX", rating:4.8, reviews:14, seats:8, color:"Midnight Black",
-    desc:"Seats 8 in first-class comfort, with heated and ventilated seats, a panoramic sunroof, AKG Studio Reference sound and a 38-inch curved OLED display. Made for group trips, airport runs and big arrivals.",
+    desc:"Seats 8 in first-class comfort, with heated and ventilated seats, a panoramic sunroof, AKG Studio Reference sound and a 38-inch curved OLED display. Made for group trips, nights out and big arrivals.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Third row","8-passenger seating","Sunroof","Premium sound","100 miles/day included"],
     tags:["Seats 8","Third row","Sunroof","Premium sound"],
     photos:[["escalade-1","Front of the black Cadillac Escalade"],["escalade-2","Escalade front grille and headlights"],["escalade-3","Escalade driver's seat and curved display"],["escalade-4","Escalade second-row seats with screens"]], },
@@ -1040,13 +1039,12 @@ const CARS = [
 
 const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
   ["Why are weekends priced differently?","Every car has lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Your trip total shows the exact split before you pay."],
-  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100 and DFW Airport handoff is $125. Both are shown in your trip total before you pay."],
-  ["What if I drive more than the included miles?","Extra miles are $3 per mile, charged after your trip. Each car shows its included miles per day."],
+  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100, shown in your trip total before you pay."],
+  ["What if I drive more than the included miles?","Extra miles are 99 cents per mile, or $3 per mile for the Cadillac Escalade, charged after your trip. Each car shows its included miles per day."],
   ["Do I need my own insurance?","Yes. At checkout you tell us your auto insurance company, and you bring proof at pickup. Your policy needs to cover you in a rental car."],
   ["What photos do I take at pickup and return?","When you pick up the car, you and we each take photos on our phones through this site: the front, back and both sides, the odometer (mileage), the fuel gauge and the interior, plus close-ups of any existing damage. You do the same when you return it. The photos are time-stamped and saved, so we both have a clear record of the car's condition. Open My trips to take them."],
   ["How does Refer a friend work?","Log in and choose Refer a friend in your account menu to get your link. A friend who signs up with it gets $50 off their first trip. When they finish a trip of 3 days or more, you get $100 in Ace Fares credit, applied automatically to your next booking."],
   ["How old do I need to be?",`Drivers must be at least ${SITE.minAge} years old with a valid driver's license.`],
-  ["Can you meet me at the airport?","Yes. We can hand the car over at DFW International Airport. Share your flight details when we confirm and we'll be there when you land."],
   ["How do tolls work?","Many Dallas highways are toll roads. Tolls from your trip are charged at cost to your card after you return the car, with an itemized list. There's a $15 handling fee for each toll or ticket we process. If a toll is billed by mail, the toll authority may send the bill to you directly."],
   ["Do you offer discounts for longer rentals?","Yes. Rentals of 3 days or more get 10% off the rental price, and rentals of 30 days or more get 25% off. The discount is applied automatically when you choose your dates."],
   ["Can I rent out my own car through Ace Fares?","Yes. Fill out the form in the Become a host section and we'll get back to you about listing your car."],

@@ -252,7 +252,8 @@ test("charge prices follow the rental agreement", () => {
   const b = { from: "2027-03-01", to: "2027-03-06" };
   assert.equal(priceCharge("srx", b, { type: "toll", qty: 2, cost: "12.50" }).total, 1250 + 3000);
   assert.equal(priceCharge("srx", b, { type: "ticket", cost: 75 }).total, 7500 + 1500);
-  assert.equal(priceCharge("srx", b, { type: "miles", qty: 40 }).total, 12000);
+  assert.equal(priceCharge("srx", b, { type: "miles", qty: 40 }).total, 3960);          // 99 cents a mile
+  assert.equal(priceCharge("escalade", b, { type: "miles", qty: 40 }).total, 12000);     // $3 a mile for the Escalade
   assert.equal(priceCharge("srx", b, { type: "fuel", cost: 20 }).total, 5000);
   assert.equal(priceCharge("srx", b, { type: "fuel", cost: 0 }).total, 3000);
   assert.equal(priceCharge("srx", b, { type: "late" }).total, 5000);

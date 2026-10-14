@@ -31,8 +31,9 @@ test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't cha
   assert.equal(quote(v({ car: "van", from: "2026-11-09", to: "2026-11-11" })).rental, 2 * 89 * 100);   // Mon + Tue
 });
 
-test("DFW airport fee is $125", () => {
-  assert.equal(quote(v({ location: "dfw" })).fee, 12500);
+test("DFW airport handoff is no longer offered; delivery is $100", () => {
+  assert.throws(() => validateRequest({ car: "srx", from: "2027-01-04", to: "2027-01-06", location: "dfw" }, new Date("2026-10-14T12:00:00Z")), /pickup or delivery option/);
+  assert.equal(quote(v({ location: "dallas-delivery" })).fee, 10000);
 });
 
 test("30 days: 25% monthly discount, still 10% tax", () => {

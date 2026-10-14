@@ -134,11 +134,11 @@ test("insurance choice: own insurance needs the company; Roamly only when it's s
 test("the business inbox gets a 'New booking' email once per booking", async () => {
   const s = setup();
   const me = await s.a("signup", { method: "POST", body: person("jo@example.com", "Jo") });
-  const b = await bookAndPay(s, me.cookie, { car: "van", from: "2027-03-05", to: "2027-03-07", fromTime: "10:00", toTime: "10:00", location: "dfw" });
+  const b = await bookAndPay(s, me.cookie, { car: "van", from: "2027-03-05", to: "2027-03-07", fromTime: "10:00", toTime: "10:00", location: "dallas-pickup" });
   const owner = s.sent.filter(m => m.to === "acefaresrental@gmail.com");
   assert.equal(owner.length, 1);
   assert.match(owner[0].subject, /^New booking: 2019 Honda Odyssey EX-L/);
-  for (const w of ["Jordan Lee", "(214) 555-0100", "DFW International Airport", "State Farm", "inspect.html?car=van&ref=" + b.id]) assert.ok(owner[0].text.includes(w), w);
+  for (const w of ["Jordan Lee", "(214) 555-0100", "Dallas pickup", "State Farm", "inspect.html?car=van&ref=" + b.id]) assert.ok(owner[0].text.includes(w), w);
   await s.hook(signedEvent("payment_intent.succeeded", s.stripe.intents.get(b.paymentIntentId)));   // webhook retry
   assert.equal(s.sent.filter(m => m.to === "acefaresrental@gmail.com").length, 1);
   assert.ok((await s.repo.get("van", b.id)).ownerEmailedAt);
@@ -265,7 +265,7 @@ test("paid on Stripe's hosted page without an account: the account is created fr
   assert.ok(b.userId); assert.equal(b.accountEmail, "renter@example.com"); assert.equal(b.accountCreatedAtCheckout, true);
 });
 
-test("delivery bookings need the address; airport bookings can add a flight", async () => {
+test("delivery bookings need the address; the airport option can no longer be booked", async () => {
   const s = setup();
   const me = await s.a("signup", { method: "POST", body: person("jo@example.com", "Jo") });
   const book = async loc => (await j(await s.checkout(req("/api/checkout", { method: "POST", cookie: me.cookie, body: { car: "srx", from: loc === "dfw" ? "2027-06-01" : "2027-05-01", to: loc === "dfw" ? "2027-06-03" : "2027-05-03", fromTime: "10:00", toTime: "10:00", location: loc } })))).data.ref;
@@ -276,8 +276,6 @@ test("delivery bookings need the address; airport bookings can add a flight", as
   assert.equal((await post({})).data.error, "address_required");
   assert.equal((await post({ deliveryAddress: "500 Elm St, Dallas, TX 75202" })).status, 200);
   assert.equal((await s.repo.get("srx", ref)).handoff.address, "500 Elm St, Dallas, TX 75202");
-  const ref2 = await book("dfw");
-  await s.details(req("/api/checkout-details", { method: "POST", cookie: me.cookie, body: { car: "srx", ref: ref2, ...sign, insurance: { choice: "own", company: "GEICO" }, flight: "AA 1234" } }));
-  const b2 = await s.repo.get("srx", ref2);
-  assert.equal(b2.handoff.flight, "AA 1234"); assert.equal(s.stripe.intents.get(b2.paymentIntentId).metadata.flight, "AA 1234");
+  const r2 = await j(await s.checkout(req("/api/checkout", { method: "POST", cookie: me.cookie, body: { car: "srx", from: "2027-06-01", to: "2027-06-03", fromTime: "10:00", toTime: "10:00", location: "dfw" } })));
+  assert.equal(r2.status, 400); assert.equal(r2.data.error, "bad_location");
 });

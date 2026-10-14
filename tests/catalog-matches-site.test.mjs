@@ -17,6 +17,7 @@ test("car prices and miles on the page match the server", () => {
 
 test("pickup/delivery fees on the page match the server", () => {
   for (const [id, l] of Object.entries(LOCATIONS)) {
+    if (l.retired) { assert.ok(!html.includes(`id:"${id}"`), `${id} is no longer offered on the page`); continue; }
     const m = html.match(new RegExp(`id:"${id}",[^\\n]*?fee:(\\d+)`));
     assert.ok(m, `location ${id} found on page`); assert.equal(Number(m[1]), l.fee, `${id} fee`);
   }

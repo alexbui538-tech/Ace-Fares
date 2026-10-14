@@ -7,7 +7,7 @@ The website keeps its own calendar and booking window. A small server, Netlify F
 1. **Blocked dates:** the page asks `/api/availability` which dates are taken, and those days are crossed out in the calendar.
 2. **Starting checkout:** the renter presses **Book and pay securely**, and the page sends the car, dates, times and pickup choice to `/api/checkout`. The server:
    - checks the request
-   - works out the price itself: rental, then the discount (10% for 3+ days, 25% for 30+ days), then the fee (delivery $100, DFW $125), then Texas rental tax (10% for 30 days or less, 6.25% for 31–180 days)
+   - works out the price itself: rental, then the discount (10% for 3+ days, 25% for 30+ days), then the fee (delivery $100; the DFW airport option was removed October 14), then Texas rental tax (10% for 30 days or less, 6.25% for 31–180 days)
    - **holds the dates for 35 minutes**
    - creates a Stripe Checkout page and sends the renter there
 3. **Payment:** the renter pays on Stripe with whatever methods you turn on in Stripe (Settings → Payment methods), such as card, Apple Pay or Google Pay. Methods that take days to clear, like bank payments, keep the dates held until the money arrives, then confirm or release them.
@@ -80,7 +80,7 @@ Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database 
 ### Automated: already run, all passing
 
 - **`npm test`**: 25 server tests, which also run on every Netlify deploy.
-  - **Prices:** rentals of 2, 4, 30 and 31 days; delivery and DFW fees; tax brackets.
+  - **Prices:** rentals of 2, 4, 30 and 31 days; delivery fee; tax brackets.
   - **Checking requests:** past dates, a return before pickup, unknown cars, more than 180 days.
   - **Holds:** they expire, can be released, and a paid booking can't be cancelled.
   - **Turnaround:** the 1-day gap between rentals.
@@ -125,7 +125,7 @@ Stripe test cards: `4242 4242 4242 4242` succeeds. `4000 0000 0000 0002` is decl
 
 ## Taxes
 
-The site charges Texas motor vehicle rental tax (10% for 30 days or less, 6.25% for 31–180 days) on the rental after discounts, plus delivery and airport fees. Confirm with your accountant whether those fees should be taxed. The setting is `TAX_INCLUDES_FEES` in `lib/catalog.mjs`, and the matching `includesFees` in `public/index.html`. You're responsible for filing and remitting the tax collected. Stripe doesn't do that for you.
+The site charges Texas motor vehicle rental tax (10% for 30 days or less, 6.25% for 31–180 days) on the rental after discounts, plus the delivery fee. Confirm with your accountant whether those fees should be taxed. The setting is `TAX_INCLUDES_FEES` in `lib/catalog.mjs`, and the matching `includesFees` in `public/index.html`. You're responsible for filing and remitting the tax collected. Stripe doesn't do that for you.
 
 ## Your bookings page
 
@@ -341,7 +341,7 @@ On the bookings page, **Add charge…** on any paid trip. Choose what it's for a
 |---|---|
 | Late return fee | $50 (after the 30-minute grace period) |
 | Extra days late | the daily rate for each day |
-| Extra miles | $3 per mile (the page suggests the number from the pickup and return odometer photos) |
+| Extra miles | $3 per mile for the Escalade, $0.99 per mile for the other cars (set as `extraMile` in `lib/catalog.mjs`; the page suggests the number from the pickup and return odometer photos) |
 | Fuel | fuel cost you enter + $30 |
 | Cleaning | $30 |
 | Smoking | $150 |

@@ -103,10 +103,10 @@ await page.click(`#cal-months button[data-d="${D(2)}"]`);
 ok(await page.locator(`#cal-months button[data-d="${D(10)}"]`).isDisabled(), "after picking a start before a booking, days past it are blocked");
 await page.click("#cal-close");
 
-// pick free dates, DFW handoff; the page shows the same total the server will charge
+// pick free dates, Dallas pickup; the page shows the same total the server will charge
 await pickRange(10, 14);
-await page.selectOption("#b-loc", "dfw");
-const expect = quote({ car: "escalade", location: "dfw", days: 4, from: D(10) }).total / 100;
+await page.selectOption("#b-loc", "dallas-pickup");
+const expect = quote({ car: "escalade", location: "dallas-pickup", days: 4, from: D(10) }).total / 100;
 const shown = (await page.textContent("#b-quote .sum")).replace(/[^\d.]/g, "");
 ok(Number(shown) === expect, `trip total on the page ($${shown}) matches what the server charges ($${expect})`);
 
@@ -134,13 +134,13 @@ ok((await makeRepo(store).all("escalade")).some(b => b.userId === riley), "the b
 
 // pay -> back to the site
 const p = stripe.calls.create.at(-1).params;
-ok(p.metadata.from === D(10) && p.metadata.to === D(14) && p.metadata.location === "dfw", "Stripe checkout started with the chosen dates and DFW");
+ok(p.metadata.from === D(10) && p.metadata.to === D(14) && p.metadata.location === "dallas-pickup", "Stripe checkout started with the chosen dates and Dallas pickup");
 const sid = [...stripe.sessions.keys()].at(-1);
 await H["/api/stripe-webhook"](signedEvent("checkout.session.completed", stripe.pay(sid)));
 await page.goto(p.success_url.replace("{CHECKOUT_SESSION_ID}", sid));
 await page.waitForSelector("#done[open]"); await page.waitForTimeout(400);
 ok((await page.textContent("#done-title")).includes("You're booked"), "after paying, the site shows 'You're booked!'");
-ok((await page.textContent("#done-sum")).includes("DFW"), "confirmation shows the trip details");
+ok((await page.textContent("#done-sum")).includes("Dallas pickup"), "confirmation shows the trip details");
 ok(!page.url().includes("session_id"), "the address bar is cleaned up");
 ok(await page.isVisible("#done-verify") && (await page.getAttribute("#done-verify", "href")).startsWith("/verify.html?car=escalade&ref="), "after paying: 'Verify your license now' button");
 ok(await page.isVisible("#acct-in") && (await page.textContent("#acct-first")) === "Riley", "header shows Riley's account");
@@ -311,7 +311,7 @@ await a.fill("#key", "wrong"); await a.click("#login button"); await a.waitForTi
 ok((await a.textContent("#login-err")).includes("isn't right"), "bookings page: wrong admin key is refused");
 await a.fill("#key", "owner-key-123"); await a.click("#login button"); await a.waitForTimeout(800);
 const txt = await a.textContent("main");
-ok(txt.includes("Test Renter") && txt.includes("Paid") && txt.includes("DFW Airport"), "bookings page: shows the paid booking with renter and pickup");
+ok(txt.includes("Test Renter") && txt.includes("Paid") && txt.includes("Dallas pickup"), "bookings page: shows the paid booking with renter and pickup");
 await a.screenshot({ path: "e2e-admin.png", fullPage: true });
 ok(await a.isChecked("#ext-on"), "bookings page: extension requests switch is on");
 await a.click('button[data-ext="extend-approve"]'); await a.waitForTimeout(900);

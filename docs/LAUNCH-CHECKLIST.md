@@ -1,7 +1,7 @@
 # Ace Fares website: launch checklist (audits of October 12 and 13, 2026)
 
 ## Fixed during the audit (live)
-- Checkout now asks for the **delivery address** (required for Delivery) and an optional **flight number** (DFW). Both are saved to the booking, Stripe, the New booking email and the bookings page.
+- Checkout now asks for the **delivery address** (required for Delivery) and an optional **flight number** (DFW, since removed). Both are saved to the booking, Stripe, the New booking email and the bookings page.
 - The Stripe webhook no longer shows server error details to the public when it isn't set up.
 - Security headers added. The bookings page is hidden from search engines.
 - Added robots.txt and sitemap.xml, plus a share image and preview text for links posted on social media and in texts.
@@ -18,7 +18,7 @@
 ## Done
 - ✅ **Built October 13 (late):** blocked dates, pickup and return-day reminder emails, a refund choice when you cancel, payment links for declined charges, the monthly sales and tax report, vehicle records with service reminders, pickup vs. return photo comparison, date changes from My trips, price and deposit editing, booking export and backup, and the contact form. Rental agreement draft9 (date changes, section 15).
 - ✅ **Stripe webhook (test mode)** set up with 12 events, and `STRIPE_WEBHOOK_SECRET` added in Netlify. Confirmed on October 12: the site rejects messages with a fake signature.
-- ✅ **Rental terms filled in** (agreement draft9): $3/extra mile, $50 late fee after a 30-minute grace period, $30 fuel fee plus fuel, $30 cleaning, a $20 cancellation fee after 24 hours, no out-of-state travel, tolls and tickets at cost plus a $15 handling fee each, extensions at the daily rate plus $25/day.
+- ✅ **Rental terms filled in** (agreement draft10): extra miles $3/mile for the Escalade and $0.99/mile for the other cars, $50 late fee after a 30-minute grace period, $30 fuel fee plus fuel, $30 cleaning, a $20 cancellation fee after 24 hours, no out-of-state travel, tolls and tickets at cost plus a $15 handling fee each, extensions at the daily rate plus $25/day.
 - ✅ **Built October 13:** renter cancellation with automatic refunds, trip extensions (owner approves; on/off switch), post-trip charges with itemized statements, reviews (emailed after each trip, shown on the site), and the Become a host form now emails your inbox.
 - ✅ **Gmail connected** (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, `OWNER_EMAIL`). The site sees the settings. Confirm with a test booking that the emails actually arrive.
 
@@ -27,7 +27,7 @@
 2. **Toll tags:** put an NTTA TollTag on each car, under your account, so tolls are billed to you at the lower tag rate. After each trip, charge the tolls from the bookings page (Add charge → Tolls); the $15 handling fee per toll is added automatically. For mailed toll bills, send the toll authority the signed rental agreement within 30 days of the bill.
 3. **Insurance:** written confirmation that your commercial or fleet policy covers paid rentals, drivers aged 18–20, and rideshare/delivery use.
 4. **Texas motor vehicle rental tax:** the site charges 10% (6.25% for 31+ days). Make sure you have the Comptroller permit and are filing it. Confirm with an accountant.
-5. **Attorney review:** rental agreement draft9, privacy policy, referral terms, biometric consent, minimum age 18.
+5. **Attorney review:** rental agreement draft10, privacy policy, referral terms, biometric consent, minimum age 18.
 6. **Go live:**
    - Switch Netlify to the live Stripe keys and add a live webhook with the same 12 events.
    - Make one real booking, then refund it.
