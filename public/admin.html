@@ -112,7 +112,7 @@ tr.blocked td{background:#F6F2EA;color:var(--ink-2)}
 </main>
 <script>
 const CARS = { escalade: "Cadillac Escalade", srx: "Cadillac SRX", bmw: "BMW 650i Convertible", van: "Honda Odyssey" };
-const PLACES = { "dallas-pickup": "Dallas pickup", "dallas-delivery": "Delivery", "dfw": "DFW Airport" };
+const PLACES = { "dallas-pickup": "McKinney pickup", "dallas-delivery": "Delivery", "dfw": "DFW Airport" };
 const LABEL = { confirmed: "Paid", hold: "In checkout", conflict: "Paid, dates taken: refund", cancelled: "Cancelled", released: "Checkout abandoned", expired: "Checkout expired" };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const nice = d => d ? new Date(d + "T12:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : "";

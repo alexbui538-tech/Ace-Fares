@@ -140,7 +140,7 @@ await H["/api/stripe-webhook"](signedEvent("checkout.session.completed", stripe.
 await page.goto(p.success_url.replace("{CHECKOUT_SESSION_ID}", sid));
 await page.waitForSelector("#done[open]"); await page.waitForTimeout(400);
 ok((await page.textContent("#done-title")).includes("You're booked"), "after paying, the site shows 'You're booked!'");
-ok((await page.textContent("#done-sum")).includes("Dallas pickup"), "confirmation shows the trip details");
+ok((await page.textContent("#done-sum")).includes("McKinney pickup"), "confirmation shows the trip details");
 ok(!page.url().includes("session_id"), "the address bar is cleaned up");
 ok(await page.isVisible("#done-verify") && (await page.getAttribute("#done-verify", "href")).startsWith("/verify.html?car=escalade&ref="), "after paying: 'Verify your license now' button");
 ok(await page.isVisible("#acct-in") && (await page.textContent("#acct-first")) === "Riley", "header shows Riley's account");
@@ -311,7 +311,7 @@ await a.fill("#key", "wrong"); await a.click("#login button"); await a.waitForTi
 ok((await a.textContent("#login-err")).includes("isn't right"), "bookings page: wrong admin key is refused");
 await a.fill("#key", "owner-key-123"); await a.click("#login button"); await a.waitForTimeout(800);
 const txt = await a.textContent("main");
-ok(txt.includes("Test Renter") && txt.includes("Paid") && txt.includes("Dallas pickup"), "bookings page: shows the paid booking with renter and pickup");
+ok(txt.includes("Test Renter") && txt.includes("Paid") && txt.includes("McKinney pickup"), "bookings page: shows the paid booking with renter and pickup");
 await a.screenshot({ path: "e2e-admin.png", fullPage: true });
 ok(await a.isChecked("#ext-on"), "bookings page: extension requests switch is on");
 await a.click('button[data-ext="extend-approve"]'); await a.waitForTimeout(900);

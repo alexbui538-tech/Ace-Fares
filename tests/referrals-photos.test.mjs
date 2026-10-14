@@ -138,7 +138,7 @@ test("the business inbox gets a 'New booking' email once per booking", async () 
   const owner = s.sent.filter(m => m.to === "acefaresrental@gmail.com");
   assert.equal(owner.length, 1);
   assert.match(owner[0].subject, /^New booking: 2019 Honda Odyssey EX-L/);
-  for (const w of ["Jordan Lee", "(214) 555-0100", "Dallas pickup", "State Farm", "inspect.html?car=van&ref=" + b.id]) assert.ok(owner[0].text.includes(w), w);
+  for (const w of ["Jordan Lee", "(214) 555-0100", "McKinney pickup, 362 Virginia Parkway, McKinney, TX", "State Farm", "inspect.html?car=van&ref=" + b.id]) assert.ok(owner[0].text.includes(w), w);
   await s.hook(signedEvent("payment_intent.succeeded", s.stripe.intents.get(b.paymentIntentId)));   // webhook retry
   assert.equal(s.sent.filter(m => m.to === "acefaresrental@gmail.com").length, 1);
   assert.ok((await s.repo.get("van", b.id)).ownerEmailedAt);
