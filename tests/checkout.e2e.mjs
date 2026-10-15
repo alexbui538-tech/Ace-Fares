@@ -46,9 +46,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(await r.text());
   }
   try {
-    let f = await readFile(join(ROOT, url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname)));
-    // these tests cover the site's own checkout; ?wb=1 keeps the live setting (Wheelbase takes bookings)
-    if ((url.pathname === "/" || url.pathname === "/index.html") && !url.searchParams.has("wb")) f = Buffer.from(String(f).replace('booking: "wheelbase"', 'booking: "site"'));
+    const f = await readFile(join(ROOT, url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname)));
     res.writeHead(200, { "content-type": { ".html": "text/html", ".webp": "image/webp", ".png": "image/png" }[extname(url.pathname) || ".html"] || "application/octet-stream" }); res.end(f);
   } catch { res.writeHead(404); res.end(); }
 });

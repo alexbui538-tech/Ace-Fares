@@ -1,7 +1,7 @@
 // Browser test: the real page + the real booking server code, with a fake Stripe.
 // Run: npm i --no-save playwright && npx playwright install chromium && node tests/site.e2e.mjs
 import http from "node:http";
-import { readFile, writeFile, unlink } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join, extname, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -64,9 +64,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(Buffer.from(await r.arrayBuffer()));
   }
   try {
-    let f = await readFile(join(ROOT, url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname)));
-    // these tests cover the site's own checkout; ?wb=1 keeps the live setting (Wheelbase takes bookings)
-    if ((url.pathname === "/" || url.pathname === "/index.html") && !url.searchParams.has("wb")) f = Buffer.from(String(f).replace('booking: "wheelbase"', 'booking: "site"'));
+    const f = await readFile(join(ROOT, url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname)));
     res.writeHead(200, { "content-type": { ".html": "text/html", ".webp": "image/webp", ".png": "image/png" }[extname(url.pathname) || ".html"] || "application/octet-stream" }); res.end(f);
   } catch { res.writeHead(404); res.end(); }
 });
@@ -285,9 +283,7 @@ apiDown = false;
 
 // opened as a file (no server): falls back to text booking
 const p2 = await browser.newPage();
-const siteCopy = join(ROOT, ".e2e-index.html");   // a copy using the site's own checkout, deleted below
-await writeFile(siteCopy, String(await readFile(join(ROOT, "index.html"))).replace('booking: "wheelbase"', 'booking: "site"'));
-await p2.goto("file://" + siteCopy); await p2.waitForTimeout(500); await unlink(siteCopy);
+await p2.goto("file://" + join(ROOT, "index.html")); await p2.waitForTimeout(500);
 await p2.click("[data-book=bmw]");
 ok((await p2.textContent("#b-go")).includes("Text us"), "no server: falls back to 'Text us to book'");
 
@@ -455,21 +451,4 @@ ok(rc && rc.change && rc.change.status === "requested" && rc.change.from === D(2
 ok(await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "phone: change dates fits the screen");
 
 ok(errs.length === 0, "no page errors " + errs.join(" | "));
-// live setting: Wheelbase takes bookings. Book buttons and the search go to /book.html, which loads the Wheelbase store.
-{
-  const w = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await w.route(/cloudfront\.net|wheelbasepro\.com/, r => r.abort());   // no outside network in tests
-  await w.goto(base + "/?wb=1"); await w.waitForTimeout(500);
-  await w.click('.car[data-id="srx"] [data-book]'); await w.waitForURL(/\/book\.html\?car=srx/);
-  ok(true, "Wheelbase: Book this car opens /book.html?car=srx");
-  const st = w.locator("wheelbase-store");
-  ok(await st.getAttribute("dealer-id") === "5234642" && await st.getAttribute("store-type") === "auto", "Wheelbase: store for dealer 5234642, cars (auto)");
-  await w.screenshot({ path: "e2e-book.png" });
-  await w.goto(base + "/?wb=1"); await w.waitForTimeout(400);
-  ok(!(await w.isVisible("#refer-band")), "Wheelbase: Refer a friend is hidden (its checkout can't use referral credit)");
-  ok(await w.locator('#nav a[href="/book.html"]').count() === 1, "Wheelbase: Book now in the menu");
-  await w.click("#search button[type=submit]"); await w.waitForURL(/\/book\.html$/);
-  ok(true, "Wheelbase: the hero search goes to the booking page");
-  await w.close();
-}
 await browser.close(); server.close();
