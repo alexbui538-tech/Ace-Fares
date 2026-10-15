@@ -48,6 +48,6 @@
 - **Google sign-in.** Needs: a Google Client ID.
 - **Booking texts to (972) 994-6413.** Needs: a Twilio account.
 - **The Roamly option at checkout.** Needs: your Roamly link.
-- **Custom domain** (e.g. acefaresrental.com). Needs: buy the domain. Netlify, Stripe and Google settings follow.
+- **Custom domain: acefares.com.** DNS points to Netlify, and the site uses acefares.com for Google. Still to do: set `SITE_URL`, move the Stripe webhook to acefares.com, and add the domain in Google Search Console (see SETUP.md).
 - **Visitor stats** (Google Analytics / Meta Pixel). Needs: the tracking IDs.
 - **Confirm** the delivery service areas and every FAQ answer, which are marked TODO in the code.

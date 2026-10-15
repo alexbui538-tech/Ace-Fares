@@ -58,7 +58,7 @@ Set these in Netlify under **Site configuration → Environment variables**. Nev
 | `GOOGLE_CLIENT_ID` | Turns on **Continue with Google**. See "Set up Continue with Google" below. It isn't secret. |
 | `SESSION_SECRET` (optional) | Signs login cookies. If it's empty, the site makes a random key and keeps it in its private storage. |
 | `REQUIRE_ACCOUNT` (optional) | Set to `true` to make people log in before booking. By default, guests can book and checkout creates their account. |
-| `SITE_URL` (optional) | Your custom domain, once you have one. Netlify's own address is used until then. |
+| `SITE_URL` | `https://acefares.com`, so links in emails use your domain. Netlify's own address is used if it isn't set. |
 
 Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database to set up.
 
@@ -129,7 +129,7 @@ The site charges Texas motor vehicle rental tax (10% for 30 days or less, 6.25% 
 
 ## Your bookings page
 
-Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `ADMIN_KEY`. It shows each car's upcoming paid bookings: dates, times, renter name, phone and email, pickup or delivery, and amount paid. **Cancel** frees the dates. If the renter paid, refund them in the Stripe Dashboard as well. The page isn't linked from the website and tells search engines not to list it, but treat the admin key like a password.
+Open **https://acefares.com/admin.html** and sign in with your `ADMIN_KEY`. It shows each car's upcoming paid bookings: dates, times, renter name, phone and email, pickup or delivery, and amount paid. **Cancel** frees the dates. If the renter paid, refund them in the Stripe Dashboard as well. The page isn't linked from the website and tells search engines not to list it, but treat the admin key like a password.
 
 ## Prices
 
@@ -408,3 +408,10 @@ Checkout has an optional box: **Add damage protection through Wheelbase**. Rente
 - their confirmation email says you'll send the price, deductible and coverage details to accept before pickup.
 
 Until the Wheelbase integration is set up, send them the Wheelbase protection offer yourself. Section 6 of the rental agreement (draft11) explains that the protection applies only once they accept and pay for it, under its own terms.
+
+## Your domain: acefares.com
+
+- The site's address for Google is **https://acefares.com** (canonical link, sitemap, robots.txt, share previews). The browser tab and Google icon is the ace of spades card (`public/favicon.ico`, `public/images/icon-*.png`).
+- **Old links:** acefares.com used to host a different site, and Google still lists its pages (/browse, /signup...). `public/_redirects` sends those to the matching part of this site with a permanent (301) redirect, and any other missing page shows `public/404.html` with a button to the cars.
+- **Google Search Console** (search.google.com/search-console): add the domain `acefares.com`. It asks for a TXT record in GoDaddy DNS. Then submit `https://acefares.com/sitemap.xml` and use **URL inspection → Request indexing** on `https://acefares.com/`. Google replaces the old listing as it re-crawls, usually within days to a few weeks.
+- **Stripe webhook:** once acefares.com is the primary domain, Netlify redirects the netlify.app address to it, and Stripe doesn't follow redirects. Change the webhook endpoint in Stripe to `https://acefares.com/api/stripe-webhook`. In Stripe's settings, also update the Public details links and add acefares.com under Payment method domains.

@@ -4,18 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="only light">
-<title>Ace Fares Rentals</title>
+<title>Ace Fares Rentals | Dallas Car Rentals Direct From the Owner</title>
 <meta name="description" content="Rent a Cadillac Escalade, Cadillac SRX, BMW 650i convertible or Honda Odyssey van direct from the owner in Dallas, Texas. Pickup in Dallas or delivery across DFW.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ace Fares Rentals">
 <meta property="og:title" content="Ace Fares Rentals: Dallas car rentals direct from the owner">
 <meta property="og:description" content="Cadillac Escalade, Cadillac SRX, BMW 650i convertible and Honda Odyssey. Pickup in Dallas or delivery across DFW.">
-<meta property="og:url" content="https://acefaresrental.netlify.app/">
-<meta property="og:image" content="https://acefaresrental.netlify.app/images/share.jpg">
+<meta property="og:url" content="https://acefares.com/">
+<meta property="og:image" content="https://acefares.com/images/share.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://acefaresrental.netlify.app/">
-<link rel="icon" href="images/logo.png">
+<link rel="canonical" href="https://acefares.com/">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="96x96" href="/images/icon-96.png"><link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png"><link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"AutoRental","name":"Ace Fares Rentals","alternateName":"Ace Fares Rental Company","url":"https://acefares.com/","logo":"https://acefares.com/images/icon-192.png","image":"https://acefares.com/images/share.jpg","telephone":"+1-972-994-6413","email":"acefaresrental@gmail.com","address":{"@type":"PostalAddress","streetAddress":"2204 Lovedale Avenue","addressLocality":"Dallas","addressRegion":"TX","addressCountry":"US"},"areaServed":"Dallas-Fort Worth"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Ace Fares Rentals","alternateName":["Ace Fares","AceFares"],"url":"https://acefares.com/"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1669,6 +1671,8 @@ function route(){
   else scrollTo(0, 0);
 }
 addEventListener("hashchange", route);
+// links to the old acefares.com site (/browse, /host, /faq...) arrive as /?s=fleet etc. (see public/_redirects)
+{ const s = new URLSearchParams(location.search).get("s"); if (s && /^[a-z]+$/.test(s) && document.getElementById(s)) history.replaceState(null, "", location.pathname + "#" + s); }
 route();
 
 /* host sign-up: sent straight to the business inbox (falls back to opening an email if the server can't be reached) */

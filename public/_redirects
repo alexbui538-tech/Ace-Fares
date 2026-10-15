@@ -1,0 +1,37 @@
+# Old acefares.com pages (from the previous site Google still lists) go to the matching part of this site.
+# 301 = moved for good, so Google replaces the old links. ?s=<section> is turned into #<section> by index.html.
+/browse           /?s=fleet  301
+/browse/*         /?s=fleet  301
+/cars             /?s=fleet  301
+/cars/*           /?s=fleet  301
+/vehicles         /?s=fleet  301
+/vehicles/*       /?s=fleet  301
+/vehicle/*        /?s=fleet  301
+/search           /?s=fleet  301
+/rent             /?s=fleet  301
+/host             /?s=host  301
+/hosts            /?s=host  301
+/list             /?s=host  301
+/list-your-car    /?s=host  301
+/become-a-host    /?s=host  301
+/earn             /?s=host  301
+/faq              /?s=faq  301
+/help             /?s=faq  301
+/how-it-works     /?s=how  301
+/contact          /?s=message  301
+/support          /?s=message  301
+/signup           /?login=1  301
+/sign-up          /?login=1  301
+/register         /?login=1  301
+/login            /?login=1  301
+/signin           /?login=1  301
+/sign-in          /?login=1  301
+/account          /?trips=1  301
+/account/*        /?trips=1  301
+/dashboard        /?trips=1  301
+/dashboard/*      /?trips=1  301
+/trips            /?trips=1  301
+/bookings         /?trips=1  301
+/about            /  301
+/terms            /rental-agreement  301
+/privacy          /privacy.html  301

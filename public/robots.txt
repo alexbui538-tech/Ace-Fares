@@ -8,4 +8,4 @@ Disallow: /compare.html
 Disallow: /pay.html
 Disallow: /api/
 
-Sitemap: https://acefaresrental.netlify.app/sitemap.xml
+Sitemap: https://acefares.com/sitemap.xml
