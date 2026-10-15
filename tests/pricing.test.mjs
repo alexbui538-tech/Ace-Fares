@@ -14,8 +14,8 @@ test("2-day SRX Wed-Thu: weekday rate $39, no discount, 10% tax", () => {
 test("4-day Escalade Wed-Sat with delivery: 2 x $259 + 2 x $349, 5% off (Escalade 3+ days), fee taxed", () => {
   const q = quote(v({ location: "dallas-delivery" }));
   assert.equal(q.weekdays, 2); assert.equal(q.weekends, 2);
-  assert.equal(q.rental, 121600); assert.equal(q.discount, 6080); assert.equal(q.fee, 10000);
-  assert.equal(q.tax, 12552); assert.equal(q.total, 138072);
+  assert.equal(q.rental, 121600); assert.equal(q.discount, 6080); assert.equal(q.fee, 5000);
+  assert.equal(q.tax, 12052); assert.equal(q.total, 132572);
 });
 
 test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't charged", () => {
@@ -31,9 +31,9 @@ test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't cha
   assert.equal(quote(v({ car: "van", from: "2026-11-09", to: "2026-11-11" })).rental, 2 * 89 * 100);   // Mon + Tue
 });
 
-test("DFW airport handoff is no longer offered; delivery is $100", () => {
+test("DFW airport handoff is no longer offered; delivery is $50", () => {
   assert.throws(() => validateRequest({ car: "srx", from: "2027-01-04", to: "2027-01-06", location: "dfw" }, new Date("2026-10-14T12:00:00Z")), /pickup or delivery option/);
-  assert.equal(quote(v({ location: "dallas-delivery" })).fee, 10000);
+  assert.equal(quote(v({ location: "dallas-delivery" })).fee, 5000);
 });
 
 test("30 days: Odyssey monthly discount is 40%, still 10% tax", () => {

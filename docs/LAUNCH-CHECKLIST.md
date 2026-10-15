@@ -44,7 +44,7 @@
 - **Additional drivers**, each with their own license check. Needs: a fee per driver, if any.
 - **Promo codes** (e.g. FIRSTRIDE10). Needs: the codes and amounts you want.
 - **Under-25 young driver fee.** Needs: the amount, if any. Many companies charge $15-$30 a day for drivers under 25.
-- **Delivery fee by distance** instead of a flat $100. Needs: a Google Maps API key and your pricing per mile.
+- **Delivery fee by distance** instead of a flat $50. Needs: a Google Maps API key and your pricing per mile.
 - **Google sign-in.** Needs: a Google Client ID.
 - **Booking texts to (972) 994-6413.** Needs: a Twilio account.
 - **The Roamly option at checkout.** Needs: your Roamly link.

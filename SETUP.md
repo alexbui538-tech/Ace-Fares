@@ -109,7 +109,7 @@ Bookings are stored in **Netlify Blobs**, which comes with Netlify. No database 
 Stripe test cards: `4242 4242 4242 4242` succeeds. `4000 0000 0000 0002` is declined. Use any future expiry date and any CVC.
 
 - [ ] `node scripts/live-checks.mjs https://YOUR-SITE`: availability answers, exactly one of five simultaneous bookings for the same dates succeeds, and past dates are rejected.
-- [ ] Book the SRX for 4 days with delivery. The Stripe page shows $212.40 rental (after 10% off), $100 delivery and $31.24 tax. Pay with 4242 and you see "You're booked!"
+- [ ] Book the SRX for 4 days with delivery. The checkout page shows the rental after the 15% discount, $50 delivery and the tax. Pay with 4242 and you see "You're booked!"
 - [ ] That payment appears in Stripe (test mode) with the car and dates in its description.
 - [ ] Those dates now show crossed out for the SRX.
 - [ ] `GET /api/admin/bookings` with your admin key shows the booking as `confirmed`, with the renter's name, email and phone.

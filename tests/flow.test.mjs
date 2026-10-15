@@ -218,12 +218,12 @@ test("on-site checkout: hold + payment created, summary shown, details saved, pa
   const pc = s.stripe.calls.piCreate[0];
   assert.equal(pc.params.amount, r.data.total); assert.deepEqual(pc.params.automatic_payment_methods, { enabled: true });
   // Thu May 6 2027 + Fri + Sat = 139 + 2*199 = 537, 10% off = 483.30, +$100 delivery, 10% tax on 583.30 = 58.33 -> 641.63
-  assert.equal(r.data.total, 64163);
+  assert.equal(r.data.total, 58663);
   const ref = r.data.ref;
 
   const g = await j(await s.details(get(`/api/checkout-details?car=bmw&ref=${ref}`)));
   assert.equal(g.status, 200); assert.equal(g.data.publishableKey, PK); assert.equal(g.data.clientSecret, "pi_test_1_secret_abc");
-  assert.equal(g.data.summary.total, 64163); assert.equal(g.data.summary.weekdays, 1); assert.equal(g.data.summary.weekends, 2);
+  assert.equal(g.data.summary.total, 58663); assert.equal(g.data.summary.weekdays, 1); assert.equal(g.data.summary.weekends, 2);
   assert.equal(g.data.summary.miles, 300); assert.equal(g.data.summary.location, "Delivery"); assert.equal(g.data.summary.photo, "bmw-1");
 
   // renter details: checked, saved, and passed to Stripe for the receipt
@@ -241,10 +241,10 @@ test("on-site checkout: hold + payment created, summary shown, details saved, pa
   assert.equal((await s.hook(signedEvent("payment_intent.succeeded", pi))).status, 200);   // retry is harmless
   assert.equal(mailer.sent.length, 1); assert.equal(mailer.sent[0].to, "jordan@example.com");
   const st = await j(await s.status(get("/api/booking?payment_intent=pi_test_1")));
-  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 64163); assert.equal(st.data.email, "jordan@example.com");
+  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 58663); assert.equal(st.data.email, "jordan@example.com");
   const all = await j(await s.admin(new Request("https://x/api/admin/bookings", { headers: { "x-admin-key": "secret-admin" } })));
   const bk = all.data.bmw.find(x => x.id === ref);
-  assert.equal(bk.customer.name, "Jordan Lee"); assert.equal(bk.termsAccepted, true); assert.equal(bk.amountPaid, 64163);
+  assert.equal(bk.customer.name, "Jordan Lee"); assert.equal(bk.termsAccepted, true); assert.equal(bk.amountPaid, 58663);
   assert.equal((await s.checkout(post("/api/checkout", body({ car: "bmw", from: "2027-05-07", to: "2027-05-08" })))).status, 409);
   // the checkout link no longer offers a payment form
   const g2 = await j(await s.details(get(`/api/checkout-details?car=bmw&ref=${ref}`)));

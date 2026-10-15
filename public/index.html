@@ -1001,7 +1001,7 @@ const SITE = {
   // Where renters can get the car. fee: number = flat fee, 0 = free, null = "quoted when we confirm"
   locations: [
     { id:"dallas-pickup",   name:"Dallas pickup",             note:"2204 Lovedale Avenue, Dallas, TX",             fee:0,    cars:["srx","escalade","bmw","van"] },
-    { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:100,  cars:["srx","escalade","bmw","van"] },
+    { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:50,   cars:["srx","escalade","bmw","van"] },
   ],
   // Discounts on the rental price (not delivery fees). The biggest one that applies is used.
   // Discounts for longer trips are set on each car below (discounts:[...]); they must match lib/catalog.mjs.
@@ -1044,7 +1044,7 @@ const CARS = [
 
 const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
   ["Why are weekends priced differently?","Every car has lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Rent the Escalade, SRX or Odyssey for 7 days or more and the weekends cost the weekday price. Your trip total shows the exact split before you pay."],
-  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100, shown in your trip total before you pay."],
+  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $50, shown in your trip total before you pay."],
   ["What if I drive more than the included miles?","Extra miles are 99 cents per mile, or $3 per mile for the Cadillac Escalade, charged after your trip. Each car shows its included miles per day."],
   ["Do I need my own insurance?","Yes. At checkout you tell us your auto insurance company, and you bring proof at pickup. Your policy needs to cover you in a rental car."],
   ["What photos do I take at pickup and return?","When you pick up the car, you and we each take photos on our phones through this site: the front, back and both sides, the odometer (mileage), the fuel gauge and the interior, plus close-ups of any existing damage. You do the same when you return it. The photos are time-stamped and saved, so we both have a clear record of the car's condition. Open My trips to take them."],
