@@ -117,13 +117,13 @@ ok(Number(shown7) === expect7, `7-day trip total on the page ($${shown7}) matche
 ok((await page.textContent("#b-quote")).includes("$259 × 7 days"), "7-day trip: one line at the weekday price");
 ok(await page.locator("#b-deals .deal.on[data-we]").count() === 1, "7-day trip: the 'Weekends at $259' deal is lit");
 await page.locator("#b-quote").screenshot({ path: "e2e-week.png" });
-// 30+ days on the Escalade: $200 every day, no % off
+// 30+ days on the Escalade: $200 every day, then 30% off
 await pickRange(10, 40);
 const expect30 = quote({ car: "escalade", location: "dallas-pickup", days: 30, from: D(10) }).total / 100;
 const shown30 = (await page.textContent("#b-quote .sum")).replace(/[^\d.]/g, "");
-ok(Number(shown30) === expect30 && expect30 === 6600, `30-day Escalade total on the page ($${shown30}) matches the server ($${expect30}): $200 x 30 + 10% tax`);
-ok((await page.textContent("#b-quote")).includes("$200 × 30 days (monthly price)") && !(await page.textContent("#b-quote")).includes("discount"), "30-day trip: one line at $200, no % discount");
-ok(await page.locator("#b-deals .deal.on").count() === 1 && await page.locator("#b-deals .deal.on[data-mo]").count() === 1, "30-day trip: only the $200/day monthly deal is lit");
+ok(Number(shown30) === expect30 && expect30 === 4620, `30-day Escalade total on the page ($${shown30}) matches the server ($${expect30}): $200 x 30, 30% off, + 10% tax`);
+ok((await page.textContent("#b-quote")).includes("$200 × 30 days (monthly price)") && (await page.textContent("#b-quote")).includes("Monthly discount (30%)"), "30-day trip: one line at $200, then the 30% monthly discount");
+ok(await page.locator("#b-deals .deal.on").count() === 2 && await page.locator("#b-deals .deal.on[data-mo]").count() === 1 && await page.locator('#b-deals .deal.on[data-min="30"]').count() === 1, "30-day trip: the $200/day and 30% monthly deals are lit");
 await page.locator("#b-quote").screenshot({ path: "e2e-month.png" });
 await pickRange(10, 14);
 

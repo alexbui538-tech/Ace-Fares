@@ -74,9 +74,9 @@ test("referral discount and Ace Fares credit come off the rental before tax, nev
 
 test("each car has its own discounts for longer trips", () => {
   const pct = (car, from, to) => quote(v({ car, from, to })).discountPct;
-  // Escalade 5% / 15%, then the flat $200 monthly price (no % off)
+  // Escalade 5% / 15% / 30% (30% off the $200 monthly price)
   assert.equal(pct("escalade", "2026-11-02", "2026-11-04"), 0); assert.equal(pct("escalade", "2026-11-02", "2026-11-05"), 5);
-  assert.equal(pct("escalade", "2026-11-02", "2026-11-09"), 15); assert.equal(pct("escalade", "2026-11-02", "2026-12-02"), 0);
+  assert.equal(pct("escalade", "2026-11-02", "2026-11-09"), 15); assert.equal(pct("escalade", "2026-11-02", "2026-12-02"), 30);
   // SRX 15% / 25% / 45%
   assert.equal(pct("srx", "2026-11-02", "2026-11-05"), 15); assert.equal(pct("srx", "2026-11-02", "2026-11-09"), 25); assert.equal(pct("srx", "2026-11-02", "2026-12-02"), 45);
   // Odyssey 10% / 20% / 40%
@@ -99,11 +99,11 @@ test("7+ day trips: Escalade, SRX and Odyssey weekends cost the weekday price; t
   assert.equal(b.weekendRate, 199); assert.equal(b.rental, (4 * 139 + 3 * 199) * 100);
 });
 
-test("Escalade 30+ days: a flat $200 every day, no % discount on top", () => {
+test("Escalade 30+ days: a flat $200 every day, then 30% off", () => {
   const q = quote(v({ car: "escalade", from: "2026-11-01", to: "2026-12-01" }));
   assert.equal(q.days, 30); assert.equal(q.weekdayRate, 200); assert.equal(q.weekendRate, 200); assert.equal(q.monthlyRate, 200);
-  assert.equal(q.rental, 30 * 200 * 100); assert.equal(q.discount, 0); assert.equal(q.discountLabel, null);
-  assert.equal(q.tax, 60000); assert.equal(q.total, 660000);
+  assert.equal(q.rental, 30 * 200 * 100); assert.equal(q.discount, 180000); assert.equal(q.discountLabel, "Monthly discount (30%)");
+  assert.equal(q.tax, 42000); assert.equal(q.total, 462000);
   const w = quote(v({ car: "escalade", from: "2026-11-01", to: "2026-11-30" }));   // 29 days: still weekday price + 15% weekly
   assert.equal(w.weekdayRate, 259); assert.equal(w.monthlyRate, null); assert.equal(w.discountPct, 15);
 });
