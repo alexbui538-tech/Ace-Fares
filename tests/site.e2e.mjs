@@ -373,7 +373,7 @@ await a.fill('tr[data-car="srx"] input[name="weekday"]', "55"); await a.click("#
 ok((await (await fetch(base + "/api/availability")).json()).prices.srx.weekday === 55, "prices tab: new price is what the website shows");
 await a.screenshot({ path: "e2e-prices.png", fullPage: true });
 await a.click("#p-reset"); await a.waitForTimeout(700);
-ok((await (await fetch(base + "/api/availability")).json()).prices.srx.weekday === 49, "prices tab: back to defaults");
+ok((await (await fetch(base + "/api/availability")).json()).prices.srx.weekday === 39, "prices tab: back to defaults");
 
 // vehicles tab
 await a.click("[data-tab=vehicles]"); await a.waitForSelector('.vcard[data-car="escalade"]');

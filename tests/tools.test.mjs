@@ -214,9 +214,9 @@ test("prices and deposits set on the bookings page are used for new bookings and
     assert.equal(b.data.total, 5900 + 590);
     assert.equal((await s.tools({ action: "prices", cars: { srx: { weekday: 0, weekend: 79 } } })).status, 400);
     const back = await s.tools({ action: "prices-reset" });
-    assert.deepEqual(back.data.prices.cars.srx, { weekday: 49, weekend: 69 }); assert.equal(DEPOSITS.srx, 250);
+    assert.deepEqual(back.data.prices.cars.srx, { weekday: 39, weekend: 69 }); assert.equal(DEPOSITS.srx, 250);
   } finally { applyPrices({}); }
-  assert.equal(CARS.srx.weekday, 49);
+  assert.equal(CARS.srx.weekday, 39);
 });
 
 /* ---------- reports and export ---------- */

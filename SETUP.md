@@ -136,7 +136,7 @@ Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `AD
 | Car | Mon–Thu | Fri–Sun |
 |---|---|---|
 | Cadillac Escalade | $259 | $349 |
-| Cadillac SRX | $49 | $69 |
+| Cadillac SRX | $39 | $69 |
 | BMW 650i Convertible | $139 | $199 |
 | Honda Odyssey | $89 | $129 |
 

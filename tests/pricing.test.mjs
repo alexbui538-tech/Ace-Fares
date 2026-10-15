@@ -5,10 +5,10 @@ import { NOW } from "./helpers.mjs";
 
 const v = (o) => validateRequest({ car: "escalade", from: "2026-11-04", to: "2026-11-08", location: "dallas-pickup", ...o }, new Date(NOW));
 
-test("2-day SRX Wed-Thu: weekday rate $49, no discount, 10% tax", () => {
+test("2-day SRX Wed-Thu: weekday rate $39, no discount, 10% tax", () => {
   const q = quote(v({ car: "srx", to: "2026-11-06" }));   // Nov 4 2026 is a Wednesday
-  assert.equal(q.days, 2); assert.equal(q.weekdays, 2); assert.equal(q.rental, 9800); assert.equal(q.discount, 0);
-  assert.equal(q.tax, 980); assert.equal(q.total, 10780);
+  assert.equal(q.days, 2); assert.equal(q.weekdays, 2); assert.equal(q.rental, 7800); assert.equal(q.discount, 0);
+  assert.equal(q.tax, 780); assert.equal(q.total, 8580);
 });
 
 test("4-day Escalade Wed-Sat with delivery: 2 x $259 + 2 x $349, 5% off (Escalade 3+ days), fee taxed", () => {
@@ -25,7 +25,7 @@ test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't cha
   const b = quote(v({ car: "bmw", from: "2026-11-06", to: "2026-11-08" }));   // Fri + Sat
   assert.equal(b.rental, 2 * 199 * 100);
   const s = quote(v({ car: "srx", from: "2026-11-08", to: "2026-11-10" }));   // Sun + Mon
-  assert.equal(s.rental, (69 + 49) * 100);
+  assert.equal(s.rental, (69 + 39) * 100);
   const vn = quote(v({ car: "van", from: "2026-11-06", to: "2026-11-09" }));  // Fri, Sat, Sun at the van weekend rate
   assert.equal(vn.rental, 3 * 129 * 100);
   assert.equal(quote(v({ car: "van", from: "2026-11-09", to: "2026-11-11" })).rental, 2 * 89 * 100);   // Mon + Tue
@@ -63,11 +63,11 @@ test("today is computed in Dallas time", () => {
 });
 
 test("referral discount and Ace Fares credit come off the rental before tax, never below $1", () => {
-  const base = v({ car: "srx", from: "2026-11-09", to: "2026-11-11" });           // Mon + Tue = $98
+  const base = v({ car: "srx", from: "2026-11-09", to: "2026-11-11" });           // Mon + Tue = $78
   const q = quote({ ...base, credits: [{ code: "welcome", label: "Friend referral: first trip", amount: 5000 }] });
-  assert.equal(q.credit, 5000); assert.equal(q.tax, Math.round((9800 - 5000) * 0.10)); assert.equal(q.total, 9800 - 5000 + q.tax);
+  assert.equal(q.credit, 5000); assert.equal(q.tax, Math.round((7800 - 5000) * 0.10)); assert.equal(q.total, 7800 - 5000 + q.tax);
   const big = quote({ ...base, credits: [{ code: "welcome", label: "w", amount: 5000 }, { code: "credit", label: "c", amount: 10000 }] });
-  assert.deepEqual(big.credits.map(c => c.amount), [5000, 4700]);               // rental can't go below $1
+  assert.deepEqual(big.credits.map(c => c.amount), [5000, 2700]);               // rental can't go below $1
   assert.equal(big.total, 100 + Math.round(100 * 0.10));
   assert.equal(quote(base).credit, 0);
 });
@@ -91,7 +91,7 @@ test("7+ day trips: Escalade, SRX and Odyssey weekends cost the weekday price; t
   // 6 days (Mon-Sat): Fri and Sat still at the weekend price
   assert.equal(at("escalade", "2026-11-08").weekendRate, 349); assert.equal(at("escalade", "2026-11-08").rental, (4 * 259 + 2 * 349) * 100);
   // 7 days (Mon-Sun): Fri, Sat, Sun at the weekday price
-  for (const [car, wd] of [["escalade", 259], ["srx", 49], ["van", 89]]) {
+  for (const [car, wd] of [["escalade", 259], ["srx", 39], ["van", 89]]) {
     const q = at(car, "2026-11-09");
     assert.equal(q.weekends, 3, car); assert.equal(q.weekendRate, wd, car); assert.equal(q.rental, 7 * wd * 100, car);
   }
