@@ -39,14 +39,14 @@ test("DFW airport handoff is no longer offered; delivery is $100", () => {
 test("30 days: Odyssey monthly discount is 40%, still 10% tax", () => {
   const q = quote(v({ car: "van", from: "2026-11-01", to: "2026-12-01" }));
   assert.equal(q.days, 30); assert.equal(q.discountPct, 40); assert.equal(q.taxPct, 10);
-  // Nov 2026: 17 Mon-Thu days at $89 + 13 Fri-Sun days at $129 = $3,190
-  assert.equal(q.weekdays, 17); assert.equal(q.weekends, 13);
-  assert.equal(q.rental, 319000); assert.equal(q.discount, 127600); assert.equal(q.tax, 19140); assert.equal(q.total, 210540);
+  // Nov 2026: 17 Mon-Thu + 13 Fri-Sun days, all at the $89 weekday price (7+ days) = $2,670
+  assert.equal(q.weekdays, 17); assert.equal(q.weekends, 13); assert.equal(q.weekendRate, 89);
+  assert.equal(q.rental, 267000); assert.equal(q.discount, 106800); assert.equal(q.tax, 16020); assert.equal(q.total, 176220);
 });
 
 test("31 days: 6.25% tax", () => {
   const q = quote(v({ car: "van", from: "2026-11-01", to: "2026-12-02" }));
-  assert.equal(q.taxPct, 6.25); assert.equal(q.rental, 327900); assert.equal(q.tax, Math.round((327900 - 131160) * 0.0625));
+  assert.equal(q.taxPct, 6.25); assert.equal(q.rental, 275900); assert.equal(q.tax, Math.round((275900 - 110360) * 0.0625));
 });
 
 test("rejects bad requests with clear messages", () => {
@@ -84,4 +84,17 @@ test("each car has its own discounts for longer trips", () => {
   // BMW: 10% for 3+ days, no weekly or monthly discount
   assert.equal(pct("bmw", "2026-11-02", "2026-11-05"), 10); assert.equal(pct("bmw", "2026-11-02", "2026-11-09"), 10); assert.equal(pct("bmw", "2026-11-02", "2026-12-02"), 10);
   assert.equal(quote(v({ car: "escalade", from: "2026-11-02", to: "2026-11-09" })).discountLabel, "Weekly discount (15%)");
+});
+
+test("7+ day trips: Escalade, SRX and Odyssey weekends cost the weekday price; the BMW's don't", () => {
+  const at = (car, to) => quote(v({ car, from: "2026-11-02", to }));   // Mon Nov 2
+  // 6 days (Mon-Sat): Fri and Sat still at the weekend price
+  assert.equal(at("escalade", "2026-11-08").weekendRate, 349); assert.equal(at("escalade", "2026-11-08").rental, (4 * 259 + 2 * 349) * 100);
+  // 7 days (Mon-Sun): Fri, Sat, Sun at the weekday price
+  for (const [car, wd] of [["escalade", 259], ["srx", 49], ["van", 89]]) {
+    const q = at(car, "2026-11-09");
+    assert.equal(q.weekends, 3, car); assert.equal(q.weekendRate, wd, car); assert.equal(q.rental, 7 * wd * 100, car);
+  }
+  const b = at("bmw", "2026-11-09");
+  assert.equal(b.weekendRate, 199); assert.equal(b.rental, (4 * 139 + 3 * 199) * 100);
 });

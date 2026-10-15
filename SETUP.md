@@ -140,7 +140,7 @@ Open **https://acefaresrental.netlify.app/admin.html** and sign in with your `AD
 | BMW 650i Convertible | $139 | $199 |
 | Honda Odyssey | $89 | $129 |
 
-Each rental day is priced by its day of the week. The return day isn't charged, so a Thursday pickup with a Monday return is one weekday plus three weekend days. Discounts and tax apply to the total. To change prices, edit `lib/catalog.mjs` **and** the matching `weekday`/`weekend` numbers in `public/index.html`. The tests fail if they don't match.
+Each rental day is priced by its day of the week. The return day isn't charged, so a Thursday pickup with a Monday return is one weekday plus three weekend days. Discounts and tax apply to the total. Trips of 7 days or more on the Escalade, SRX and Odyssey pay the weekday price on Fri–Sun too (`WEEKEND_DEAL` in `lib/catalog.mjs`, and `weekendDeal` on each car in `public/index.html`); the BMW always pays weekend prices. For an extension, the whole trip's new length decides it, and only the added days get the weekday price. To change prices, edit `lib/catalog.mjs` **and** the matching `weekday`/`weekend` numbers in `public/index.html`. The tests fail if they don't match.
 
 ## Confirmation email and rental agreement
 

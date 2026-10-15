@@ -157,8 +157,11 @@ test("cancelling gives back Ace Fares credit the trip used", async () => {
 
 test("extension price: each extra day's rate + $25, plus tax", () => {
   const q = extensionQuote("srx", { from: "2027-03-01", to: "2027-03-06", toTime: "10:00" }, "2027-03-08");   // Sat + Sun
-  assert.equal(q.days, 2); assert.equal(q.weekends, 2); assert.equal(q.rental, 13800); assert.equal(q.fee, 5000);
-  assert.equal(q.tax, 1880); assert.equal(q.total, 20680);
+  // the trip becomes 7 days, so the SRX's Sat + Sun cost the $49 weekday price
+  assert.equal(q.days, 2); assert.equal(q.weekends, 2); assert.equal(q.weekendRate, 49); assert.equal(q.rental, 9800); assert.equal(q.fee, 5000);
+  assert.equal(q.tax, 1480);
+  const short = extensionQuote("srx", { from: "2027-03-03", to: "2027-03-06", toTime: "10:00" }, "2027-03-08");   // a 5-day trip: weekend price
+  assert.equal(short.weekendRate, 69); assert.equal(short.rental, 13800); assert.equal(q.total, 16280);
   assert.throws(() => extensionQuote("srx", { from: "2027-03-01", to: "2027-03-06" }, "2027-03-06"), /after your current one/);
 });
 
@@ -168,7 +171,7 @@ test("renter asks to extend; the extra days are held; owner approves and the sav
   const b = await bookAndPay(s, me.cookie);
   assert.equal((await s.a("trips", { cookie: me.cookie })).data.trips[0].canExtend, true);
   const q = await s.trip({ action: "extend-quote", car: "srx", ref: b.id, to: "2027-03-08" }, me.cookie);
-  assert.equal(q.status, 200, JSON.stringify(q.data)); assert.equal(q.data.quote.total, 20680);
+  assert.equal(q.status, 200, JSON.stringify(q.data)); assert.equal(q.data.quote.total, 16280);
   s.sent.length = 0;
   const r = await s.trip({ action: "extend", car: "srx", ref: b.id, to: "2027-03-08" }, me.cookie);
   assert.equal(r.status, 200); assert.equal(r.data.extension.status, "requested");
@@ -186,11 +189,11 @@ test("renter asks to extend; the extra days are held; owner approves and the sav
   const ok = await s.admin({ action: "extend-approve", car: "srx", id: b.id });
   assert.equal(ok.status, 200, JSON.stringify(ok.data));
   const charge = s.stripe.calls.piCreate.at(-1).params;
-  assert.equal(charge.amount, 20680); assert.equal(charge.off_session, true); assert.equal(charge.metadata.kind, "extension");
+  assert.equal(charge.amount, 16280); assert.equal(charge.off_session, true); assert.equal(charge.metadata.kind, "extension");
   assert.equal(charge.customer, s.stripe.intents.get(b.paymentIntentId).customer);
   const after = await s.repo.get("srx", b.id);
   assert.equal(after.to, "2027-03-08"); assert.equal(after.extension.status, "approved");
-  assert.deepEqual(after.extensions.map(e => [e.from, e.to, e.amount]), [["2027-03-06", "2027-03-08", 20680]]);
+  assert.deepEqual(after.extensions.map(e => [e.from, e.to, e.amount]), [["2027-03-06", "2027-03-08", 16280]]);
   assert.equal(s.sent[0].to, "jordan@example.com"); assert.match(s.sent[0].subject, /Extension approved/);
   assert.equal((await s.admin({ action: "extend-approve", car: "srx", id: b.id })).status, 409);   // only once
 
@@ -200,7 +203,7 @@ test("renter asks to extend; the extra days are held; owner approves and the sav
 
   // cancelling before pickup refunds the extension too
   const c = await s.trip({ action: "cancel", car: "srx", ref: b.id, confirm: true }, me.cookie);
-  assert.equal(c.data.extensionRefund, 20680); assert.equal(s.stripe.calls.refunds.length, 2);
+  assert.equal(c.data.extensionRefund, 16280); assert.equal(s.stripe.calls.refunds.length, 2);
 });
 
 test("owner can switch extension requests off; declined and failed requests", async () => {

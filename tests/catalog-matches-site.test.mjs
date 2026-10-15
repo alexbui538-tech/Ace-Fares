@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CARS, LOCATIONS, CAR_DISCOUNTS, TAX, TAX_INCLUDES_FEES } from "../lib/catalog.mjs";
+import { CARS, LOCATIONS, CAR_DISCOUNTS, WEEKEND_DEAL, TAX, TAX_INCLUDES_FEES } from "../lib/catalog.mjs";
 
 const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
 
@@ -31,6 +31,14 @@ test("discounts and tax on the page match the server", () => {
     assert.deepEqual(page.map(d => [d.minDays, d.pct]).sort((a, b) => b[0] - a[0]), list.map(d => [d.minDays, d.pct]), `${id} discounts`);
   }
   assert.ok(html.includes(`tax: { shortPct: ${TAX.shortPct}, longPct: ${TAX.longPct}, shortMaxDays: ${TAX.shortMaxDays}, includesFees: ${TAX_INCLUDES_FEES} }`), "tax settings");
+});
+
+test("weekends-at-weekday-price trip lengths on the page match the server", () => {
+  for (const id of Object.keys(CARS)) {
+    const m = html.match(new RegExp(`id:"${id}"[^\\n]*?weekendDeal:(\\d+)`)), line = html.match(new RegExp(`id:"${id}"[^\\n]*`))[0];
+    if (WEEKEND_DEAL[id]) { assert.ok(m, `${id} weekendDeal on the page`); assert.equal(Number(m[1]), WEEKEND_DEAL[id], `${id} weekendDeal`); }
+    else assert.ok(!line.includes("weekendDeal"), `${id} has no weekend deal`);
+  }
 });
 
 test("no secret keys in the website files", () => {

@@ -109,6 +109,15 @@ await page.selectOption("#b-loc", "dallas-pickup");
 const expect = quote({ car: "escalade", location: "dallas-pickup", days: 4, from: D(10) }).total / 100;
 const shown = (await page.textContent("#b-quote .sum")).replace(/[^\d.]/g, "");
 ok(Number(shown) === expect, `trip total on the page ($${shown}) matches what the server charges ($${expect})`);
+// 7+ days on the Escalade: weekends at the weekday price, same total as the server
+await pickRange(10, 17);
+const expect7 = quote({ car: "escalade", location: "dallas-pickup", days: 7, from: D(10) }).total / 100;
+const shown7 = (await page.textContent("#b-quote .sum")).replace(/[^\d.]/g, "");
+ok(Number(shown7) === expect7, `7-day trip total on the page ($${shown7}) matches the server ($${expect7}), weekends at the weekday price`);
+ok((await page.textContent("#b-quote")).includes("$259 × 7 days"), "7-day trip: one line at the weekday price");
+ok(await page.locator("#b-deals .deal.on[data-we]").count() === 1, "7-day trip: the 'Weekends at $259' deal is lit");
+await page.locator("#b-quote").screenshot({ path: "e2e-week.png" });
+await pickRange(10, 14);
 
 // book while logged out -> "Log in to book" -> sign up -> straight on to Stripe
 ok(await page.isVisible("#acct-out") && !(await page.isVisible("#acct-in")), "header shows Log in / Sign up when logged out");

@@ -1014,13 +1014,13 @@ const SITE = {
 };
 
 const CARS = [
-  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", weekday:259, weekend:349, miles:100, discounts:[{minDays:30,pct:30},{minDays:7,pct:15},{minDays:3,pct:5}],
+  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", weekday:259, weekend:349, miles:100, discounts:[{minDays:30,pct:30},{minDays:7,pct:15},{minDays:3,pct:5}], weekendDeal:7,
     location:"Dallas, TX", rating:4.8, reviews:14, seats:8, color:"Midnight Black",
     desc:"Seats 8 in first-class comfort, with heated and ventilated seats, a panoramic sunroof, AKG Studio Reference sound and a 38-inch curved OLED display. Made for group trips, nights out and big arrivals.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Third row","8-passenger seating","Sunroof","Premium sound","100 miles/day included"],
     tags:["Seats 8","Third row","Sunroof","Premium sound"],
     photos:[["escalade-1","Front of the black Cadillac Escalade"],["escalade-2","Escalade front grille and headlights"],["escalade-3","Escalade driver's seat and curved display"],["escalade-4","Escalade second-row seats with screens"]], },
-  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", weekday:49, weekend:69, miles:200, discounts:[{minDays:30,pct:45},{minDays:7,pct:25},{minDays:3,pct:15}],
+  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", weekday:49, weekend:69, miles:200, discounts:[{minDays:30,pct:45},{minDays:7,pct:25},{minDays:3,pct:15}], weekendDeal:7,
     location:"Dallas, TX", rating:5, reviews:0, seats:5, color:"Champagne Silver",
     desc:"A sleek crossover with Cadillac comfort for everyday driving. Heated leather seats, a panoramic sunroof, premium sound and a smooth ride for work trips or weekends away.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Sunroof","Leather interior","AWD","Premium sound","Roof rack","200 miles/day included"],
@@ -1032,7 +1032,7 @@ const CARS = [
     features:["AC","Bluetooth","GPS","Backup camera","Convertible top","Heated seats","Cognac leather interior","Premium sound","xDrive AWD","100 miles/day included"],
     tags:["Convertible","V8","Cognac leather","AWD"],
     photos:[["bmw-1","Blue BMW 650i convertible with the top down"],["bmw-2","BMW 650i front view"],["bmw-3","BMW 650i rear three-quarter view"],["bmw-4","BMW 650i rear view, top down"],["bmw-5","BMW cognac leather front seats"],["bmw-6","BMW cognac leather rear seats"]], }
-  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:89, weekend:129, miles:200, discounts:[{minDays:30,pct:40},{minDays:7,pct:20},{minDays:3,pct:10}],
+  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:89, weekend:129, miles:200, discounts:[{minDays:30,pct:40},{minDays:7,pct:20},{minDays:3,pct:10}], weekendDeal:7,
     location:"Dallas, TX", rating:5, reviews:0, seats:8, color:"Lunar Silver",
     desc:"The family hauler for DFW. Seats 8 with heated leather seats, tri-zone climate control and Magic Slide second-row seats. A 280 hp V6, Honda Sensing safety features, and Apple CarPlay and Android Auto make every mile easy.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","8-passenger seating","Leather interior","Sliding doors","Magic Slide 2nd row","Honda Sensing safety suite","Apple CarPlay / Android Auto","Tri-zone climate control","9-speed automatic","280 hp V6","200 miles/day included"],
@@ -1041,7 +1041,7 @@ const CARS = [
 ];
 
 const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
-  ["Why are weekends priced differently?","Every car has lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Your trip total shows the exact split before you pay."],
+  ["Why are weekends priced differently?","Every car has lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Rent the Escalade, SRX or Odyssey for 7 days or more and the weekends cost the weekday price. Your trip total shows the exact split before you pay."],
   ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. Delivery is $100, shown in your trip total before you pay."],
   ["What if I drive more than the included miles?","Extra miles are 99 cents per mile, or $3 per mile for the Cadillac Escalade, charged after your trip. Each car shows its included miles per day."],
   ["Do I need my own insurance?","Yes. At checkout you tell us your auto insurance company, and you bring proof at pickup. Your policy needs to cover you in a rental car."],
@@ -1081,20 +1081,23 @@ const WEEKEND = [5, 6, 0];
 function priceFor(car, n, from){
   let wd = 0, we = 0;
   for (let i = 0; i < n && from; i++) { const d = new Date(from + "T12:00"); d.setDate(d.getDate() + i); WEEKEND.includes(d.getDay()) ? we++ : wd++; }
-  const sub = wd * car.weekday + we * car.weekend;
+  const weRate = weekendFor(car, n), sub = wd * car.weekday + we * weRate;
   const d = discFor(car).find(x => n >= x.minDays);
   const off = d ? Math.round(sub * d.pct) / 100 : 0;   // rounded to the cent, same as the server
-  return { sub, off, total: Math.round((sub - off) * 100) / 100, d, wd, we };
+  return { sub, off, total: Math.round((sub - off) * 100) / 100, d, wd, we, weRate, weDeal: weRate !== car.weekend };
 }
 const flatRate = car => car.weekday === car.weekend;
+// long trips on some cars pay the weekday price on weekends too (WEEKEND_DEAL in lib/catalog.mjs)
+const weekendFor = (car, n) => car.weekendDeal && n >= car.weekendDeal ? car.weekday : car.weekend;
 // each car's discounts for longer trips, biggest first
 const discLabel = d => d.minDays >= 30 ? "Monthly discount" : d.minDays >= 7 ? "Weekly discount" : `${d.minDays}+ day discount`;
 const discFor = car => (car.discounts || []).slice().sort((a, b) => b.minDays - a.minDays).map(d => ({ ...d, label: discLabel(d) }));
 const discWhen = d => d.minDays >= 30 ? "Rent by the month (30+ days)" : d.minDays >= 7 ? "Rent a week or more" : `Rent ${d.minDays} days or more`;
 function dealsHTML(car, n, small){
   const list = discFor(car).slice().reverse(), on = list.slice().reverse().find(d => n >= d.minDays);
-  if (!list.length) return "";
-  return list.map(d => `<div class="deal${on === d ? " on" : ""}" data-min="${d.minDays}"><b>${d.pct}% off</b><span>${small ? (d.minDays >= 30 ? "Monthly, 30+ days" : `${d.minDays}+ days`) : discWhen(d)}</span></div>`).join("");
+  const we = car.weekendDeal && !flatRate(car) ? `<div class="deal${n >= car.weekendDeal ? " on" : ""}" data-we="${car.weekendDeal}"><b>Weekends at ${fmt(car.weekday)}</b><span>${small ? `${car.weekendDeal}+ days` : `Rent ${car.weekendDeal}+ days: Fri–Sun at the weekday price`}</span></div>` : "";
+  if (!list.length) return we;
+  return list.map(d => `<div class="deal${on === d ? " on" : ""}" data-min="${d.minDays}"><b>${d.pct}% off</b><span>${small ? (d.minDays >= 30 ? "Monthly, 30+ days" : `${d.minDays}+ days`) : discWhen(d)}</span></div>`).join("") + we;
 }
 const rateText = car => flatRate(car) ? `${fmt(car.weekday)} per day` : `${fmt(car.weekday)} Mon–Thu, ${fmt(car.weekend)} Fri–Sun`;
 const totalHTML = (car, n, from) => {
@@ -1281,13 +1284,14 @@ function updateQuote(){
   const n = bFrom.value && bTo.value && bTo.value > bFrom.value ? days(bFrom.value, bTo.value) : 0;
   const fee = loc && loc.fee ? loc.fee : 0;
   const q = priceFor(current, n || 0, bFrom.value);
-  document.querySelectorAll("#b-deals .deal").forEach(el => el.classList.toggle("on", !!q.d && q.d.minDays === +el.dataset.min));
+  document.querySelectorAll("#b-deals .deal").forEach(el => el.classList.toggle("on", el.dataset.we ? n >= +el.dataset.we : !!q.d && q.d.minDays === +el.dataset.min));
+  const one = flatRate(current) || q.weDeal, lo = discFor(current).slice(-1)[0];
   const taxPct = n <= SITE.tax.shortMaxDays ? SITE.tax.shortPct : SITE.tax.longPct;
   const tax = Math.round(((q.total + (SITE.tax.includesFees ? fee : 0)) * taxPct)) / 100;
   $("#b-quote").innerHTML = n
-    ? `${q.wd ? `<div><span>${fmt(current.weekday)} × ${q.wd} ${flatRate(current) ? "day" : "Mon–Thu day"}${q.wd>1?"s":""}</span><span>${fmt(q.wd*current.weekday)}</span></div>` : ""}
-       ${q.we ? `<div><span>${fmt(current.weekend)} × ${q.we} ${flatRate(current) ? "day" : "Fri–Sun day"}${q.we>1?"s":""}</span><span>${fmt(q.we*current.weekend)}</span></div>` : ""}
-       ${q.off ? `<div class="disc"><span>${q.d.label} (${q.d.pct}%)</span><span>−${money(q.off)}</span></div>` : n < 3 ? `<div class="hint"><span>Book 3 or more days to save 10%</span><span></span></div>` : ""}
+    ? `${one ? `<div><span>${fmt(current.weekday)} × ${n} day${n>1?"s":""}${q.weDeal && q.we ? " (weekends at the weekday price)" : ""}</span><span>${fmt(n*current.weekday)}</span></div>` : `${q.wd ? `<div><span>${fmt(current.weekday)} × ${q.wd} Mon–Thu day${q.wd>1?"s":""}</span><span>${fmt(q.wd*current.weekday)}</span></div>` : ""}
+       ${q.we ? `<div><span>${fmt(q.weRate)} × ${q.we} Fri–Sun day${q.we>1?"s":""}</span><span>${fmt(q.we*q.weRate)}</span></div>` : ""}`}
+       ${q.off ? `<div class="disc"><span>${q.d.label} (${q.d.pct}%)</span><span>−${money(q.off)}</span></div>` : lo && n < lo.minDays ? `<div class="hint"><span>Book ${lo.minDays} or more days to save ${lo.pct}%</span><span></span></div>` : ""}
        <div><span>${loc ? loc.name : "Pickup"}</span><span>${fee ? fmt(fee) : "Free"}</span></div>
        <div><span>Texas rental tax (${taxPct}%)</span><span>${money(tax)}</span></div>
        <div><span>Miles included</span><span>${(current.miles*n).toLocaleString()} miles</span></div>
