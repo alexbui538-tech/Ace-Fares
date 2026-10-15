@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CARS, LOCATIONS, CAR_DISCOUNTS, WEEKEND_DEAL, TAX, TAX_INCLUDES_FEES } from "../lib/catalog.mjs";
+import { CARS, LOCATIONS, CAR_DISCOUNTS, WEEKEND_DEAL, MONTHLY_RATE, TAX, TAX_INCLUDES_FEES } from "../lib/catalog.mjs";
 
 const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
 
@@ -38,6 +38,14 @@ test("weekends-at-weekday-price trip lengths on the page match the server", () =
     const m = html.match(new RegExp(`id:"${id}"[^\\n]*?weekendDeal:(\\d+)`)), line = html.match(new RegExp(`id:"${id}"[^\\n]*`))[0];
     if (WEEKEND_DEAL[id]) { assert.ok(m, `${id} weekendDeal on the page`); assert.equal(Number(m[1]), WEEKEND_DEAL[id], `${id} weekendDeal`); }
     else assert.ok(!line.includes("weekendDeal"), `${id} has no weekend deal`);
+  }
+});
+
+test("monthly flat prices on the page match the server", () => {
+  for (const id of Object.keys(CARS)) {
+    const line = html.match(new RegExp(`id:"${id}"[^\\n]*`))[0], m = line.match(/monthly:\{minDays:(\d+),rate:(\d+)\}/);
+    if (MONTHLY_RATE[id]) { assert.ok(m, `${id} monthly on the page`); assert.deepEqual([Number(m[1]), Number(m[2])], [MONTHLY_RATE[id].minDays, MONTHLY_RATE[id].rate], `${id} monthly`); }
+    else assert.ok(!m, `${id} has no monthly price`);
   }
 });
 
