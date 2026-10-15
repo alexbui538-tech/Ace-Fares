@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CARS, LOCATIONS, DISCOUNTS, TAX, TAX_INCLUDES_FEES } from "../lib/catalog.mjs";
+import { CARS, LOCATIONS, CAR_DISCOUNTS, TAX, TAX_INCLUDES_FEES } from "../lib/catalog.mjs";
 
 const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
 
@@ -24,7 +24,12 @@ test("pickup/delivery fees on the page match the server", () => {
 });
 
 test("discounts and tax on the page match the server", () => {
-  for (const d of DISCOUNTS) assert.ok(html.includes(`{ minDays:${d.minDays}, pct:${d.pct},`), `discount ${d.minDays}+ days ${d.pct}%`);
+  for (const [id, list] of Object.entries(CAR_DISCOUNTS)) {
+    const m = html.match(new RegExp(`id:"${id}"[^\\n]*?discounts:(\\[[^\\]]*\\])`));
+    assert.ok(m, `discounts for ${id} on the page`);
+    const page = JSON.parse(m[1].replace(/(\w+):/g, '"$1":'));
+    assert.deepEqual(page.map(d => [d.minDays, d.pct]).sort((a, b) => b[0] - a[0]), list.map(d => [d.minDays, d.pct]), `${id} discounts`);
+  }
   assert.ok(html.includes(`tax: { shortPct: ${TAX.shortPct}, longPct: ${TAX.longPct}, shortMaxDays: ${TAX.shortMaxDays}, includesFees: ${TAX_INCLUDES_FEES} }`), "tax settings");
 });
 

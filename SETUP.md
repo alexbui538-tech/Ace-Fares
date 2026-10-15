@@ -7,7 +7,7 @@ The website keeps its own calendar and booking window. A small server, Netlify F
 1. **Blocked dates:** the page asks `/api/availability` which dates are taken, and those days are crossed out in the calendar.
 2. **Starting checkout:** the renter presses **Book and pay securely**, and the page sends the car, dates, times and pickup choice to `/api/checkout`. The server:
    - checks the request
-   - works out the price itself: rental, then the discount (10% for 3+ days, 25% for 30+ days), then the fee (delivery $100; the DFW airport option was removed October 14), then Texas rental tax (10% for 30 days or less, 6.25% for 31–180 days)
+   - works out the price itself: rental, then the discount for that car (Escalade 5% / 15% / 30%, SRX 15% / 25% / 45%, Odyssey 10% / 20% / 40% for 3+ / 7+ / 30+ days; BMW 10% for 3+ days only; set in `CAR_DISCOUNTS` in `lib/catalog.mjs` and on each car in `public/index.html`), then the fee (delivery $100; the DFW airport option was removed October 14), then Texas rental tax (10% for 30 days or less, 6.25% for 31–180 days)
    - **holds the dates for 35 minutes**
    - creates a Stripe Checkout page and sends the renter there
 3. **Payment:** the renter pays on Stripe with whatever methods you turn on in Stripe (Settings → Payment methods), such as card, Apple Pay or Google Pay. Methods that take days to clear, like bank payments, keep the dates held until the money arrives, then confirm or release them.

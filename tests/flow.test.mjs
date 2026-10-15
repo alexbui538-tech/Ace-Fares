@@ -32,9 +32,9 @@ test("full booking: checkout -> Stripe session -> paid webhook -> confirmed and 
 
   // what was sent to Stripe: server-computed prices, card payments, 30 min expiry, return URLs
   const p = s.stripe.calls.create[0].params;
-  assert.deepEqual(p.line_items.map(l => l.price_data.unit_amount), [109440, 10944]);  // Wed-Sat: 2x$259 + 2x$349 -10%, Dallas pickup (free), 10% tax
+  assert.deepEqual(p.line_items.map(l => l.price_data.unit_amount), [115520, 11552]);  // Wed-Sat: 2x$259 + 2x$349 -5% (Escalade 3+ days), free pickup, 10% tax
   assert.match(p.line_items[0].price_data.product_data.description, /2 Mon-Thu at \$259, 2 Fri-Sun at \$349/);
-  assert.equal(r.data.total, 120384);
+  assert.equal(r.data.total, 127072);
   assert.equal(p.payment_method_types, undefined);   // methods come from the Stripe Dashboard
   assert.equal(p.expires_at, Math.floor(NOW / 1000) + 31 * 60);
   assert.match(p.success_url, /booking=success&session_id=\{CHECKOUT_SESSION_ID\}/);
@@ -49,7 +49,7 @@ test("full booking: checkout -> Stripe session -> paid webhook -> confirmed and 
   const sess = s.stripe.pay("cs_test_1");
   assert.equal((await s.hook(signedEvent("checkout.session.completed", sess))).status, 200);
   const st = await j(await s.status(get("/api/booking?session_id=cs_test_1")));
-  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 120384); assert.equal(st.data.email, "renter@example.com");
+  assert.equal(st.data.status, "confirmed"); assert.equal(st.data.total, 127072); assert.equal(st.data.email, "renter@example.com");
 
   // webhook retries are harmless, and a paid booking can't be cancelled from the return link
   assert.equal((await s.hook(signedEvent("checkout.session.completed", sess))).status, 200);

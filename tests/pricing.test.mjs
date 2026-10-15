@@ -11,11 +11,11 @@ test("2-day SRX Wed-Thu: weekday rate $49, no discount, 10% tax", () => {
   assert.equal(q.tax, 980); assert.equal(q.total, 10780);
 });
 
-test("4-day Escalade Wed-Sat with delivery: 2 x $259 + 2 x $349, 10% off, fee taxed", () => {
+test("4-day Escalade Wed-Sat with delivery: 2 x $259 + 2 x $349, 5% off (Escalade 3+ days), fee taxed", () => {
   const q = quote(v({ location: "dallas-delivery" }));
   assert.equal(q.weekdays, 2); assert.equal(q.weekends, 2);
-  assert.equal(q.rental, 121600); assert.equal(q.discount, 12160); assert.equal(q.fee, 10000);
-  assert.equal(q.tax, 11944); assert.equal(q.total, 131384);
+  assert.equal(q.rental, 121600); assert.equal(q.discount, 6080); assert.equal(q.fee, 10000);
+  assert.equal(q.tax, 12552); assert.equal(q.total, 138072);
 });
 
 test("weekend rates: Fri, Sat and Sun are weekend days; the return day isn't charged", () => {
@@ -36,17 +36,17 @@ test("DFW airport handoff is no longer offered; delivery is $100", () => {
   assert.equal(quote(v({ location: "dallas-delivery" })).fee, 10000);
 });
 
-test("30 days: 25% monthly discount, still 10% tax", () => {
+test("30 days: Odyssey monthly discount is 40%, still 10% tax", () => {
   const q = quote(v({ car: "van", from: "2026-11-01", to: "2026-12-01" }));
-  assert.equal(q.days, 30); assert.equal(q.discountPct, 25); assert.equal(q.taxPct, 10);
+  assert.equal(q.days, 30); assert.equal(q.discountPct, 40); assert.equal(q.taxPct, 10);
   // Nov 2026: 17 Mon-Thu days at $89 + 13 Fri-Sun days at $129 = $3,190
   assert.equal(q.weekdays, 17); assert.equal(q.weekends, 13);
-  assert.equal(q.rental, 319000); assert.equal(q.discount, 79750); assert.equal(q.tax, 23925); assert.equal(q.total, 263175);
+  assert.equal(q.rental, 319000); assert.equal(q.discount, 127600); assert.equal(q.tax, 19140); assert.equal(q.total, 210540);
 });
 
 test("31 days: 6.25% tax", () => {
   const q = quote(v({ car: "van", from: "2026-11-01", to: "2026-12-02" }));
-  assert.equal(q.taxPct, 6.25); assert.equal(q.rental, 327900); assert.equal(q.tax, Math.round((327900 - 81975) * 0.0625));
+  assert.equal(q.taxPct, 6.25); assert.equal(q.rental, 327900); assert.equal(q.tax, Math.round((327900 - 131160) * 0.0625));
 });
 
 test("rejects bad requests with clear messages", () => {
@@ -70,4 +70,18 @@ test("referral discount and Ace Fares credit come off the rental before tax, nev
   assert.deepEqual(big.credits.map(c => c.amount), [5000, 4700]);               // rental can't go below $1
   assert.equal(big.total, 100 + Math.round(100 * 0.10));
   assert.equal(quote(base).credit, 0);
+});
+
+test("each car has its own discounts for longer trips", () => {
+  const pct = (car, from, to) => quote(v({ car, from, to })).discountPct;
+  // Escalade 5% / 15% / 30%
+  assert.equal(pct("escalade", "2026-11-02", "2026-11-04"), 0); assert.equal(pct("escalade", "2026-11-02", "2026-11-05"), 5);
+  assert.equal(pct("escalade", "2026-11-02", "2026-11-09"), 15); assert.equal(pct("escalade", "2026-11-02", "2026-12-02"), 30);
+  // SRX 15% / 25% / 45%
+  assert.equal(pct("srx", "2026-11-02", "2026-11-05"), 15); assert.equal(pct("srx", "2026-11-02", "2026-11-09"), 25); assert.equal(pct("srx", "2026-11-02", "2026-12-02"), 45);
+  // Odyssey 10% / 20% / 40%
+  assert.equal(pct("van", "2026-11-02", "2026-11-05"), 10); assert.equal(pct("van", "2026-11-02", "2026-11-09"), 20); assert.equal(pct("van", "2026-11-02", "2026-12-02"), 40);
+  // BMW: 10% for 3+ days, no weekly or monthly discount
+  assert.equal(pct("bmw", "2026-11-02", "2026-11-05"), 10); assert.equal(pct("bmw", "2026-11-02", "2026-11-09"), 10); assert.equal(pct("bmw", "2026-11-02", "2026-12-02"), 10);
+  assert.equal(quote(v({ car: "escalade", from: "2026-11-02", to: "2026-11-09" })).discountLabel, "Weekly discount (15%)");
 });

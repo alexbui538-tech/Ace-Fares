@@ -317,8 +317,8 @@ section{scroll-margin-top:80px}
 }
 
 /* vehicle details */
-#detail{width:min(1080px,calc(100vw - 24px));max-height:calc(100vh - 24px);border-radius:20px;overflow:hidden}
-.dt{display:grid;grid-template-columns:1.25fr 1fr;height:min(760px,calc(100vh - 24px))}
+#detail{width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:100dvh;margin:0;border-radius:0;overflow:hidden}
+.dt{display:grid;grid-template-columns:1.4fr 1fr;height:100vh;height:100dvh}
 .dt-media{background:#fff;display:flex;flex-direction:column;min-height:0;overflow:hidden;border-right:1px solid var(--line)}
 .dt-main .g-btn{z-index:2}
 .dt-main{position:relative;flex:1;min-height:0;background:#fff;display:flex;align-items:center;justify-content:center;padding:16px 16px 8px}
@@ -335,7 +335,11 @@ section{scroll-margin-top:80px}
 .dt-top{position:sticky;top:0;background:var(--paper);display:flex;justify-content:flex-end;padding:12px 12px 0;z-index:1}
 .dt-body{padding:0 28px 20px;display:grid;gap:14px}
 .dt-body h3{font-size:2rem}
-.dt-price{display:flex;align-items:baseline;gap:6px}
+.dt-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 22px}
+.dt-price .pp{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
+.dt-foot .btn{white-space:nowrap}
+.dt-foot .total{flex:1 1 auto;min-width:0}
+@media (max-width:520px){.dt-price b{font-size:1.9rem}.dt-foot{padding:12px 16px}.dt-foot .total{font-size:.9rem;line-height:1.35}.dt-foot .btn{padding:0 16px}}
 .dt-price b{font-family:var(--serif);font-weight:400;font-size:2.2rem}
 .dt-price span{color:var(--ink-2)}
 .dt-body p{margin:0;color:var(--ink-2)}
@@ -962,10 +966,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
         <select id="b-loc"></select>
         <p class="help" id="b-loc-help"></p>
       </div>
-      <div class="deals small" id="b-deals">
-        <div class="deal" data-min="3"><b>10% off</b><span>3+ days</span></div>
-        <div class="deal" data-min="30"><b>25% off</b><span>Monthly, 30+ days</span></div>
-      </div>
+      <div class="deals small" id="b-deals"></div>
       <div class="quote-box own-only" id="b-quote" aria-live="polite"></div>
       <div class="notice" id="b-notice" hidden></div>
       <p class="fine" id="b-fine"></p>
@@ -999,7 +1000,7 @@ const SITE = {
     { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:100,  cars:["srx","escalade","bmw","van"] },
   ],
   // Discounts on the rental price (not delivery fees). The biggest one that applies is used.
-  discounts: [ { minDays:30, pct:25, label:"Monthly discount" }, { minDays:3, pct:10, label:"3+ day discount" } ],
+  // Discounts for longer trips are set on each car below (discounts:[...]); they must match lib/catalog.mjs.
   serviceAreas: "Dallas, Plano, Frisco, Richardson, Irving and the rest of DFW.", // TODO confirm
 
   // Paste real reviews here (copy them from Turo or Google). Delete the sample lines, or set sample:false on real ones.
@@ -1011,25 +1012,25 @@ const SITE = {
 };
 
 const CARS = [
-  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", weekday:259, weekend:349, miles:100,
+  { id:"escalade", name:"Cadillac Escalade", year:2021, type:"suv", weekday:259, weekend:349, miles:100, discounts:[{minDays:30,pct:30},{minDays:7,pct:15},{minDays:3,pct:5}],
     location:"Dallas, TX", rating:4.8, reviews:14, seats:8, color:"Midnight Black",
     desc:"Seats 8 in first-class comfort, with heated and ventilated seats, a panoramic sunroof, AKG Studio Reference sound and a 38-inch curved OLED display. Made for group trips, nights out and big arrivals.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Third row","8-passenger seating","Sunroof","Premium sound","100 miles/day included"],
     tags:["Seats 8","Third row","Sunroof","Premium sound"],
     photos:[["escalade-1","Front of the black Cadillac Escalade"],["escalade-2","Escalade front grille and headlights"],["escalade-3","Escalade driver's seat and curved display"],["escalade-4","Escalade second-row seats with screens"]], },
-  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", weekday:49, weekend:69, miles:200,
+  { id:"srx", name:"Cadillac SRX", year:null, type:"suv", weekday:49, weekend:69, miles:200, discounts:[{minDays:30,pct:45},{minDays:7,pct:25},{minDays:3,pct:15}],
     location:"Dallas, TX", rating:5, reviews:0, seats:5, color:"Champagne Silver",
     desc:"A sleek crossover with Cadillac comfort for everyday driving. Heated leather seats, a panoramic sunroof, premium sound and a smooth ride for work trips or weekends away.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","Sunroof","Leather interior","AWD","Premium sound","Roof rack","200 miles/day included"],
     tags:["200 mi/day","AWD","Leather","Roof rack"],
     photos:[["srx-1","Champagne Cadillac SRX, front three-quarter view"],["srx-2","Cadillac SRX rear with roof rack"],["srx-3","SRX front seats and dashboard"],["srx-4","SRX rear leather seats"],["srx-5","SRX cargo area"]], },
-  { id:"bmw", name:"BMW 650i xDrive Convertible", year:null, type:"convertible", weekday:139, weekend:199, miles:100,
+  { id:"bmw", name:"BMW 650i xDrive Convertible", year:null, type:"convertible", weekday:139, weekend:199, miles:100, discounts:[{minDays:3,pct:10}],
     location:"Dallas, TX", rating:5, reviews:0, seats:4, color:"Montego Blue",
     desc:"Drop the top and enjoy the DFW sun. Twin-turbo 4.4L V8, xDrive all-wheel drive, sport-tuned suspension and cognac leather. Made for date nights, weekend drives and arriving in style.",
     features:["AC","Bluetooth","GPS","Backup camera","Convertible top","Heated seats","Cognac leather interior","Premium sound","xDrive AWD","100 miles/day included"],
     tags:["Convertible","V8","Cognac leather","AWD"],
     photos:[["bmw-1","Blue BMW 650i convertible with the top down"],["bmw-2","BMW 650i front view"],["bmw-3","BMW 650i rear three-quarter view"],["bmw-4","BMW 650i rear view, top down"],["bmw-5","BMW cognac leather front seats"],["bmw-6","BMW cognac leather rear seats"]], }
-  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:89, weekend:129, miles:200,
+  ,{ id:"van", name:"Honda Odyssey EX-L", year:2019, type:"van", weekday:89, weekend:129, miles:200, discounts:[{minDays:30,pct:40},{minDays:7,pct:20},{minDays:3,pct:10}],
     location:"Dallas, TX", rating:5, reviews:0, seats:8, color:"Lunar Silver",
     desc:"The family hauler for DFW. Seats 8 with heated leather seats, tri-zone climate control and Magic Slide second-row seats. A 280 hp V6, Honda Sensing safety features, and Apple CarPlay and Android Auto make every mile easy.",
     features:["AC","Bluetooth","GPS","Backup camera","Heated seats","8-passenger seating","Leather interior","Sliding doors","Magic Slide 2nd row","Honda Sensing safety suite","Apple CarPlay / Android Auto","Tri-zone climate control","9-speed automatic","280 hp V6","200 miles/day included"],
@@ -1046,7 +1047,7 @@ const FAQ = [ // TODO review every answer and change anything that doesn't match
   ["How does Refer a friend work?","Log in and choose Refer a friend in your account menu to get your link. A friend who signs up with it gets $50 off their first trip. When they finish a trip of 3 days or more, you get $100 in Ace Fares credit, applied automatically to your next booking."],
   ["How old do I need to be?",`Drivers must be at least ${SITE.minAge} years old with a valid driver's license.`],
   ["How do tolls work?","Many Dallas highways are toll roads. Tolls from your trip are charged at cost to your card after you return the car, with an itemized list. There's a $15 handling fee for each toll or ticket we process. If a toll is billed by mail, the toll authority may send the bill to you directly."],
-  ["Do you offer discounts for longer rentals?","Yes. Rentals of 3 days or more get 10% off the rental price, and rentals of 30 days or more get 25% off. The discount is applied automatically when you choose your dates."],
+  ["Do you offer discounts for longer rentals?","Yes, and they're applied automatically when you choose your dates. Cadillac Escalade: 5% off 3+ days, 15% off 7+ days, 30% off 30+ days. Cadillac SRX: 15% off 3+ days, 25% off 7+ days, 45% off 30+ days. Honda Odyssey: 10% off 3+ days, 20% off 7+ days, 40% off 30+ days. BMW 650i: 10% off 3+ days. Discounts apply to the rental price, not the delivery fee."],
   ["Can I rent out my own car through Ace Fares?","Yes. Fill out the form in the Become a host section and we'll get back to you about listing your car."],
   ["What if I need to cancel?","Cancel within 24 hours after you book for a full refund. After that, we refund your trip minus a $20 cancellation fee. Cancel any time before pickup in My trips (in your account menu), or text us at (972) 994-6413."],
   ["Can I change my dates?","Yes, up to 2 hours before pickup, if the car is free. Open My trips and choose Change dates. You'll see the new price before you send the request. If the new trip costs more, the difference is charged when we approve; if it costs less, we refund the difference."],
@@ -1079,11 +1080,20 @@ function priceFor(car, n, from){
   let wd = 0, we = 0;
   for (let i = 0; i < n && from; i++) { const d = new Date(from + "T12:00"); d.setDate(d.getDate() + i); WEEKEND.includes(d.getDay()) ? we++ : wd++; }
   const sub = wd * car.weekday + we * car.weekend;
-  const d = SITE.discounts.find(x => n >= x.minDays);
+  const d = discFor(car).find(x => n >= x.minDays);
   const off = d ? Math.round(sub * d.pct) / 100 : 0;   // rounded to the cent, same as the server
   return { sub, off, total: Math.round((sub - off) * 100) / 100, d, wd, we };
 }
 const flatRate = car => car.weekday === car.weekend;
+// each car's discounts for longer trips, biggest first
+const discLabel = d => d.minDays >= 30 ? "Monthly discount" : d.minDays >= 7 ? "Weekly discount" : `${d.minDays}+ day discount`;
+const discFor = car => (car.discounts || []).slice().sort((a, b) => b.minDays - a.minDays).map(d => ({ ...d, label: discLabel(d) }));
+const discWhen = d => d.minDays >= 30 ? "Rent by the month (30+ days)" : d.minDays >= 7 ? "Rent a week or more" : `Rent ${d.minDays} days or more`;
+function dealsHTML(car, n, small){
+  const list = discFor(car).slice().reverse(), on = list.slice().reverse().find(d => n >= d.minDays);
+  if (!list.length) return "";
+  return list.map(d => `<div class="deal${on === d ? " on" : ""}" data-min="${d.minDays}"><b>${d.pct}% off</b><span>${small ? (d.minDays >= 30 ? "Monthly, 30+ days" : `${d.minDays}+ days`) : discWhen(d)}</span></div>`).join("");
+}
 const rateText = car => flatRate(car) ? `${fmt(car.weekday)} per day` : `${fmt(car.weekday)} Mon–Thu, ${fmt(car.weekend)} Fri–Sun`;
 const totalHTML = (car, n, from) => {
   if (!n) return flatRate(car) ? `<b>${fmt(car.weekday)}</b> / day` : `<b>${fmt(car.weekday)}</b> Mon–Thu, <b>${fmt(car.weekend)}</b> Fri–Sun`;
@@ -1148,11 +1158,11 @@ function renderCal(){
   const n = calA && calB ? days(calA, calB) : 0;
   $("#cal-step").textContent = calKind === "book" && ONLINE.state === "loading" ? "Checking which dates are free..." : !calA ? "Tap your pickup date" : !calB ? "Now tap your return date" : "Tap Done to use these dates, or tap a new pickup date";
   $("#cal-sum").textContent = n ? `${nice(calA)} to ${nice(calB)}, ${n} day${n>1?"s":""}` : calA ? `Pickup ${nice(calA)}` : "No dates chosen";
-  const save = $("#cal-save"), d = SITE.discounts.find(x => n >= x.minDays);
+  const dl = calKind === "book" && current ? discFor(current) : [], save = $("#cal-save"), d = dl.find(x => n >= x.minDays), next = dl.slice().reverse().find(x => n < x.minDays);
   save.className = "";
   if (d) save.textContent = `${d.label}: ${d.pct}% off`;
-  else if (n) { save.textContent = `Add ${3 - n} more day${3-n>1?"s":""} to save 10%`; save.className = "nudge"; }
-  else save.textContent = "";
+  else if (n && next) { save.textContent = `Add ${next.minDays - n} more day${next.minDays - n > 1 ? "s" : ""} to save ${next.pct}%`; save.className = "nudge"; }
+  else save.textContent = n && !calKind.startsWith("book") ? "Longer trips get a discount on most cars" : "";
 }
 $("#cal-months").addEventListener("click", e => {
   const b = e.target.closest("button[data-d]"); if (!b || b.disabled) return;
@@ -1204,10 +1214,7 @@ function renderFleet(){
     <article class="car" data-id="${car.id}">
       <div class="gallery" data-i="0">
         <img src="images/${car.photos[0][0]}.webp" alt="${car.photos[0][1]}" loading="lazy" width="1200" height="1600" >
-        <span class="index" aria-hidden="true">${flatRate(car) ? "" : "<small>from</small>"}<b>${fmt(car.weekday)}</b><small>per day</small>${SPADE}</span>
-        <button class="g-btn g-prev" type="button" aria-label="Previous photo of ${car.name}">${CHEV("M15 6l-6 6 6 6")}</button>
-        <button class="g-btn g-next" type="button" aria-label="Next photo of ${car.name}">${CHEV("M9 6l6 6-6 6")}</button>
-        <span class="g-count">1 / ${car.photos.length}</span>
+        <span class="index" aria-hidden="true"><b>${fmt(car.weekday)}</b><small>per day</small>${SPADE}</span>
       </div>
       <div class="car-body">
         <div class="car-title"><h3><button class="open" type="button" data-open="${car.id}">${car.year ? car.year + " " : ""}${car.name}</button></h3></div>
@@ -1219,7 +1226,7 @@ function renderFleet(){
         <p class="desc">${car.desc}</p>
         <ul class="feat">${car.tags.map(t => `<li>${t}</li>`).join("")}</ul>
         <div class="car-foot">
-          <span class="total">${n && carBusy(car.id, state.from, state.to) ? '<span class="unavail">Booked for these dates</span>' : totalHTML(car, n, state.from)}</span>
+          <span class="total">${n && carBusy(car.id, state.from, state.to) ? '<span class="unavail">Booked for these dates</span>' : n ? totalHTML(car, n, state.from) : `<b>${fmt(car.weekday)}</b> / day`}</span>
           <button class="btn btn-ink" type="button" data-book="${car.id}">Book this car</button>
         </div>
         <span class="more" aria-hidden="true">View details</span>
@@ -1250,6 +1257,7 @@ function openBooking(id){
   current = CARS.find(c => c.id === id);
   $("#book-title").textContent = current.name;
   $("#b-sub").textContent = `${rateText(current)}, ${current.miles} miles/day included`;
+  $("#b-deals").innerHTML = dealsHTML(current, 0, true); $("#b-deals").hidden = !discFor(current).length;
   $("#b-img").src = `images/${current.photos[0][0]}-sm.webp`;
   const ls = locsFor(current);
   bLoc.innerHTML = ls.map(l => `<option value="${l.id}">${l.name}${l.fee === 0 ? " (free)" : l.fee ? ` (+${fmt(l.fee)})` : " (fee quoted)"}</option>`).join("");
@@ -1521,7 +1529,7 @@ function openDetail(id, i){
       <span>${STAR}${dCar.reviews ? `${dCar.rating} <span style="color:var(--ink-3)">(${dCar.reviews} trips)</span>` : "New listing"}</span>
       <span>${PIN}${dCar.location}</span><span>${SEAT}${dCar.seats} seats</span>
     </div>
-    <div class="dt-price">${flatRate(dCar) ? `<b>${fmt(dCar.weekday)}</b><span>per day</span>` : `<b>${fmt(dCar.weekday)}</b><span>per day Mon–Thu</span><b style="margin-left:14px">${fmt(dCar.weekend)}</b><span>Fri–Sun</span>`}</div>
+    <div class="dt-price">${flatRate(dCar) ? `<span class="pp"><b>${fmt(dCar.weekday)}</b><span>per day</span></span>` : `<span class="pp"><b>${fmt(dCar.weekday)}</b><span>per day Mon–Thu</span></span><span class="pp"><b>${fmt(dCar.weekend)}</b><span>per day Fri–Sun</span></span>`}</div>
     <p>${dCar.desc}</p>
     <div class="dt-facts">
       <div><small>Miles included</small><b>${dCar.miles} per day</b></div>
@@ -1529,10 +1537,7 @@ function openDetail(id, i){
       <div><small>Color</small><b>${dCar.color}</b></div>
       <div><small>Type</small><b>${{suv:"SUV",van:"Van",convertible:"Convertible"}[dCar.type]}</b></div>
     </div>
-    <div class="deals">
-      <div class="deal${n >= 3 && n < 30 ? " on" : ""}"><b>10% off</b><span>Rent 3 days or more</span></div>
-      <div class="deal${n >= 30 ? " on" : ""}"><b>25% off</b><span>Rent by the month (30+ days)</span></div>
-    </div>
+    <div class="deals">${dealsHTML(dCar, n, false)}</div>
     <h4>Features</h4>
     <ul class="all-feat">${dCar.features.map(f => `<li>${f}</li>`).join("")}</ul>
     <h4>Pickup and delivery</h4>
