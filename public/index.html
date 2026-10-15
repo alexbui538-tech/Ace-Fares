@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="only light">
 <title>Ace Fares Rentals</title>
-<meta name="description" content="Rent a Cadillac Escalade, Cadillac SRX, BMW 650i convertible or Honda Odyssey van direct from the owner in Dallas, Texas. Pickup in McKinney or delivery across DFW.">
+<meta name="description" content="Rent a Cadillac Escalade, Cadillac SRX, BMW 650i convertible or Honda Odyssey van direct from the owner in Dallas, Texas. Pickup in Dallas or delivery across DFW.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ace Fares Rentals">
 <meta property="og:title" content="Ace Fares Rentals: Dallas car rentals direct from the owner">
-<meta property="og:description" content="Cadillac Escalade, Cadillac SRX, BMW 650i convertible and Honda Odyssey. Pickup in McKinney or delivery across DFW.">
+<meta property="og:description" content="Cadillac Escalade, Cadillac SRX, BMW 650i convertible and Honda Odyssey. Pickup in Dallas or delivery across DFW.">
 <meta property="og:url" content="https://acefaresrental.netlify.app/">
 <meta property="og:image" content="https://acefaresrental.netlify.app/images/share.jpg">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -19,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root{color-scheme:only light}
 :root{
   --ivory:#FBF8F1; --paper:#FFFFFF; --cream:#F3ECDD; --line:#E4DCCB;
   --ink:#15130F; --ink-2:#514A3D; --ink-3:#6F6757;
@@ -583,7 +585,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
         <img src="images/hero.webp" srcset="images/hero-sm.webp 1000w, images/hero.webp 2000w" sizes="100vw" alt="Black Cadillac Escalade parked in a Dallas driveway" width="2000" height="1296" fetchpriority="high">
         <div class="banner-inner">
           <h1 id="hero-title">Drive something worth arriving in.</h1>
-          <p class="sub">Cadillacs, a BMW convertible and a Honda Odyssey van, rented straight from a Dallas owner. Pick up in McKinney, or have the car brought to you.</p>
+          <p class="sub">Cadillacs, a BMW convertible and a Honda Odyssey van, rented straight from a Dallas owner. Pick up in Dallas, or have the car brought to you.</p>
           <form class="search" id="search" novalidate>
             <div class="field">
               <label for="s-loc">Where</label>
@@ -665,7 +667,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
     <div class="wrap deliv-grid">
       <div>
         <h2 id="deliv-title">Pickup &amp; delivery</h2>
-        <p class="lede">Pick the car up for free at 362 Virginia Parkway in McKinney, or have us bring it to your home, hotel or office, ready to go.</p>
+        <p class="lede">Pick the car up for free at 2204 Lovedale Avenue in Dallas, or have us bring it to your home, hotel or office, ready to go.</p>
         <p class="areas" id="areas"></p>
         <a class="btn btn-line" href="#fleet" style="margin-top:12px">Choose a car</a>
       </div>
@@ -996,7 +998,7 @@ const SITE = {
 
   // Where renters can get the car. fee: number = flat fee, 0 = free, null = "quoted when we confirm"
   locations: [
-    { id:"dallas-pickup",   name:"McKinney pickup",           note:"362 Virginia Parkway, McKinney, TX",             fee:0,    cars:["srx","escalade","bmw","van"] },
+    { id:"dallas-pickup",   name:"Dallas pickup",             note:"2204 Lovedale Avenue, Dallas, TX",             fee:0,    cars:["srx","escalade","bmw","van"] },
     { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:100,  cars:["srx","escalade","bmw","van"] },
   ],
   // Discounts on the rental price (not delivery fees). The biggest one that applies is used.

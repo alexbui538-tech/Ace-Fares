@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="only light">
 <meta name="robots" content="noindex, nofollow">
 <title>Ace Fares Bookings</title>
 <link rel="icon" href="images/logo.png">
 <style>
+:root{color-scheme:only light}
 :root{--ivory:#FBF8F1;--paper:#fff;--cream:#F3ECDD;--line:#E4DCCB;--ink:#15130F;--ink-2:#514A3D;--ink-3:#6F6757;--gold:#AF8135;--gold-bright:#DAA336;--navy:#0F1A34;--ok:#2F6B3A;--bad:#8A2D14}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ivory);color:var(--ink);font:400 15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -112,7 +114,7 @@ tr.blocked td{background:#F6F2EA;color:var(--ink-2)}
 </main>
 <script>
 const CARS = { escalade: "Cadillac Escalade", srx: "Cadillac SRX", bmw: "BMW 650i Convertible", van: "Honda Odyssey" };
-const PLACES = { "dallas-pickup": "McKinney pickup", "dallas-delivery": "Delivery", "dfw": "DFW Airport" };
+const PLACES = { "dallas-pickup": "Dallas pickup", "dallas-delivery": "Delivery", "dfw": "DFW Airport" };
 const LABEL = { confirmed: "Paid", hold: "In checkout", conflict: "Paid, dates taken: refund", cancelled: "Cancelled", released: "Checkout abandoned", expired: "Checkout expired" };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const nice = d => d ? new Date(d + "T12:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : "";
