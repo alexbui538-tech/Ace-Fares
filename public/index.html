@@ -71,6 +71,9 @@ section{scroll-margin-top:80px}
 .nav a{padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:500;color:var(--ink-2)}
 .nav a:hover{color:var(--ink);background:var(--cream)}
 .nav a.host-link{color:var(--gold-text);font-weight:600}
+.nav a,.acct-out button{white-space:nowrap}
+@media (min-width:861px) and (max-width:1180px){.nav a{padding:10px 9px}}
+@media (min-width:861px) and (max-width:1080px){.nav a[href="#how"],.nav a[href="#delivery"]{display:none}}
 .nav a[aria-current="page"]{color:var(--ink);background:var(--cream)}
 .menu-btn{display:none;margin-left:auto;width:48px;height:48px;border:1px solid var(--line);border-radius:10px;background:var(--paper);cursor:pointer;align-items:center;justify-content:center}
 @media (max-width:860px){
@@ -557,6 +560,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <a href="#how">How it works</a>
       <a href="#delivery">Delivery</a>
       <a href="#faq">FAQ</a>
+      <a href="/book.html" class="book-link">Book now</a>
       <a href="#host" class="host-link">Become a host</a>
     </nav>
     <div class="acct" id="acct">
@@ -572,7 +576,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
           <div class="who"><b id="acct-name"></b><span id="acct-email"></span><span class="credit" id="acct-credit" hidden></span></div>
           <button type="button" role="menuitem" id="m-trips">My trips</button>
           <button type="button" role="menuitem" id="m-refer">Refer a friend</button>
-          <a role="menuitem" href="#fleet" id="m-book">Book a car</a>
+          <a role="menuitem" href="/book.html" id="m-book">Book a car</a>
           <button type="button" role="menuitem" id="m-logout">Log out</button>
         </div>
       </div>
@@ -995,6 +999,9 @@ const SITE = {
 
   // Online booking server (Netlify functions). If it can't be reached, booking falls back to "Text us to book".
   api: "/api",
+  // Who takes bookings: "wheelbase" sends every Book button to /book.html (the Wheelbase store, its own checkout).
+  // Set to "site" to switch back to this site's own Stripe checkout.
+  booking: "wheelbase",
   // Texas motor vehicle rental tax: 10% for 1-30 days, 6.25% for 31-180 days, after discounts (must match lib/catalog.mjs)
   tax: { shortPct: 10, longPct: 6.25, shortMaxDays: 30, includesFees: true },
 
@@ -1192,6 +1199,7 @@ $("#cal-done").addEventListener("click", () => {
 document.addEventListener("click", e => { const b = e.target.closest("[data-cal]"); if (b) openCal(b.dataset.cal); });
 $("#search").addEventListener("submit", e => {
   e.preventDefault();
+  if (SITE.booking === "wheelbase") { location.href = "/book.html"; return; }   // dates and availability are picked in the Wheelbase store
   const err = $("#search-error");
   if (!sFrom.value || !sTo.value) { err.textContent = "Choose both dates to see trip prices."; return; }
   if (sTo.value <= sFrom.value) { err.textContent = "The end date needs to be after the start date."; return; }
@@ -1263,6 +1271,7 @@ $("#grid").addEventListener("click", e => {
 const dlg = $("#book"), bFrom = $("#b-from"), bTo = $("#b-to"), bLoc = $("#b-loc");
 let current = null;
 function openBooking(id){
+  if (SITE.booking === "wheelbase") { location.href = "/book.html?car=" + encodeURIComponent(id); return; }
   current = CARS.find(c => c.id === id);
   $("#book-title").textContent = current.name;
   $("#b-sub").textContent = `${rateText(current)}, ${current.miles} miles/day included`;
@@ -1486,7 +1495,15 @@ const rated = CARS.filter(c => c.reviews);
 const trips = rated.reduce((a,c) => a + c.reviews, 0);
 const avg = trips ? (rated.reduce((a,c) => a + c.rating*c.reviews, 0) / trips) : 0;
 /* faq */
-$("#faq-list").innerHTML = FAQ.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join("");
+// while Wheelbase takes bookings, these answers point renters to their Wheelbase booking instead of My trips
+const FAQ_WHEELBASE = {
+  "Do I need my own insurance?": "Yes. When you book, you give your auto insurance details, and you bring proof at pickup. Your policy needs to cover you in a rental car. You can also add damage protection when you book.",
+  "What if I need to cancel?": `Cancel within 24 hours after you book for a full refund. After that, we refund your trip minus a $20 cancellation fee. Use the link in your booking confirmation email, or text us at ${SITE.phone}.`,
+  "Can I change my dates?": `Yes, if the car is free. Text us at ${SITE.phone} or reply to your booking confirmation, and we'll send you the new price before anything changes.`,
+  "Can I extend my trip?": `Yes, if the car is free. Text us at ${SITE.phone} before your return time. Each extra day is that day's normal rate plus $25, plus tax.`,
+};
+const faqList = SITE.booking === "wheelbase" ? FAQ.filter(([q]) => !/Refer a friend/.test(q)).map(([q, a]) => [q, FAQ_WHEELBASE[q] || a]) : FAQ;
+$("#faq-list").innerHTML = faqList.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join("");
 
 /* contact */
 const cl = [], cta = [];
@@ -2081,6 +2098,7 @@ $("#ref-share").addEventListener("click", () => {
 });
 $("#refer-close").addEventListener("click", () => $("#refer").close());
 $("#m-refer").addEventListener("click", openRefer);
+if (SITE.booking === "wheelbase") { $("#refer-band").hidden = true; $("#m-refer").hidden = true; }   // Wheelbase checkout can't apply referral credit
 $("#refer-cta").addEventListener("click", openRefer);
 loadInvite();
 $("#done-close").addEventListener("click", () => $("#done").close());
