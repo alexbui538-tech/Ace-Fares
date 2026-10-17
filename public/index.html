@@ -81,7 +81,10 @@ section{scroll-margin-top:80px}
 @media (max-width:560px){.wb-store{padding:14px 10px 22px;border-radius:16px;margin:0 -6px}.wb-perks{gap:8px}.wb-perks li{padding:10px;font-size:.86rem}}
 .hero-book{margin-top:22px;min-height:54px;padding:0 28px;font-size:1.05rem}
 .wb-loading{color:var(--ink-3);padding:24px 0}
-.wb-fallback{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:8px;justify-items:start}
+.wb-fallback{display:grid;gap:12px}
+.wb-frame{width:100%;height:min(1100px,85vh);min-height:640px;border:0;border-radius:14px;background:#fff}
+.wb-open{margin:0;color:var(--ink-2);font-size:.95rem;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.wb-open a:not(.btn){color:var(--gold-text);font-weight:600}
 .nav a,.acct-out button{white-space:nowrap}
 @media (min-width:861px) and (max-width:1180px){.nav a{padding:10px 9px}}
 @media (min-width:861px) and (max-width:1080px){.nav a[href="#how"],.nav a[href="#delivery"]{display:none}}
@@ -2136,9 +2139,20 @@ if (SITE.booking === "wheelbase") {
   for (const [k, v] of Object.entries({ "dealer-id": W.dealer, "store-type": W.storeType, "hide-hero": "true", "hide-locale-selector": "true", "visible-filters": "type", "show-reviews": "true",
     "primary-color": c.primary, "secondary-color": c.secondary, "text-color": c.text, "surface-color": c.surface, "background-color": c.background })) el.setAttribute(k, v);
   $("#wb-store").insertBefore(el, $("#wb-loading"));
-  const sc = document.createElement("script"); sc.type = "module"; sc.src = W.script; document.head.appendChild(sc);
+  // If the Wheelbase script can't load (blocked or slow), show Wheelbase's own hosted store in a frame instead,
+  // with a button to open it in a new tab, so renters can always book.
+  const hosted = `https://widget.wheelbasepro.com/?dealer_id=${W.dealer}&store_type=${W.storeType}`;
+  let fellBack = false;
+  const fallBack = () => {
+    if (fellBack || customElements.get("wheelbase-store")) return; fellBack = true;
+    el.remove(); $("#wb-loading").hidden = true;
+    $("#wb-fallback").hidden = false;
+    $("#wb-fallback").innerHTML = `<iframe class="wb-frame" src="${hosted}" title="Book a car with Ace Fares" loading="lazy" allow="payment"></iframe>
+      <p class="wb-open">Booking not showing? <a class="btn btn-gold" href="${hosted}" target="_blank" rel="noopener">Open booking in a new tab</a> or text <a href="sms:+19729946413">${SITE.phone}</a>.</p>`;
+  };
+  const sc = document.createElement("script"); sc.type = "module"; sc.src = W.script; sc.onerror = fallBack; document.head.appendChild(sc);
   customElements.whenDefined("wheelbase-store").then(() => { $("#wb-loading").hidden = true; });
-  setTimeout(() => { if (!customElements.get("wheelbase-store")) { $("#wb-loading").hidden = true; $("#wb-fallback").hidden = false; } }, 12000);
+  setTimeout(fallBack, 20000);
 }   // Wheelbase checkout can't apply referral credit
 $("#refer-cta").addEventListener("click", openRefer);
 loadInvite();

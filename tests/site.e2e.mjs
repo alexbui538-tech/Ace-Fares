@@ -458,7 +458,9 @@ ok(errs.length === 0, "no page errors " + errs.join(" | "));
 // live setting: Wheelbase takes bookings. Its store is on the home page in place of the car cards.
 {
   const w = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await w.route(/cloudfront\.net|wheelbasepro\.com/, r => r.abort());   // no outside network in tests
+  // stand-in for the Wheelbase script (no outside network in tests)
+  await w.route(/cloudfront\.net/, r => r.fulfill({ contentType: "text/javascript", body: 'customElements.define("wheelbase-store", class extends HTMLElement { connectedCallback(){ this.textContent = "STORE"; } });' }));
+  await w.route(/wheelbasepro\.com/, r => r.abort());
   await w.goto(base + "/?wb=1"); await w.waitForTimeout(500);
   const st = w.locator("#fleet wheelbase-store");
   ok(await st.count() === 1 && await st.getAttribute("dealer-id") === "5234642" && await st.getAttribute("store-type") === "auto", "Wheelbase: store on the home page for dealer 5234642, cars (auto)");
@@ -467,6 +469,12 @@ ok(errs.length === 0, "no page errors " + errs.join(" | "));
   ok(!(await w.isVisible("#refer-band")), "Wheelbase: Refer a friend is hidden (its checkout can't use referral credit)");
   ok(await w.locator('#nav a[href="#fleet"].book-link').count() === 1, "Wheelbase: Book now in the menu goes to the store");
   await w.screenshot({ path: "e2e-book.png", fullPage: false });
+  ok(!(await w.isVisible("#wb-loading")) && !(await w.isVisible("#wb-fallback")), "Wheelbase: once the store loads, no loading or fallback message");
+  // the Wheelbase script blocked: the hosted store shows in a frame, with an open-in-new-tab button
+  await w.unroute(/cloudfront\.net/); await w.route(/cloudfront\.net/, r => r.abort());
+  await w.goto(base + "/?wb=1");
+  await w.waitForSelector("#wb-fallback iframe.wb-frame", { timeout: 5000 });
+  ok((await w.getAttribute("#wb-fallback iframe", "src")).includes("dealer_id=5234642") && await w.locator('#wb-fallback a[target="_blank"]').count() === 1, "Wheelbase: if the script can't load, the hosted store shows in a frame with an Open booking button");
   await w.close();
 }
 await browser.close(); server.close();
