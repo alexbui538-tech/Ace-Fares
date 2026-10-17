@@ -71,7 +71,14 @@ section{scroll-margin-top:80px}
 .nav a{padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:500;color:var(--ink-2)}
 .nav a:hover{color:var(--ink);background:var(--cream)}
 .nav a.host-link{color:var(--gold-text);font-weight:600}
-.wb-store{min-height:420px}
+.wb-store{min-height:420px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px 24px 30px;box-shadow:0 10px 30px -18px rgba(21,19,15,.25)}
+.wb-perks{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.wb-perks li{display:flex;gap:10px;align-items:flex-start;background:var(--ivory);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:.93rem;color:var(--ink-2);line-height:1.35}
+.wb-perks li b{display:block;color:var(--ink);font-weight:700}
+.wb-perks svg{flex:none;width:22px;height:22px;color:var(--gold);margin-top:1px}
+.wb-perks a{color:var(--gold-text);font-weight:600;text-decoration:none;white-space:nowrap}
+@media (max-width:900px){.wb-perks{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.wb-store{padding:14px 10px 22px;border-radius:16px;margin:0 -6px}.wb-perks{gap:8px}.wb-perks li{padding:10px;font-size:.86rem}}
 .hero-book{margin-top:22px;min-height:54px;padding:0 28px;font-size:1.05rem}
 .wb-loading{color:var(--ink-3);padding:24px 0}
 .wb-fallback{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:8px;justify-items:start}
@@ -642,6 +649,12 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <p class="trip-note" id="trip-note" aria-live="polite"></p>
       <div class="grid" id="grid"></div>
       <div class="wb-store" id="wb-store" hidden>
+        <ul class="wb-perks">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span><b>Free pickup</b>2204 Lovedale Ave, Dallas</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span><b>Delivery $50</b>To your home, hotel or office</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span><b>Save on longer trips</b>Discounts from 3 days</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span><b>Questions?</b><a href="sms:+19729946413">Text (972) 994-6413</a></span></li>
+        </ul>
         <p class="wb-loading" id="wb-loading">Loading available cars...</p>
         <div class="wb-fallback" id="wb-fallback" hidden><b>Booking didn't load.</b> Check your connection and refresh the page, or text us and we'll book your trip for you. <a class="btn btn-gold" href="sms:+19729946413">Text (972) 994-6413</a></div>
       </div>
@@ -1011,7 +1024,7 @@ const SITE = {
   // on the home page in place of the car cards. Set to "site" to switch back to this site's own Stripe checkout.
   booking: "wheelbase",
   wheelbase: { dealer: "5234642", storeType: "auto", script: "https://d2toxav8qvoos4.cloudfront.net/latest/wheelbase-widget.js",
-    colors: { primary: "#15130F", secondary: "#AF8135", text: "#15130F", surface: "#FFFFFF", background: "#FBF8F1" } },
+    colors: { primary: "#15130F", secondary: "#AF8135", text: "#15130F", surface: "#FFFFFF", background: "#FFFFFF" } },
   // Texas motor vehicle rental tax: 10% for 1-30 days, 6.25% for 31-180 days, after discounts (must match lib/catalog.mjs)
   tax: { shortPct: 10, longPct: 6.25, shortMaxDays: 30, includesFees: true },
 
@@ -2113,16 +2126,16 @@ if (SITE.booking === "wheelbase") { $("#refer-band").hidden = true; $("#m-refer"
 if (SITE.booking === "wheelbase") {
   const W = SITE.wheelbase, c = W.colors;
   $("#fleet-title").textContent = "Book your car";
-  $("#fleet .fleet-head .lede").textContent = "Choose your dates to see what's available and the full price. Free pickup at 2204 Lovedale Avenue in Dallas, or delivery across DFW.";
+  $("#fleet .fleet-head .lede").textContent = "Choose your dates to see which cars are free and the full price, then book in a few minutes.";
   document.querySelector("#fleet .chips").hidden = true; $("#trip-note").hidden = true; $("#grid").hidden = true;
   $("#wb-store").hidden = false;
   // the hero date search belongs to the site's own booking; Wheelbase has its own date picker
   $("#search").hidden = true;
   $("#search").insertAdjacentHTML("afterend", '<a class="btn btn-gold hero-book" href="#fleet">Check dates &amp; book</a>');
   const el = document.createElement("wheelbase-store");
-  for (const [k, v] of Object.entries({ "dealer-id": W.dealer, "store-type": W.storeType, "hide-hero": "true", "hide-locale-selector": "true",
+  for (const [k, v] of Object.entries({ "dealer-id": W.dealer, "store-type": W.storeType, "hide-hero": "true", "hide-locale-selector": "true", "visible-filters": "type", "show-reviews": "true",
     "primary-color": c.primary, "secondary-color": c.secondary, "text-color": c.text, "surface-color": c.surface, "background-color": c.background })) el.setAttribute(k, v);
-  $("#wb-store").appendChild(el);
+  $("#wb-store").insertBefore(el, $("#wb-loading"));
   const sc = document.createElement("script"); sc.type = "module"; sc.src = W.script; document.head.appendChild(sc);
   customElements.whenDefined("wheelbase-store").then(() => { $("#wb-loading").hidden = true; });
   setTimeout(() => { if (!customElements.get("wheelbase-store")) { $("#wb-loading").hidden = true; $("#wb-fallback").hidden = false; } }, 12000);
