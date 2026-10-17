@@ -654,7 +654,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <div class="wb-store" id="wb-store" hidden>
         <ul class="wb-perks">
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span><b>Free pickup</b>2204 Lovedale Ave, Dallas</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span><b>Delivery $50</b>To your home, hotel or office</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg><span><b>Delivery $5/mile</b>To your home, hotel or office</span></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span><b>Save on longer trips</b>Discounts from 3 days</span></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span><b>Questions?</b><a href="sms:+19729946413">Text (972) 994-6413</a></span></li>
         </ul>
@@ -1034,7 +1034,7 @@ const SITE = {
   // Where renters can get the car. fee: number = flat fee, 0 = free, null = "quoted when we confirm"
   locations: [
     { id:"dallas-pickup",   name:"Dallas pickup",             note:"2204 Lovedale Avenue, Dallas, TX",             fee:0,    cars:["srx","escalade","bmw","van"] },
-    { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:50,   cars:["srx","escalade","bmw","van"] },
+    { id:"dallas-delivery", name:"Delivery",                  note:"We bring the car to your address",      fee:50, perMile:5, cars:["srx","escalade","bmw","van"] },
   ],
   // Discounts on the rental price (not delivery fees). The biggest one that applies is used.
   // Discounts for longer trips are set on each car below (discounts:[...]); they must match lib/catalog.mjs.
@@ -1077,7 +1077,7 @@ const CARS = [
 
 const FAQ = [ // TODO review every answer and change anything that doesn't match your policies
   ["Why are weekends priced differently?","Every car has lower rates Monday to Thursday and higher rates Friday to Sunday. Each day of your trip is priced by its day of the week, and the day you return isn't charged. Rent the Escalade, SRX or Odyssey for 7 days or more and the weekends cost the weekday price. Your trip total shows the exact split before you pay."],
-  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. For the Lexus GX and the Nissan Rogue, the included miles are shown on the car when you book. Delivery is $50, shown in your trip total before you pay."],
+  ["What's included in the daily price?","Each car includes a set number of miles per day: 200 for the Cadillac SRX and the Honda Odyssey, and 100 for the Escalade and the BMW. For the Lexus GX and the Nissan Rogue, the included miles are shown on the car when you book. Delivery is $5 per mile from our pickup spot at 2204 Lovedale Avenue, shown in your trip total before you pay."],
   ["What if I drive more than the included miles?","Extra miles are 99 cents per mile, or $3 per mile for the Cadillac Escalade, charged after your trip. Each car shows its included miles per day."],
   ["Do I need my own insurance?","Yes. At checkout you tell us your auto insurance company, and you bring proof at pickup. Your policy needs to cover you in a rental car."],
   ["What photos do I take at pickup and return?","When you pick up the car, you and we each take photos on our phones through this site: the front, back and both sides, the odometer (mileage), the fuel gauge and the interior, plus close-ups of any existing damage. You do the same when you return it. The photos are time-stamped and saved, so we both have a clear record of the car's condition. Open My trips to take them."],
@@ -1511,7 +1511,8 @@ const ICONS = {
 $("#places").innerHTML = SITE.locations.map(l => {
   const ic = l.id.includes("pickup") ? ICONS.pickup : l.id.includes("delivery") ? ICONS.delivery : ICONS.air;
   const carsTxt = l.cars.length === CARS.length ? "All cars" : l.cars.map(id => CARS.find(c => c.id === id).name.replace(" xDrive Convertible","")).join(", ");
-  const fee = l.fee === 0 ? '<span class="fee free">Free</span>' : l.fee ? `<span class="fee">${fmt(l.fee)}</span>` : '<span class="fee">Quoted</span>';
+  // while Wheelbase takes bookings, delivery is priced per mile there (perMile); the site's own checkout uses the flat fee
+  const fee = l.fee === 0 ? '<span class="fee free">Free</span>' : l.perMile && SITE.booking === "wheelbase" ? `<span class="fee">${fmt(l.perMile)}/mile</span>` : l.fee ? `<span class="fee">${fmt(l.fee)}</span>` : '<span class="fee">Quoted</span>';
   return `<li><span class="ic" aria-hidden="true">${ic}</span><div><b>${l.name}</b><span>${l.note}. ${carsTxt}.</span></div>${fee}</li>`;
 }).join("");
 $("#areas").textContent = "We deliver across " + SITE.serviceAreas;
