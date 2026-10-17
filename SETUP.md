@@ -240,7 +240,7 @@ After paying, the confirmation shows **Verify your license now**. It also appear
    - It compares the selfie with the license photo.
    - Photos go straight to Stripe, never through your site.
 4. **The result** comes back automatically through the webhook. The site then checks it against the booking:
-   - The renter is **18 or older on the pickup date**.
+   - The renter is **21 or older on the pickup date**.
    - The **name matches** the booking or the account.
    - The **license is valid through the return date**.
    - If everything passes, the booking shows **Verified**. If anything fails, it shows **Needs your review** and you're emailed.
