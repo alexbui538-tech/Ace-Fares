@@ -455,21 +455,18 @@ ok(rc && rc.change && rc.change.status === "requested" && rc.change.from === D(2
 ok(await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "phone: change dates fits the screen");
 
 ok(errs.length === 0, "no page errors " + errs.join(" | "));
-// live setting: Wheelbase takes bookings. Book buttons and the search go to /book.html, which loads the Wheelbase store.
+// live setting: Wheelbase takes bookings. Its store is on the home page in place of the car cards.
 {
   const w = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await w.route(/cloudfront\.net|wheelbasepro\.com/, r => r.abort());   // no outside network in tests
   await w.goto(base + "/?wb=1"); await w.waitForTimeout(500);
-  await w.click('.car[data-id="srx"] [data-book]'); await w.waitForURL(/\/book\.html\?car=srx/);
-  ok(true, "Wheelbase: Book this car opens /book.html?car=srx");
-  const st = w.locator("wheelbase-store");
-  ok(await st.getAttribute("dealer-id") === "5234642" && await st.getAttribute("store-type") === "auto", "Wheelbase: store for dealer 5234642, cars (auto)");
-  await w.screenshot({ path: "e2e-book.png" });
-  await w.goto(base + "/?wb=1"); await w.waitForTimeout(400);
+  const st = w.locator("#fleet wheelbase-store");
+  ok(await st.count() === 1 && await st.getAttribute("dealer-id") === "5234642" && await st.getAttribute("store-type") === "auto", "Wheelbase: store on the home page for dealer 5234642, cars (auto)");
+  ok(!(await w.isVisible("#grid")) && (await w.textContent("#fleet-title")) === "Book your car", "Wheelbase: replaces the car cards, titled Book your car");
+  ok(!(await w.isVisible("#search")) && await w.isVisible(".hero-book"), "Wheelbase: hero shows Check dates & book instead of the date search");
   ok(!(await w.isVisible("#refer-band")), "Wheelbase: Refer a friend is hidden (its checkout can't use referral credit)");
-  ok(await w.locator('#nav a[href="/book.html"]').count() === 1, "Wheelbase: Book now in the menu");
-  await w.click("#search button[type=submit]"); await w.waitForURL(/\/book\.html$/);
-  ok(true, "Wheelbase: the hero search goes to the booking page");
+  ok(await w.locator('#nav a[href="#fleet"].book-link').count() === 1, "Wheelbase: Book now in the menu goes to the store");
+  await w.screenshot({ path: "e2e-book.png", fullPage: false });
   await w.close();
 }
 await browser.close(); server.close();

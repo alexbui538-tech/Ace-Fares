@@ -71,6 +71,10 @@ section{scroll-margin-top:80px}
 .nav a{padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:500;color:var(--ink-2)}
 .nav a:hover{color:var(--ink);background:var(--cream)}
 .nav a.host-link{color:var(--gold-text);font-weight:600}
+.wb-store{min-height:420px}
+.hero-book{margin-top:22px;min-height:54px;padding:0 28px;font-size:1.05rem}
+.wb-loading{color:var(--ink-3);padding:24px 0}
+.wb-fallback{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:8px;justify-items:start}
 .nav a,.acct-out button{white-space:nowrap}
 @media (min-width:861px) and (max-width:1180px){.nav a{padding:10px 9px}}
 @media (min-width:861px) and (max-width:1080px){.nav a[href="#how"],.nav a[href="#delivery"]{display:none}}
@@ -560,7 +564,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       <a href="#how">How it works</a>
       <a href="#delivery">Delivery</a>
       <a href="#faq">FAQ</a>
-      <a href="/book.html" class="book-link">Book now</a>
+      <a href="#fleet" class="book-link">Book now</a>
       <a href="#host" class="host-link">Become a host</a>
     </nav>
     <div class="acct" id="acct">
@@ -576,7 +580,7 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
           <div class="who"><b id="acct-name"></b><span id="acct-email"></span><span class="credit" id="acct-credit" hidden></span></div>
           <button type="button" role="menuitem" id="m-trips">My trips</button>
           <button type="button" role="menuitem" id="m-refer">Refer a friend</button>
-          <a role="menuitem" href="/book.html" id="m-book">Book a car</a>
+          <a role="menuitem" href="#fleet" id="m-book">Book a car</a>
           <button type="button" role="menuitem" id="m-logout">Log out</button>
         </div>
       </div>
@@ -637,6 +641,10 @@ dialog::backdrop{background:rgba(15,26,52,.6)}
       </div>
       <p class="trip-note" id="trip-note" aria-live="polite"></p>
       <div class="grid" id="grid"></div>
+      <div class="wb-store" id="wb-store" hidden>
+        <p class="wb-loading" id="wb-loading">Loading available cars...</p>
+        <div class="wb-fallback" id="wb-fallback" hidden><b>Booking didn't load.</b> Check your connection and refresh the page, or text us and we'll book your trip for you. <a class="btn btn-gold" href="sms:+19729946413">Text (972) 994-6413</a></div>
+      </div>
     </div>
   </section>
 
@@ -999,9 +1007,11 @@ const SITE = {
 
   // Online booking server (Netlify functions). If it can't be reached, booking falls back to "Text us to book".
   api: "/api",
-  // Who takes bookings: "wheelbase" sends every Book button to /book.html (the Wheelbase store, its own checkout).
-  // Set to "site" to switch back to this site's own Stripe checkout.
+  // Who takes bookings: "wheelbase" shows the Wheelbase store (its own availability, prices and checkout)
+  // on the home page in place of the car cards. Set to "site" to switch back to this site's own Stripe checkout.
   booking: "wheelbase",
+  wheelbase: { dealer: "5234642", storeType: "auto", script: "https://d2toxav8qvoos4.cloudfront.net/latest/wheelbase-widget.js",
+    colors: { primary: "#15130F", secondary: "#AF8135", text: "#15130F", surface: "#FFFFFF", background: "#FBF8F1" } },
   // Texas motor vehicle rental tax: 10% for 1-30 days, 6.25% for 31-180 days, after discounts (must match lib/catalog.mjs)
   tax: { shortPct: 10, longPct: 6.25, shortMaxDays: 30, includesFees: true },
 
@@ -1199,7 +1209,7 @@ $("#cal-done").addEventListener("click", () => {
 document.addEventListener("click", e => { const b = e.target.closest("[data-cal]"); if (b) openCal(b.dataset.cal); });
 $("#search").addEventListener("submit", e => {
   e.preventDefault();
-  if (SITE.booking === "wheelbase") { location.href = "/book.html"; return; }   // dates and availability are picked in the Wheelbase store
+  if (SITE.booking === "wheelbase") { $("#fleet").scrollIntoView({ behavior: "smooth" }); return; }   // dates and availability are picked in the Wheelbase store
   const err = $("#search-error");
   if (!sFrom.value || !sTo.value) { err.textContent = "Choose both dates to see trip prices."; return; }
   if (sTo.value <= sFrom.value) { err.textContent = "The end date needs to be after the start date."; return; }
@@ -1271,7 +1281,7 @@ $("#grid").addEventListener("click", e => {
 const dlg = $("#book"), bFrom = $("#b-from"), bTo = $("#b-to"), bLoc = $("#b-loc");
 let current = null;
 function openBooking(id){
-  if (SITE.booking === "wheelbase") { location.href = "/book.html?car=" + encodeURIComponent(id); return; }
+  if (SITE.booking === "wheelbase") { $("#fleet").scrollIntoView({ behavior: "smooth" }); return; }
   current = CARS.find(c => c.id === id);
   $("#book-title").textContent = current.name;
   $("#b-sub").textContent = `${rateText(current)}, ${current.miles} miles/day included`;
@@ -2098,7 +2108,25 @@ $("#ref-share").addEventListener("click", () => {
 });
 $("#refer-close").addEventListener("click", () => $("#refer").close());
 $("#m-refer").addEventListener("click", openRefer);
-if (SITE.booking === "wheelbase") { $("#refer-band").hidden = true; $("#m-refer").hidden = true; }   // Wheelbase checkout can't apply referral credit
+if (SITE.booking === "wheelbase") { $("#refer-band").hidden = true; $("#m-refer").hidden = true; }
+/* Wheelbase store on the home page, in place of the car cards */
+if (SITE.booking === "wheelbase") {
+  const W = SITE.wheelbase, c = W.colors;
+  $("#fleet-title").textContent = "Book your car";
+  $("#fleet .fleet-head .lede").textContent = "Choose your dates to see what's available and the full price. Free pickup at 2204 Lovedale Avenue in Dallas, or delivery across DFW.";
+  document.querySelector("#fleet .chips").hidden = true; $("#trip-note").hidden = true; $("#grid").hidden = true;
+  $("#wb-store").hidden = false;
+  // the hero date search belongs to the site's own booking; Wheelbase has its own date picker
+  $("#search").hidden = true;
+  $("#search").insertAdjacentHTML("afterend", '<a class="btn btn-gold hero-book" href="#fleet">Check dates &amp; book</a>');
+  const el = document.createElement("wheelbase-store");
+  for (const [k, v] of Object.entries({ "dealer-id": W.dealer, "store-type": W.storeType, "hide-hero": "true", "hide-locale-selector": "true",
+    "primary-color": c.primary, "secondary-color": c.secondary, "text-color": c.text, "surface-color": c.surface, "background-color": c.background })) el.setAttribute(k, v);
+  $("#wb-store").appendChild(el);
+  const sc = document.createElement("script"); sc.type = "module"; sc.src = W.script; document.head.appendChild(sc);
+  customElements.whenDefined("wheelbase-store").then(() => { $("#wb-loading").hidden = true; });
+  setTimeout(() => { if (!customElements.get("wheelbase-store")) { $("#wb-loading").hidden = true; $("#wb-fallback").hidden = false; } }, 12000);
+}   // Wheelbase checkout can't apply referral credit
 $("#refer-cta").addEventListener("click", openRefer);
 loadInvite();
 $("#done-close").addEventListener("click", () => $("#done").close());

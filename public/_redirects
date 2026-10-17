@@ -35,3 +35,5 @@
 /about            /  301
 /terms            /rental-agreement  301
 /privacy          /privacy.html  301
+/book.html         /?s=fleet  301
+/book              /?s=fleet  301
